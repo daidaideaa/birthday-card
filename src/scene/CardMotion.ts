@@ -12,6 +12,16 @@ export class CardMotion {
     private onSurprise: () => void,
     private onState: (state: CardState) => void,
   ) {}
+  reset() {
+    this.state = "CLOSED";
+    this.progress = 0;
+    this.targetOpen = false;
+    this.surpriseArmed = true;
+    this.start = 0;
+    this.elapsed = 0;
+    this.duration = 1;
+    this.onState(this.state);
+  }
   setTarget(open: boolean) {
     if (open === this.targetOpen) return;
     this.targetOpen = open;

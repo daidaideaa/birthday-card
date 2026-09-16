@@ -21,6 +21,8 @@ export class BirthdayScene {
   private particles = new CardParticles(isMobile());
   private candles = new CandleBackground();
   private frame = 0;
+  private active = true;
+  private lost = false;
   private last = 0;
   private time = 0;
   private cameraDistance = 8.7;
@@ -42,7 +44,7 @@ export class BirthdayScene {
     this.renderer.setPixelRatio(
       Math.min(devicePixelRatio, isMobile() ? 1.5 : 2),
     );
-    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.enabled = !isMobile();
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
@@ -59,7 +61,7 @@ export class BirthdayScene {
     const key = new THREE.DirectionalLight("#fff0d9", 1.65);
     key.position.set(-2, 7, 5);
     key.castShadow = true;
-    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.mapSize.set(isMobile() ? 512 : 1024, isMobile() ? 512 : 1024);
     key.shadow.camera.left = -5;
     key.shadow.camera.right = 5;
     key.shadow.camera.top = 6;
@@ -105,6 +107,27 @@ export class BirthdayScene {
     document.addEventListener("visibilitychange", this.visibility);
     this.frame = requestAnimationFrame(this.animate);
   }
+  setActive(active: boolean) {
+    this.active = active;
+    cancelAnimationFrame(this.frame);
+    this.last = 0;
+    this.drag = null;
+    if (active && !document.hidden && !this.lost) {
+      this.resize();
+      this.frame = requestAnimationFrame(this.animate);
+    }
+  }
+  reset() {
+    this.motion.reset();
+    this.card.update(0);
+    this.particles.clear();
+    this.candles.boost = 0;
+    this.audio.fadeOut();
+    this.yaw = -0.08;
+    this.tilt = 0;
+    this.card.root.rotation.set(0, this.yaw, 0);
+    this.last = 0;
+  }
   setOpen(open: boolean) {
     if (!open && this.motion.targetOpen) this.audio.fadeOut();
     this.motion.setTarget(open);
@@ -146,6 +169,7 @@ export class BirthdayScene {
   };
   private contextLost = (e: Event) => {
     e.preventDefault();
+    this.lost = true;
     cancelAnimationFrame(this.frame);
     this.onError();
   };
@@ -153,9 +177,11 @@ export class BirthdayScene {
     cancelAnimationFrame(this.frame);
     this.last = 0;
     if (document.hidden) this.audio.fadeOut();
-    else this.frame = requestAnimationFrame(this.animate);
+    else if (this.active && !this.lost)
+      this.frame = requestAnimationFrame(this.animate);
   };
   private animate = (now: number) => {
+    if (!this.active || this.lost || document.hidden) return;
     const elapsed = this.last ? (now - this.last) / 1000 : 0;
     const dt = Math.min(elapsed, 0.05);
     this.last = now;

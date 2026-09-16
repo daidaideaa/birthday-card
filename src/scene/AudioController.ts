@@ -3,6 +3,19 @@ export class AudioController {
   private master?: GainNode;
   private voices: OscillatorNode[] = [];
   muted = false;
+  private volume = 1;
+  setVolume(volume: number) {
+    this.volume = Math.max(0, Math.min(1, volume));
+    if (this.context && this.master)
+      this.master.gain.setTargetAtTime(
+        0.18 * this.volume,
+        this.context.currentTime,
+        0.2,
+      );
+  }
+  playEnding() {
+    this.play(true);
+  }
   async unlock() {
     this.context ??= new AudioContext();
     await this.context.resume();
@@ -11,42 +24,49 @@ export class AudioController {
     this.muted = muted;
     if (muted) this.fadeOut();
   }
-  play() {
+  play(ending = false) {
     const ctx = this.context;
     if (!ctx || ctx.state !== "running" || this.muted) return;
     this.fadeOut();
     const master = ctx.createGain();
-    master.gain.value = 0.18;
+    master.gain.value = 0.18 * this.volume;
     master.connect(ctx.destination);
     this.master = master;
     // Familiar melody, synthesized locally. Gentle fundamentals and fading bell overtones.
-    const notes = [
-      [67, 0.75],
-      [67, 0.25],
-      [69, 1],
-      [67, 1],
-      [72, 1],
-      [71, 2],
-      [67, 0.75],
-      [67, 0.25],
-      [69, 1],
-      [67, 1],
-      [74, 1],
-      [72, 2],
-      [67, 0.75],
-      [67, 0.25],
-      [79, 1],
-      [76, 1],
-      [72, 1],
-      [71, 1],
-      [69, 2],
-      [77, 0.75],
-      [77, 0.25],
-      [76, 1],
-      [72, 1],
-      [74, 1],
-      [72, 2],
-    ];
+    const notes = ending
+      ? [
+          [72, 0.6],
+          [76, 0.6],
+          [79, 0.6],
+          [84, 2.5],
+        ]
+      : [
+          [67, 0.75],
+          [67, 0.25],
+          [69, 1],
+          [67, 1],
+          [72, 1],
+          [71, 2],
+          [67, 0.75],
+          [67, 0.25],
+          [69, 1],
+          [67, 1],
+          [74, 1],
+          [72, 2],
+          [67, 0.75],
+          [67, 0.25],
+          [79, 1],
+          [76, 1],
+          [72, 1],
+          [71, 1],
+          [69, 2],
+          [77, 0.75],
+          [77, 0.25],
+          [76, 1],
+          [72, 1],
+          [74, 1],
+          [72, 2],
+        ];
     let at = ctx.currentTime + 0.04;
     for (const [midi, beats] of notes) {
       const length = beats * 0.38;

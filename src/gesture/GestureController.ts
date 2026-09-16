@@ -6,6 +6,7 @@ export class GestureController {
   private timer?: number;
   private deadline?: number;
   private stopped = false;
+  private enabled = true;
   private lastVideoTime = -1;
   private stabilizer = new GestureStabilizer();
   constructor(
@@ -66,17 +67,29 @@ export class GestureController {
       this.recognizer = recognizer;
       clearTimeout(this.deadline);
       this.onStatus("Camera ready");
-      this.timer = window.setInterval(this.infer, 66);
+      this.updateLoop();
       document.addEventListener("visibilitychange", this.visibility);
     } catch {
       if (!this.stopped) this.fail();
     }
   }
+  setEnabled(enabled: boolean) {
+    this.enabled = enabled;
+    this.stabilizer.reset();
+    this.updateLoop();
+  }
+  private updateLoop() {
+    clearInterval(this.timer);
+    if (this.enabled && !this.stopped && !document.hidden && this.recognizer)
+      this.timer = window.setInterval(this.infer, 66);
+  }
   private visibility = () => {
     this.stabilizer.reset();
+    this.updateLoop();
   };
   private infer = () => {
-    if (this.stopped || document.hidden || !this.recognizer) return;
+    if (this.stopped || !this.enabled || document.hidden || !this.recognizer)
+      return;
     if (this.stream?.getVideoTracks()[0]?.readyState === "ended") {
       this.fail();
       return;

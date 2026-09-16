@@ -92,8 +92,13 @@ export class CardParticles {
       return true;
     });
   }
-  dispose() {
+  clear() {
     for (const p of this.particles) p.mesh.material.dispose();
+    this.particles = [];
+    this.group.clear();
+  }
+  dispose() {
+    this.clear();
     for (const g of this.geometries) g.dispose();
     this.particles = [];
     this.group.clear();
