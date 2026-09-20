@@ -50,21 +50,17 @@ export function PhotoViewer({
     <dialog
       ref={dialog}
       className="photo-viewer"
-      aria-label={title || "Memory photograph"}
+      aria-label={title || "照片"}
       onCancel={onClose}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <button
-        className="photo-close"
-        onClick={onClose}
-        aria-label="Close photograph"
-      >
+      <button className="photo-close" onClick={onClose} aria-label="关闭照片">
         ×
       </button>
       <figure>
-        <MemoryImage path={image} alt={title || "Memory photograph"} eager />
+        <MemoryImage path={image} alt={title || "照片"} eager />
         <figcaption>
           {date && <span>{date}</span>}
           {title && <h3>{title}</h3>}
@@ -82,7 +78,7 @@ export function formatStoryDate(date: string) {
     parsed.toISOString().slice(0, 10) !== date
   )
     return date;
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat("zh-CN", {
     dateStyle: "long",
     timeZone: "UTC",
   }).format(parsed);

@@ -48,7 +48,7 @@ test("blank records and a greeting-only letter do not create empty chapters", ()
     "filtering must not mutate the editable source",
   );
 });
-test("supplied content yields ordered chapters, including optional places and valid zero statistics", () => {
+test("personal content is condensed into one album and four ordered chapters", () => {
   const source = structuredClone(emptyStory);
   source.firstMet.memory = "TEST ONLY";
   source.timeline = [{ date: "", title: "TEST ONLY", description: "" }];
@@ -63,18 +63,7 @@ test("supplied content yields ordered chapters, including optional places and va
   source.letter.paragraphs = ["TEST ONLY"];
   assert.deepEqual(
     getChapters(source).map((c) => c.id),
-    [
-      "birthday",
-      "firstMet",
-      "timeline",
-      "moments",
-      "littleThings",
-      "insideJokes",
-      "places",
-      "stats",
-      "letter",
-      "finalWish",
-    ],
+    ["birthday", "moments", "letter", "finalWish"],
   );
   assert.equal(prepareStory(source).stats.length, 2);
 });

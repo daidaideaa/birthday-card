@@ -12,9 +12,8 @@ export function PageTurn({
     <div className="page-perspective">
       <div
         key={turn}
-        className={`paper-page turn-${direction === 1 ? "next" : "previous"}`}
+        className={"paper-page turn-" + (direction === 1 ? "next" : "previous")}
       >
-        <span className="paper-fold" aria-hidden="true" />
         <div className="page-content">{children}</div>
       </div>
     </div>

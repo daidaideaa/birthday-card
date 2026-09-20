@@ -1,66 +1,54 @@
-# 3D Birthday Card
+# 师宝宝 · 生日奇遇
 
-A warm, interactive birthday gift for Han, built with React, TypeScript, Three.js and MediaPipe. No backend.
+一个中文、无后端的互动生日礼物。基于 React、TypeScript、Three.js 和 MediaPipe，沿用现有 GitHub Pages 发布流程。
 
-## Features
+## 四个场景
 
-- Textured ivory paper, an original canvas cake illustration and handwritten wishes on real 3D surfaces.
-- Open palm to open, closed fist to close; no hand preserves the current state.
-- Smooth reversible animation, gentle drag rotation, hearts, ribbons and locally synthesized birthday music.
-- Complete camera-free experience, touch support, sound toggle and adaptive mobile rendering.
+1. **生日邀请**：城堡夜色、悬浮烛光和纸质 3D 贺卡。点击打开、挥动魔杖或使用张掌/握拳手势，保留鼠标与触摸拖动旋转。
+2. **小小美好**：照片、时间线、小事、趣梗、地点和数字合入同一章，照片可放大查看。当前使用三张风景示意图。
+3. **一封心意**：一次拆信即可完整阅读；窗边的钢琴可以逐键弹奏或播放原创短句，两个人影随之轻轻起舞。
+4. **生日愿望**：草原夕阳、奔跑登岩的狮子剪影、可点击的低声回应、生日蛋糕与烛火，最后展示祝福。重播会重置贺卡、书信和蜡烛状态。
 
-## Local Development
+泰迪贯穿四个场景：自建的 Three.js 蒙皮骨骼身体、实例化卷毛、眼睛鼻子与项圈。支持呼吸、眨眼、转头、摇尾、短距离走动、抚摸、趴下和庆祝小跳。它是程序化制作的三维角色，并非扫描模型。电影元素以环境、剪影和动效呈现；音乐与狮子的低声回应均在本地合成，无需下载电影原声。
 
-Node.js 22.12+ recommended.
+## 运行与验证
+
+建议 Node.js 22.12+。
 
 ```sh
-npm install
+npm ci
 npm run dev
-```
-
-## Build
-
-```sh
 npm run lint
 npm test
 npm run build
 npm run preview
 ```
 
-## GitHub Pages
+GitHub Pages 地址：<https://daidaideaa.github.io/birthday-card/>。Vite 基础路径仍为 `/birthday-card/`，推送 `main` 后由原有 Actions 执行测试、构建与部署，不提交 `dist`。
 
-Target: https://daidaideaa.github.io/birthday-card/
+## 替换个人内容
 
-Vite uses `/birthday-card/`. In repository Settings → Pages, select **GitHub Actions**. A push to `main` runs lint, state/gesture tests, build and official Pages deployment actions. Do not commit `dist` or create a `gh-pages` branch.
+编辑 `src/content/story.ts`：
 
-## Camera Permission
+- `person.name`：页面与贺卡上的称呼。
+- `preview: true`：显示“风景与文字为效果示意”的说明，换成真实照片与文案后设为 `false`。
+- `moments`：建议精选 3–5 个片段，每项填写标题、图片路径和简短描述。
+- `firstMet`、`timeline`、`littleThings`、`insideJokes`、`places`、`stats`：仍兼容这些资料，但统一展示在相册中，不再增加独立章节。空内容不显示。
+- `letter`：称呼、完整段落、结尾与落款。只填写称呼不会生成空白信件章节。
+- `finalWish`：许愿前的一句祝福。
 
-Click **Start the Magic** to enable sound and request camera access. The card remains closed until a stable open palm is recognized. **Continue without camera** works without model downloads or permission. **Turn Camera Off** stops the video tracks; hiding the preview only hides it.
+图片放入 `public/memories/`，使用 `memories/photo.jpg` 这样的相对路径。当前网图保存在本地 `public/images/`，不会运行时依赖图片外链。预览内容没有虚构相识日期或共同经历。中文标题采用随项目提供的思源宋体子集，新增未收录汉字由系统中文字体补充。
 
-Camera frames are processed locally in the browser and are not uploaded.
+## 交互与性能
 
-MediaPipe 0.10.32 WASM loads from jsDelivr and Google's pretrained gesture model loads from Google Cloud Storage. These downloads require internet access; failure or a 25-second timeout offers manual controls. No camera frames are sent to these hosts.
+- 摄像头只有在主动点击“用手势打开”后才请求；拒绝或加载失败不影响点击体验。
+- 摄像头帧仅在本地处理；进入书页后暂停手势推理和贺卡渲染，泰迪继续独立动画。
+- 手势库 WASM 来自 jsDelivr，模型来自 Google Cloud Storage，加载超时会回落到手动方式。
+- 键盘左右箭头、导航按钮与横向滑动均可换章；照片弹窗支持 Escape 和焦点恢复，信件保留正常纵向阅读。
+- 音效由用户交互解锁，“声音关”统一控制生日曲、钢琴和狮子回应。
+- 手机端降低卷毛实例数量、像素比和阴影成本；后台标签页暂停渲染。减少动态效果偏好会关闭装饰动画与小狗持续动作。
+- WebGL 不可用时可直接阅读完整生日故事，宠物单独降级，不阻断主要内容。
 
-## Browser Notes
+## 资源与来源
 
-Use a current browser with WebGL, Web Audio and HTTPS camera access (localhost also works). Camera behavior and recognition quality require testing with a real webcam. Inference runs independently at about 15 FPS and pauses in hidden tabs. Font and illustration assets are local; Parisienne is bundled under the SIL Open Font License in `public/fonts/OFL.txt`.
-
-## Personalize the Memory Book
-
-Edit **`src/content/story.ts`** and add only genuine details. All dates, memories, jokes, photographs and letter paragraphs are intentionally empty. Empty records and empty chapters are skipped; the current public experience is **Birthday Card → Make a Wish**. The birthday card and final wish are always included in the page count.
-
-- `firstMet`: date, place, memory, first impression, optional image. A title alone does not enable the chapter.
-- `timeline`: dated events with expandable details; optional `isBirthday: true` highlights a genuine birthday event without guessing whether it is today.
-- `moments`: title, optional date, short description and photograph.
-- `littleThings`: one `{ text }` per note, revealed individually.
-- `insideJokes`: one `{ title, note? }` per genuine joke.
-- `places`: `{ city, date?, memory }`; decorative route, no map service.
-- `stats`: `{ label, value }` for actual numbers (zero is valid), or `{ label, text }`. Nothing is inferred or counted automatically.
-- `letter`: greeting, an array of complete paragraphs, ending and signature. A greeting without any paragraphs stays hidden.
-- `finalWish`: optional personal wish before the candle is extinguished.
-
-Put images in **`public/memories/`**, then use a relative path such as `memories/photo-name.jpg`. Do not include `public/` or a remote URL. `assetUrl()` supplies the GitHub Pages base path. Images are lazy loaded, and only the next chapter's first two images are prefetched. Failed images disappear while captions remain. Resize phone originals before committing when practical (around 1600–2000 px on the long edge is sufficient for this layout).
-
-The book supports buttons, page edges, keyboard arrows and horizontal swipes. Vertical swipes remain available for reading long pages. Photo dialogs support Escape and return focus to the photo. Notes and letter state survive Previous/Next. Replay resets the card, particles, music, chapter and all reveals, while retaining camera permission. Click Start again to resume an already connected camera.
-
-The hidden Three.js scene and gesture inference pause during the book. The letter uses natural document scrolling, lowers any remaining birthday music, and avoids per-character animation. The final candle uses a click/tap and a short local bell ending, with no microphone. Reduced motion replaces page turns with fades and limits sparkles.
+详见 [素材来源](public/ASSET_SOURCES.md)。新泰迪模型、魔杖效果、舞蹈与狮子剪影由项目代码生成。项目未使用付费模型或远程宠物服务。

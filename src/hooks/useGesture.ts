@@ -3,7 +3,7 @@ import { GestureController } from "../gesture/GestureController";
 export function useGesture(onTarget: (open: boolean) => void, enabled = true) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const controller = useRef<GestureController | null>(null);
-  const [status, setStatus] = useState("Camera off");
+  const [status, setStatus] = useState("摄像头已关闭");
   const [mode, setMode] = useState<"off" | "loading" | "ready" | "fallback">(
     "off",
   );
@@ -15,13 +15,13 @@ export function useGesture(onTarget: (open: boolean) => void, enabled = true) {
     controller.current?.stop();
     controller.current = null;
     setMode("fallback");
-    setStatus("Camera off");
+    setStatus("摄像头已关闭");
   }, []);
   const start = useCallback(() => {
     if (!videoRef.current) return;
     controller.current?.stop();
     setMode("loading");
-    setStatus("Preparing a little magic...");
+    setStatus("正在准备手势识别…");
     const next = new GestureController(
       videoRef.current,
       (open) => targetRef.current(open),
@@ -31,7 +31,7 @@ export function useGesture(onTarget: (open: boolean) => void, enabled = true) {
       },
       () => {
         setMode("fallback");
-        setStatus("Camera unavailable. Your surprise is still waiting.");
+        setStatus("暂时无法使用摄像头，你仍可以点击打开贺卡。");
       },
     );
     next.setEnabled(enabledRef.current);

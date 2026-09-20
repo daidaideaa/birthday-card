@@ -29,32 +29,30 @@ export function prepareStory(source: BirthdayStory): BirthdayStory {
 }
 export function getChapters(source: BirthdayStory): Chapter[] {
   const data = prepareStory(source);
-  const chapters: Chapter[] = [{ id: "birthday", label: "BIRTHDAY WISHES" }];
+  const chapters: Chapter[] = [{ id: "birthday", label: "生日邀请" }];
   const first = data.firstMet;
+  const hasFirst = [
+    first.date,
+    first.place,
+    first.memory,
+    first.firstImpression,
+    first.image,
+  ].some(filled);
   if (
+    hasFirst ||
     [
-      first.date,
-      first.place,
-      first.memory,
-      first.firstImpression,
-      first.image,
-    ].some(filled)
+      data.timeline,
+      data.moments,
+      data.littleThings,
+      data.insideJokes,
+      data.places,
+      data.stats,
+    ].some((group) => group.length)
   )
-    chapters.push({ id: "firstMet", label: "THE BEGINNING" });
-  const groups = [
-    ["timeline", "OUR TIMELINE"],
-    ["moments", "OUR MEMORIES"],
-    ["littleThings", "LITTLE THINGS"],
-    ["insideJokes", "JUST BETWEEN US"],
-    ["places", "OUR PLACES"],
-    ["stats", "BY THE NUMBERS"],
-  ] as const;
-  groups.forEach(([id, label]) => {
-    if (data[id].length) chapters.push({ id, label });
-  });
+    chapters.push({ id: "moments", label: "小小美好" });
   if (data.letter.paragraphs.length)
-    chapters.push({ id: "letter", label: "A LETTER FOR YOU" });
-  chapters.push({ id: "finalWish", label: "ONE LAST WISH" });
+    chapters.push({ id: "letter", label: "一封心意" });
+  chapters.push({ id: "finalWish", label: "生日愿望" });
   return chapters;
 }
 export interface StorySnapshot {

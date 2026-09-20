@@ -50,7 +50,7 @@ export class BirthdayScene {
     this.renderer.toneMappingExposure = 1.0;
     this.renderer.domElement.setAttribute(
       "aria-label",
-      "A three-dimensional birthday card for Han. Drag to rotate.",
+      "师宝宝的立体生日贺卡，可以拖动旋转。",
     );
     this.renderer.domElement.addEventListener(
       "webglcontextlost",
@@ -128,6 +128,14 @@ export class BirthdayScene {
     this.card.root.rotation.set(0, this.yaw, 0);
     this.last = 0;
   }
+  castSpell() {
+    this.card.root.updateWorldMatrix(true, false);
+    this.particles.burst(
+      this.card.root.localToWorld(new THREE.Vector3(0, 0.2, 0)),
+    );
+    this.candles.boost = 1;
+    this.setOpen(true);
+  }
   setOpen(open: boolean) {
     if (!open && this.motion.targetOpen) this.audio.fadeOut();
     this.motion.setTarget(open);
@@ -137,7 +145,7 @@ export class BirthdayScene {
       h = this.host.clientHeight;
     if (!w || !h) return;
     this.camera.aspect = w / h;
-    const distance = Math.max(8.7, 5.7 / this.camera.aspect);
+    const distance = Math.max(7.9, 5.8 / this.camera.aspect);
     this.cameraDistance = distance;
     this.camera.position.set(0, distance * 0.77, distance * 0.68);
     this.camera.lookAt(0, 0.65, -0.15);
@@ -187,7 +195,7 @@ export class BirthdayScene {
     this.last = now;
     this.time += dt;
     this.motion.update(elapsed);
-    const distance = this.cameraDistance + this.motion.progress * 0.8;
+    const distance = this.cameraDistance + this.motion.progress * 0.35;
     this.camera.position.set(0, distance * 0.77, distance * 0.68);
     this.camera.lookAt(
       0,

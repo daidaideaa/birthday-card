@@ -27,8 +27,8 @@ export function FinalWish({
     <article className={`final-wish wish-${state}`} data-candle-state={state}>
       {state !== "complete" ? (
         <>
-          <span className="chapter-kicker">ONE LAST THING</span>
-          <h2 tabIndex={-1}>Make a wish.</h2>
+          <span className="chapter-kicker">把愿望，交给今晚的星光</span>
+          <h2 tabIndex={-1}>许个愿吧，{controller.data.person.name}。</h2>
           {controller.data.finalWish && (
             <p className="personal-wish">{controller.data.finalWish}</p>
           )}
@@ -90,7 +90,7 @@ export function FinalWish({
             </svg>
             <button
               className="wish-candle"
-              aria-label="Blow out the candle"
+              aria-label="轻轻熄灭生日蜡烛"
               disabled={state !== "lit"}
               onClick={() => controller.extinguish()}
             >
@@ -102,8 +102,8 @@ export function FinalWish({
           </div>
           <p className="candle-instruction">
             {state === "lit"
-              ? "Tap the candle when you’re ready."
-              : "A little wish, just for you."}
+              ? "准备好了，就轻轻点一下烛火。"
+              : "愿望已经出发，幸福正在路上。"}
           </p>
         </>
       ) : (
@@ -125,10 +125,11 @@ export function FinalWish({
             ))}
           </div>
           <h2 tabIndex={-1}>
-            Happy Birthday, {controller.data.person.name}. <span>♥</span>
+            {controller.data.person.name}，<br />
+            生日快乐。<span>愿你一直勇敢，也一直被爱。</span>
           </h2>
           <button className="story-link" onClick={onReplay}>
-            Replay our story
+            再看一次这份惊喜
           </button>
         </div>
       )}

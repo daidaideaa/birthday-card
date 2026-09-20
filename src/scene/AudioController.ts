@@ -2,6 +2,7 @@ export class AudioController {
   private context?: AudioContext;
   private master?: GainNode;
   private voices: OscillatorNode[] = [];
+  private noise?: AudioBufferSourceNode;
   muted = false;
   private volume = 1;
   setVolume(volume: number) {
@@ -15,6 +16,86 @@ export class AudioController {
   }
   playEnding() {
     this.play(true);
+  }
+  /** 原创短音型；按键与自动短句共用音量和静音控制。 */
+  playPiano(note?: number) {
+    const ctx = this.context;
+    if (!ctx || ctx.state !== "running" || this.muted) return;
+    this.fadeOut();
+    const master = ctx.createGain();
+    master.gain.value = 0.15 * Math.max(this.volume, 0.4);
+    master.connect(ctx.destination);
+    this.master = master;
+    const notes =
+      note === undefined ? [60, 64, 67, 71, 69, 67, 64, 62, 60] : [note];
+    notes.forEach((midi, i) => {
+      const at = ctx.currentTime + i * 0.47;
+      for (const [multiple, strength] of [
+        [1, 0.75],
+        [2, 0.18],
+        [3, 0.07],
+      ]) {
+        const voice = ctx.createOscillator(),
+          gain = ctx.createGain();
+        voice.type = "sine";
+        voice.frequency.value = 440 * 2 ** ((midi - 69) / 12) * multiple;
+        gain.gain.setValueAtTime(0, at);
+        gain.gain.linearRampToValueAtTime(strength, at + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 1.6);
+        voice.connect(gain);
+        gain.connect(master);
+        voice.start(at);
+        voice.stop(at + 1.7);
+        this.voices.push(voice);
+        voice.onended = () => {
+          voice.disconnect();
+          gain.disconnect();
+          this.voices = this.voices.filter((v) => v !== voice);
+        };
+      }
+    });
+  }
+  /** 点击触发的短促低声回应，不加载远程音频，不自动播放。 */
+  roar() {
+    const ctx = this.context;
+    if (!ctx || ctx.state !== "running" || this.muted) return;
+    this.fadeOut();
+    const length = 1.25,
+      buffer = ctx.createBuffer(
+        1,
+        Math.ceil(ctx.sampleRate * length),
+        ctx.sampleRate,
+      );
+    const data = buffer.getChannelData(0);
+    let low = 0;
+    for (let i = 0; i < data.length; i++) {
+      const t = i / ctx.sampleRate;
+      low = low * 0.94 + (Math.random() * 2 - 1) * 0.06;
+      data[i] =
+        (low * 2 + Math.sin(2 * Math.PI * (75 * t - 12 * t * t)) * 0.25) *
+        (0.6 + 0.4 * Math.sin(t * 41));
+    }
+    const noise = ctx.createBufferSource(),
+      filter = ctx.createBiquadFilter(),
+      gain = ctx.createGain();
+    filter.type = "lowpass";
+    filter.frequency.value = 650;
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.17, now + 0.14);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + length);
+    noise.buffer = buffer;
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    this.master = gain;
+    this.noise = noise;
+    noise.start();
+    noise.onended = () => {
+      noise.disconnect();
+      filter.disconnect();
+      if (this.noise === noise) this.noise = undefined;
+    };
   }
   async unlock() {
     this.context ??= new AudioContext();
@@ -99,6 +180,12 @@ export class AudioController {
   fadeOut() {
     if (!this.context || !this.master) return;
     const now = this.context.currentTime;
+    try {
+      this.noise?.stop(now + 0.1);
+    } catch {
+      /* 音源可能已结束。 */
+    }
+    this.noise = undefined;
     const old = this.master;
     old.gain.cancelScheduledValues(now);
     old.gain.setTargetAtTime(0, now, 0.09);

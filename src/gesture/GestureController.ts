@@ -37,8 +37,9 @@ export class GestureController {
       this.video.srcObject = stream;
       await this.video.play();
       if (this.stopped) return;
-      const { FilesetResolver, GestureRecognizer } =
-        await import("@mediapipe/tasks-vision");
+      const { FilesetResolver, GestureRecognizer } = await import(
+        "@mediapipe/tasks-vision"
+      );
       if (this.stopped) return;
       const vision = await FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm",
@@ -66,7 +67,7 @@ export class GestureController {
       }
       this.recognizer = recognizer;
       clearTimeout(this.deadline);
-      this.onStatus("Camera ready");
+      this.onStatus("摄像头已就绪");
       this.updateLoop();
       document.addEventListener("visibilitychange", this.visibility);
     } catch {
@@ -112,12 +113,12 @@ export class GestureController {
             : "None";
       this.onStatus(
         gesture === "Open_Palm"
-          ? "Open palm detected"
+          ? "已识别张开手掌"
           : gesture === "Closed_Fist"
-            ? "Closed fist detected"
+            ? "已识别握拳"
             : result.landmarks.length
-              ? "Show an open palm or a closed fist"
-              : "No hand",
+              ? "试着张开手掌或握拳"
+              : "等待你的手势",
       );
       const target = this.stabilizer.update(gesture, best?.score ?? 0, now);
       if (target !== null) this.onTarget(target);

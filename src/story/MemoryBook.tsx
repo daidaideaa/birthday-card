@@ -9,12 +9,14 @@ interface Props {
   snapshot: StorySnapshot;
   onReplay: () => void;
   onEnding: () => void;
+  onPiano: (note?: number) => void;
 }
 export function MemoryBook({
   controller,
   snapshot,
   onReplay,
   onEnding,
+  onPiano,
 }: Props) {
   const { index, direction, turn } = snapshot;
   const chapter = controller.chapters[index];
@@ -75,13 +77,13 @@ export function MemoryBook({
     const next = controller.chapters[index + 1]?.id;
     const data = controller.data;
     const paths =
-      next === "firstMet"
-        ? [data.firstMet.image]
-        : next === "timeline"
-          ? data.timeline.map((e) => e.image)
-          : next === "moments"
-            ? data.moments.map((e) => e.image)
-            : [];
+      next === "moments"
+        ? [
+            data.firstMet.image,
+            ...data.moments.map((e) => e.image),
+            ...data.timeline.map((e) => e.image),
+          ]
+        : [];
     const links = paths
       .filter((p): p is string => Boolean(p))
       .slice(0, 2)
@@ -102,7 +104,7 @@ export function MemoryBook({
     <section
       ref={root}
       className={`memory-book chapter-${chapter.id}`}
-      aria-label="Birthday memory book"
+      aria-label="生日纪念册"
       data-chapter={chapter.id}
       onTouchStart={(e) => {
         if (
@@ -131,7 +133,7 @@ export function MemoryBook({
       <div className="book-meta">
         <span>{chapter.label}</span>
         <span
-          aria-label={`Chapter ${index + 1} of ${controller.chapters.length}`}
+          aria-label={`第 ${index + 1} 章，共 ${controller.chapters.length} 章`}
         >
           {String(index + 1).padStart(2, "0")} /{" "}
           {String(controller.chapters.length).padStart(2, "0")}
@@ -143,12 +145,13 @@ export function MemoryBook({
           snapshot={snapshot}
           onReplay={onReplay}
           onEnding={onEnding}
+          onPiano={onPiano}
           onNext={() => go(1)}
         />
       </PageTurn>
       <button
         className="page-edge edge-left"
-        aria-label="Previous page"
+        aria-label="上一章"
         disabled={turning}
         onClick={() => go(-1)}
       >
@@ -157,20 +160,20 @@ export function MemoryBook({
       {!nextDisabled && (
         <button
           className="page-edge edge-right"
-          aria-label="Next page"
+          aria-label="下一章"
           disabled={turning}
           onClick={() => go(1)}
         >
           ›
         </button>
       )}
-      <nav className="book-navigation" aria-label="Chapter navigation">
+      <nav className="book-navigation" aria-label="章节导航">
         <button onClick={() => go(-1)} disabled={turning}>
-          ← Previous
+          ← 上一章
         </button>
-        <span>OUR STORY</span>
+        <span>慢慢看，不着急</span>
         <button onClick={() => go(1)} disabled={nextDisabled || turning}>
-          Next →
+          下一章 →
         </button>
       </nav>
     </section>

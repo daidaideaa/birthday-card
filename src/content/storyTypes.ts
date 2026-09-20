@@ -46,6 +46,8 @@ export interface StoryLetter {
 }
 export interface BirthdayStory {
   person: { name: string };
+  /** 预览素材与示例文案，替换为个人内容后改为 false。 */
+  preview?: boolean;
   firstMet: FirstMeeting;
   timeline: TimelineEvent[];
   moments: MemoryMoment[];
@@ -56,17 +58,7 @@ export interface BirthdayStory {
   letter: StoryLetter;
   finalWish: string;
 }
-export type ChapterId =
-  | "birthday"
-  | "firstMet"
-  | "timeline"
-  | "moments"
-  | "littleThings"
-  | "insideJokes"
-  | "places"
-  | "stats"
-  | "letter"
-  | "finalWish";
+export type ChapterId = "birthday" | "moments" | "letter" | "finalWish";
 export interface Chapter {
   id: ChapterId;
   label: string;

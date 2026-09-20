@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { story } from "../content/story";
 type Face = "cover" | "inside" | "message" | "back";
 export function createArtwork(face: Face) {
   const canvas = document.createElement("canvas");
@@ -27,7 +28,7 @@ export function createArtwork(face: Face) {
     y: number,
     size: number,
     color = "#493033",
-    family = "Georgia",
+    family = '"Birthday Serif"',
   ) => {
     c.fillStyle = color;
     c.textAlign = "center";
@@ -49,14 +50,8 @@ export function createArtwork(face: Face) {
     c.restore();
   };
   if (face === "cover") {
-    text("F O R   Y O U ,   H A N", 188, 30, "#957950");
-    text(
-      "A little birthday magic",
-      330,
-      100,
-      "#755353",
-      '"Parisienne", cursive',
-    );
+    text("写给  " + story.person.name, 188, 30, "#957950");
+    text("生日快乐", 330, 100, "#755353", '"Birthday Serif"');
     // Layered patisserie illustration, with soft painted shading and piped icing.
     c.save();
     c.translate(880, 720);
@@ -179,31 +174,31 @@ export function createArtwork(face: Face) {
       c.arc(x, y, 3 + (i % 3), 0, Math.PI * 2);
       c.fill();
     }
-    text("A little surprise for you", 1080, 34, "#997e68", "Georgia");
+    text("愿你被温柔与惊喜包围", 1080, 34, "#997e68", '"Birthday Serif"');
   } else if (face === "message") {
-    text("Dear Han,", 235, 68, "#8f6461", '"Parisienne", cursive');
-    text("Happy Birthday!", 405, 130, "#7b4c50", '"Parisienne", cursive');
+    text("亲爱的" + story.person.name, 235, 68, "#8f6461", '"Birthday Serif"');
+    text("生日快乐。", 405, 130, "#7b4c50", '"Birthday Serif"');
     star(880, 483, 15);
     [
-      "May your day be filled with laughter,",
-      "your heart with love,",
-      "and the year ahead with wonderful little surprises.",
+      "愿你心里有光，眼里有星。",
+      "愿每一个小小的心愿，",
+      "都在未来的某天悄悄实现。",
     ].forEach((s, i) => text(s, 590 + i * 68, 56));
-    ["Here’s to you,", "and all the beautiful moments yet to come."].forEach(
-      (s, i) => text(s, 843 + i * 64, 56),
+    ["愿你一直勇敢，", "也一直被爱。"].forEach((s, i) =>
+      text(s, 843 + i * 64, 56),
     );
-    text("With love ♥", 1060, 56, "#a17b52", '"Parisienne", cursive');
+    text("爱与魔法，都送给你。", 1060, 56, "#a17b52", '"Birthday Serif"');
   } else if (face === "inside") {
     star(880, 380, 29);
-    text("Make a wish.", 650, 155, "#937352", '"Parisienne", cursive');
-    text("T H I S   M O M E N T   I S   Y O U R S", 810, 25, "#a58b6c");
+    text("许个愿吧。", 650, 155, "#937352", '"Birthday Serif"');
+    text("今 天 ， 只 属 于 你", 810, 25, "#a58b6c");
   } else {
     text(
-      "Made with love, for Han.",
+      "只为" + story.person.name + "，认真准备。",
       690,
       65,
       "#a58b6c",
-      '"Parisienne", cursive',
+      '"Birthday Serif"',
     );
   }
   const texture = new THREE.CanvasTexture(canvas);
