@@ -1,0 +1,41 @@
+.pride-rock-stage {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  isolation: isolate;
+  background: radial-gradient(ellipse at 35% 43%, #fac87615, transparent 62%);
+  transition: background-color 1.4s;
+}
+.pride-rock-stage--stars {
+  background-color: #15173066;
+}
+.pride-rock-canvas {
+  position: absolute;
+  inset: 0;
+}
+.pride-rock-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.pride-rock-status {
+  position: absolute;
+  top: 44%;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: #ead5b5;
+  font-family: "Birthday Serif", serif;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+@media (max-width: 700px) {
+  .pride-rock-stage {
+    height: 310px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pride-rock-stage {
+    transition: none;
+  }
+}

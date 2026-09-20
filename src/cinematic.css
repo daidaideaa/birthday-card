@@ -299,11 +299,6 @@
 .experience .cinema-piano .piano-night::after {
   display: none;
 }
-.night-perspective {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
 .night-lamplight {
   position: absolute;
   inset: 0;
@@ -312,41 +307,6 @@
 }
 .is-dancing .night-lamplight {
   animation: cinema-light 0.8s ease-out;
-}
-.animated-atlas {
-  display: block;
-  background-repeat: no-repeat;
-  aspect-ratio: 1;
-}
-.film-dancers {
-  position: absolute;
-  width: min(100%, 360px);
-  bottom: 30px;
-  left: -10%;
-  filter: drop-shadow(0 5px 3px #10142260) saturate(0.8) brightness(0.84);
-  transform-origin: 50% 90%;
-}
-.is-dancing .film-dancers {
-  animation: dance-drift 3.76s ease-in-out infinite;
-}
-@keyframes dance-drift {
-  0%,
-  100% {
-    transform: translateX(-4px) rotate(-0.5deg);
-  }
-  50% {
-    transform: translateX(10px) rotate(0.5deg);
-  }
-}
-.dance-floor-shadow {
-  position: absolute;
-  width: 180px;
-  height: 25px;
-  left: 30px;
-  bottom: 62px;
-  background: #100e1e66;
-  border-radius: 50%;
-  filter: blur(7px);
 }
 .night-caption {
   position: absolute;
@@ -437,7 +397,7 @@
   margin-top: 22px;
 }
 
-/* 草原结尾：狮子、蛋糕与小狗共享夕阳色温。 */
+/* 草原结尾：荣耀石、蛋糕与小狗共享暖色照明。 */
 .experience.chapter-finalWish {
   min-height: 980px;
   height: 100svh;
@@ -479,162 +439,6 @@
   bottom: 75px;
   right: 2%;
 }
-.experience .cinema-savanna {
-  position: absolute;
-  left: 0;
-  bottom: 90px;
-  width: 32%;
-  height: 350px;
-  z-index: 5;
-  pointer-events: none;
-}
-.lion-stage {
-  position: relative;
-  height: 310px;
-}
-.lion-character {
-  pointer-events: auto;
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  transform: none !important;
-}
-.lion-character:disabled {
-  opacity: 1;
-  cursor: default;
-}
-.film-lion {
-  width: 100%;
-  max-width: 390px;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  filter: brightness(0.82) saturate(0.78) drop-shadow(0 8px 6px #341c2050);
-  transform-origin: 50% 90%;
-}
-.lion-idle .film-lion {
-  animation: lion-breath 4s ease-in-out infinite;
-}
-@keyframes lion-breath {
-  50% {
-    transform: scale(1.005, 1.013) rotate(-0.2deg);
-  }
-}
-.lion-run .lion-stage {
-  animation: lion-cinema-run 3.6s ease-out both;
-}
-@keyframes lion-cinema-run {
-  0% {
-    transform: translate(-65%, 16%) scale(0.85);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  78% {
-    transform: translate(0, -2%) scale(1);
-  }
-  100% {
-    transform: none;
-  }
-}
-.lion-roar .film-lion {
-  animation: lion-lift 1.6s ease;
-}
-@keyframes lion-lift {
-  35%,
-  65% {
-    transform: translateY(-3px) scale(1.01);
-  }
-}
-.lion-contact-shadow {
-  position: absolute;
-  bottom: 12%;
-  left: 12%;
-  width: 73%;
-  height: 8%;
-  background: #2b1d24a1;
-  border-radius: 50%;
-  filter: blur(7px);
-}
-.lion-controls {
-  display: flex;
-  gap: 14px;
-  justify-content: center;
-  position: relative;
-  z-index: 5;
-}
-.lion-controls button {
-  pointer-events: auto;
-  border: 0;
-  background: #1f171580;
-  color: #ecd0a8;
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid #e4c08c35;
-  padding: 9px 5px;
-  font-size: 11px;
-  white-space: nowrap;
-}
-.lion-controls button:disabled {
-  opacity: 0.75;
-}
-.lion-dust {
-  position: absolute;
-  bottom: 0;
-  left: 20%;
-  width: 60%;
-  height: 30%;
-  pointer-events: none;
-  opacity: 0;
-}
-.lion-run .lion-dust {
-  opacity: 1;
-}
-.lion-dust i {
-  position: absolute;
-  width: 32px;
-  height: 20px;
-  border-radius: 50%;
-  background: #c5a16f3d;
-  filter: blur(7px);
-  animation: lion-dust 1s ease-out 3;
-}
-@keyframes lion-dust {
-  to {
-    transform: translate(-85px, -10px) scale(2.6);
-    opacity: 0;
-  }
-}
-.savanna-grass {
-  position: absolute;
-  bottom: 15px;
-  inset-inline: 0;
-  height: 100px;
-  opacity: 0.75;
-}
-.savanna-grass i {
-  position: absolute;
-  bottom: 0;
-  width: 10px;
-  border-right: 2px solid #847451;
-  border-radius: 0 80% 0 0;
-  transform-origin: bottom;
-  animation: grass-breeze 4s ease-in-out infinite alternate;
-}
-.lion-roar .savanna-grass i {
-  animation-duration: 0.35s;
-}
-@keyframes grass-breeze {
-  from {
-    transform: rotate(-9deg);
-  }
-  to {
-    transform: rotate(15deg);
-  }
-}
 
 @media (min-width: 1600px) {
   .experience .hero-copy {
@@ -649,10 +453,6 @@
   .experience.chapter-letter .letter-chapter {
     grid-template-columns: 490px 1fr;
     gap: 10%;
-  }
-  .film-dancers {
-    width: 410px;
-    max-width: none;
   }
 }
 @media (max-width: 1100px) and (min-width: 701px) {
@@ -681,23 +481,8 @@
   .experience .cinema-piano {
     min-height: 600px;
   }
-  .film-dancers {
-    width: 285px;
-    left: 0;
-  }
   .night-caption {
     font-size: 13px;
-  }
-  .experience .cinema-savanna {
-    width: 31%;
-    bottom: 70px;
-  }
-  .lion-controls {
-    gap: 4px;
-    flex-wrap: wrap;
-  }
-  .lion-controls button {
-    font-size: 10px;
   }
   .experience.chapter-finalWish .pet-companion.pet-duo {
     right: 0;
@@ -844,16 +629,6 @@
   .experience.chapter-letter .world-shade {
     background: linear-gradient(#1b1b3b50, #1e1c3255 35%, #141525d9 75%);
   }
-  .film-dancers {
-    width: 250px;
-    max-width: none;
-    left: calc(50% - 135px);
-    bottom: -3px;
-  }
-  .dance-floor-shadow {
-    left: calc(50% - 90px);
-    bottom: 18px;
-  }
   .night-caption {
     font-size: 13px;
     top: 2px;
@@ -891,30 +666,6 @@
   .experience.chapter-finalWish .world-shade {
     background: linear-gradient(#1b152688, #351f2538 45%, #1b1526ef 86%);
   }
-  .experience .cinema-savanna {
-    position: relative;
-    bottom: auto;
-    left: auto;
-    width: 270px;
-    height: 290px;
-    margin: 18px auto 0;
-  }
-  .lion-stage {
-    height: 245px;
-  }
-  .film-lion {
-    max-width: 270px;
-    bottom: 0;
-  }
-  .lion-contact-shadow {
-    bottom: 10%;
-  }
-  .lion-controls {
-    gap: 12px;
-  }
-  .lion-controls button {
-    font-size: 10px;
-  }
   .experience.chapter-finalWish .pet-companion.pet-duo {
     position: relative;
     bottom: auto;
@@ -935,15 +686,8 @@
   }
   .cinema-atmosphere,
   .scene-response,
-  .night-petals,
-  .lion-dust {
+  .night-petals {
     display: none;
-  }
-  .film-dancers,
-  .film-lion,
-  .lion-stage,
-  .savanna-grass i {
-    animation: none !important;
   }
   .experience .paper-page {
     filter: none;
@@ -961,5 +705,178 @@
   .experience.chapter-letter .letter-chapter {
     grid-template-columns: minmax(280px, 1fr) minmax(270px, 1fr);
     gap: 20px;
+  }
+}
+
+/* The finale is a shared stage: Pride Rock and the candle stay together. */
+.experience.chapter-finalWish {
+  height: auto;
+  min-height: 100svh;
+  padding-bottom: 110px;
+}
+.experience.chapter-finalWish .memory-book {
+  max-width: 1120px;
+}
+.birthday-finale-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
+  align-items: center;
+  gap: 16px;
+  margin: 24px auto 0;
+}
+.pride-story {
+  position: relative;
+  min-width: 0;
+  text-align: left;
+  isolation: isolate;
+}
+.pride-story::before {
+  position: absolute;
+  content: "";
+  z-index: -1;
+  inset: 0 -10% 8%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #ecc58120, transparent 65%);
+  transition: background 1.5s;
+}
+.pride-story.phase-stars::before {
+  background: radial-gradient(ellipse, #292852d9, #13162970 45%, transparent 70%);
+}
+.pride-story-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-inline: 5%;
+  gap: 16px;
+}
+.pride-eyebrow {
+  color: #f1d5a5;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+}
+.pride-story-progress {
+  display: flex;
+  gap: 6px;
+}
+.pride-story-progress i {
+  width: 22px;
+  height: 2px;
+  background: #efd8b13b;
+  transition: background 600ms;
+}
+.pride-story-progress i.active {
+  background: #f6dab0;
+}
+.pride-caption {
+  min-height: 96px;
+  margin-top: -14px;
+  padding: 0 5%;
+  position: relative;
+  text-shadow: 0 2px 14px #211522;
+}
+.pride-caption h3 {
+  font-family: "Birthday Serif", serif;
+  font-size: clamp(21px, 2vw, 28px);
+  font-weight: 500;
+  color: #ffe7bc;
+  letter-spacing: 0.08em;
+  margin: 0 0 10px;
+}
+.pride-caption p {
+  color: #f2d8b7;
+  font-size: 12px;
+  line-height: 1.95;
+  max-width: 36em;
+  margin: 0;
+}
+.pride-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  padding-inline: 5%;
+}
+.pride-controls button {
+  color: #f3d7b1;
+  background: #17142155;
+  border: 0;
+  border-bottom: 1px solid #c4a98355;
+  min-height: 44px;
+  padding: 8px 6px;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.pride-controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.pride-controls button:focus-visible {
+  outline: 2px solid #f1d5a5;
+  outline-offset: 4px;
+}
+.experience.chapter-finalWish .pet-companion.pet-duo {
+  position: relative;
+  inset: auto;
+  margin: 8px 4% 0 auto;
+}
+.experience.chapter-finalWish .wish-complete {
+  min-height: 0;
+  padding-top: 30px;
+}
+.experience.chapter-finalWish .wish-complete h2 {
+  font-size: clamp(38px, 5vw, 62px);
+}
+.wish-complete ~ .birthday-finale-stage {
+  grid-template-columns: 1fr;
+  max-width: 640px;
+}
+.birthday-candle-stage {
+  min-width: 0;
+}
+.birthday-candle-stage .cinema-cake {
+  max-width: 100%;
+}
+.experience .cinema-piano .piano-night {
+  isolation: isolate;
+}
+.experience.chapter-letter .jazz-background {
+  opacity: 0.9;
+  filter: saturate(0.85);
+}
+.experience .cinema-piano .night-caption {
+  z-index: 2;
+  top: 8px;
+  right: 12px;
+  font-size: 13px;
+  pointer-events: none;
+}
+@media (max-width: 760px) {
+  .birthday-finale-stage {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    margin-top: 30px;
+  }
+  .pride-story {
+    width: 100%;
+    max-width: 530px;
+    margin-inline: auto;
+  }
+  .pride-caption {
+    min-height: 88px;
+  }
+  .pride-caption h3 {
+    font-size: 22px;
+  }
+  .experience.chapter-finalWish .pet-companion.pet-duo {
+    margin: 8px auto 0;
+  }
+  .experience.chapter-finalWish .memory-book {
+    max-width: 610px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pride-story::before,
+  .pride-story-progress i {
+    transition: none;
   }
 }

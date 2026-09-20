@@ -1,0 +1,7 @@
+Lion cub and adult lion derivative models
+Based on "Baby Lion" by kenchoo
+https://sketchfab.com/3d-models/baby-lion-c9599625dc474262aab754d7b63841f5
+License: Creative Commons Attribution 4.0
+https://creativecommons.org/licenses/by/4.0/
+
+Changes: adult body proportions, sculpted mane, new skeletal Idle / Walk / Roar / Bow animation clips, file conversion. Original artist is not associated with or endorsing this project.

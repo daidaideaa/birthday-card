@@ -9,10 +9,12 @@ export function ChapterContent({
   onEnding,
   onNext,
   onPiano,
+  onRoar,
 }: {
   controller: StoryController;
   snapshot: StorySnapshot;
   onPiano: (note?: number) => void;
+  onRoar: () => void;
   onReplay: () => void;
   onEnding: () => void;
   onNext: () => void;
@@ -39,6 +41,7 @@ export function ChapterContent({
           snapshot={snapshot}
           onReplay={onReplay}
           onEnding={onEnding}
+          onRoar={onRoar}
         />
       );
     case "birthday":

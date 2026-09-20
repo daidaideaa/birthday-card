@@ -2,16 +2,19 @@ import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 import type { StoryController, StorySnapshot } from "../StoryController";
 import { CakeViewport } from "../../scene/CakeViewport";
+import { SavannaLife } from "../../scene/CinemaVignettes";
 export function FinalWish({
   controller,
   snapshot,
   onReplay,
   onEnding,
+  onRoar,
 }: {
   controller: StoryController;
   snapshot: StorySnapshot;
   onReplay: () => void;
   onEnding: () => void;
+  onRoar: () => void;
 }) {
   const state = snapshot.finalState;
   const ending = useRef(onEnding);
@@ -33,15 +36,6 @@ export function FinalWish({
           {controller.data.finalWish && (
             <p className="personal-wish">{controller.data.finalWish}</p>
           )}
-          <CakeViewport
-            state={state}
-            onExtinguish={() => controller.extinguish()}
-          />
-          <p className="candle-instruction" role="status" aria-live="polite">
-            {state === "lit"
-              ? "准备好了，就轻轻点一下烛火。"
-              : "愿望已经出发，幸福正在路上。"}
-          </p>
         </>
       ) : (
         <div className="wish-complete">
@@ -70,6 +64,22 @@ export function FinalWish({
           </button>
         </div>
       )}
+      <div className="birthday-finale-stage">
+        <SavannaLife onRoar={onRoar} celebrating={state === "complete"} />
+        {state !== "complete" && (
+          <div className="birthday-candle-stage">
+            <CakeViewport
+              state={state}
+              onExtinguish={() => controller.extinguish()}
+            />
+            <p className="candle-instruction" role="status" aria-live="polite">
+              {state === "lit"
+                ? "准备好了，就轻轻点一下烛火。"
+                : "愿望已经出发，幸福正在路上。"}
+            </p>
+          </div>
+        )}
+      </div>
     </article>
   );
 }

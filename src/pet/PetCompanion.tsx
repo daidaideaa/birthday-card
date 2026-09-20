@@ -118,6 +118,13 @@ export function PetCompanion({
       rim.position.set(3, 3, -3);
       world.add(rim);
       dogs.current = [new TeddyDog(mobile, 0), new TeddyDog(mobile, 1)];
+      void Promise.all(dogs.current.map((dog) => dog.ready)).catch(() => {
+        if (!stopped) {
+          stopped = true;
+          cancelAnimationFrame(frame);
+          setFailed(true);
+        }
+      });
       dogs.current.forEach((dog, i) => {
         const place = new THREE.Group();
         place.position.set(i ? 0.53 : -0.52, 0, i ? -0.09 : 0.06);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { MagicWand, SavannaLife } from "./scene/CinemaVignettes";
+import { MagicWand } from "./scene/CinemaVignettes";
 import { BirthdayScene } from "./scene/BirthdayScene";
 import { AudioController } from "./scene/AudioController";
 import type { CardState } from "./scene/CardMotion";
@@ -362,6 +362,13 @@ export default function App() {
               .then(() => audio.current?.playPiano(note))
               .catch(() => setAudioError(true));
           }}
+          onRoar={() => {
+            emit("roar");
+            void audio.current
+              ?.unlock()
+              .then(() => audio.current?.roar())
+              .catch(() => setAudioError(true));
+          }}
           onEnding={() => {
             emit("wish");
             unlock();
@@ -378,19 +385,6 @@ export default function App() {
             unlock();
             setStarted(true);
             scene.current?.castSpell();
-          }}
-        />
-      )}
-      {chapter === "finalWish" && (
-        <SavannaLife
-          celebrating={snapshot.finalState === "complete"}
-          onRoar={() => {
-            emit("roar");
-            unlock();
-            void audio.current
-              ?.unlock()
-              .then(() => audio.current?.roar())
-              .catch(() => setAudioError(true));
           }}
         />
       )}
@@ -481,7 +475,7 @@ export default function App() {
           <h2>给{story.person.name}的生日奇遇</h2>
           <p>
             四个片段：{names.join("、")}
-            。魔法烛光与草原夕阳，来自对《哈利波特》和《狮子王》的喜爱。
+            。魔法烛光、爵士夜色与荣耀石，来自对《哈利波特》《爱乐之城》和《狮子王》的喜爱。
           </p>
           {story.preview && (
             <p>
@@ -489,11 +483,15 @@ export default function App() {
             </p>
           )}
           <p>
-            风景照片来自 Unsplash；城堡参考图来自 Business Insider；草原照片来自
-            The Great Projects。素材来源见项目说明。
+            风景照片来自 Unsplash，场景背景为生成绘画。幼狮与钢琴使用公开授权模型，作者与许可见项目素材说明。
           </p>
           <p>
-            泰迪为本项目制作的三维角色。点击它可以摸摸；摄像头只用于本地手势识别，不会上传画面。
+            幼狮：<a href="https://sketchfab.com/3d-models/baby-lion-c9599625dc474262aab754d7b63841f5" target="_blank" rel="noreferrer">kenchoo</a>（<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>）；
+            钢琴：<a href="https://poly.pizza/m/7U-93vxPOER" target="_blank" rel="noreferrer">jeremy</a>（<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer">CC BY 3.0</a>）。
+            本项目调整了材质，制作成年狮衍生与新动作。舞者基础网格与服装来自 Quaternius（CC0）。
+          </p>
+          <p>
+            两只泰迪为本项目制作的三维角色，点击可以摸摸。摄像头只用于本地手势识别，不会上传画面。
           </p>
           <button className="primary" onClick={() => setCredits(false)}>
             继续这场奇遇

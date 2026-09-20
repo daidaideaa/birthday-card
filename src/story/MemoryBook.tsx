@@ -10,6 +10,7 @@ interface Props {
   onReplay: () => void;
   onEnding: () => void;
   onPiano: (note?: number) => void;
+  onRoar: () => void;
 }
 export function MemoryBook({
   controller,
@@ -17,6 +18,7 @@ export function MemoryBook({
   onReplay,
   onEnding,
   onPiano,
+  onRoar,
 }: Props) {
   const { index, direction, turn } = snapshot;
   const chapter = controller.chapters[index];
@@ -146,6 +148,7 @@ export function MemoryBook({
           onReplay={onReplay}
           onEnding={onEnding}
           onPiano={onPiano}
+          onRoar={onRoar}
           onNext={() => go(1)}
         />
       </PageTurn>

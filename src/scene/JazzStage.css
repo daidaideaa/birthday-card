@@ -1,0 +1,45 @@
+.cinema-piano .jazz-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  overflow: visible;
+  background: transparent;
+}
+.cinema-piano .jazz-stage__viewport {
+  width: 100%;
+  height: 420px;
+}
+.cinema-piano .jazz-stage__viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+.cinema-piano .jazz-stage__status {
+  position: absolute;
+  inset: 40% 24px auto;
+  text-align: center;
+  color: #f2dfbc;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.cinema-piano .jazz-stage__accessible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.cinema-piano .jazz-stage--error canvas {
+  opacity: 0.25;
+}
+@media (max-width: 600px) {
+  .cinema-piano .jazz-stage {
+    min-height: 290px;
+  }
+  .cinema-piano .jazz-stage__viewport {
+    height: 290px;
+  }
+}
