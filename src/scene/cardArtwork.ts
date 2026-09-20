@@ -1,208 +1,233 @@
 import * as THREE from "three";
 import { story } from "../content/story";
+
 type Face = "cover" | "inside" | "message" | "back";
+const WIDTH = 1760;
+const HEIGHT = 1240;
+
 export function createArtwork(face: Face) {
   const canvas = document.createElement("canvas");
-  canvas.width = 1760;
-  canvas.height = 1240;
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
   const c = canvas.getContext("2d")!;
-  c.fillStyle = "#fff5e3";
-  c.fillRect(0, 0, 1760, 1240);
-  // Fine, deterministic cotton-paper flecks; never a downloaded image.
+  const dark = face === "cover" || face === "back";
+  const field = c.createRadialGradient(770, 430, 80, 880, 620, 1080);
+  field.addColorStop(0, dark ? "#50252f" : "#fff9e9");
+  field.addColorStop(0.6, dark ? "#30151f" : "#f9efdc");
+  field.addColorStop(1, dark ? "#140f1a" : "#e7d4b4");
+  c.fillStyle = field;
+  c.fillRect(0, 0, WIDTH, HEIGHT);
+
+  // Fine deterministic fibres keep the surface tactile at close range.
   let seed = 17;
-  for (let i = 0; i < 24000; i++) {
+  for (let i = 0; i < 34000; i++) {
     seed = (seed * 1664525 + 1013904223) >>> 0;
-    const x = seed % 1760;
+    const x = seed % WIDTH;
     seed = (seed * 1664525 + 1013904223) >>> 0;
-    const y = seed % 1240;
-    c.fillStyle = i % 2 ? "rgba(129,94,58,.025)" : "rgba(255,255,255,.18)";
-    c.fillRect(x, y, 1.5, 1.5);
+    const y = seed % HEIGHT;
+    c.fillStyle = dark
+      ? i % 2
+        ? "rgba(235,174,155,.027)"
+        : "rgba(0,0,0,.06)"
+      : i % 2
+        ? "rgba(129,94,58,.035)"
+        : "rgba(255,255,255,.24)";
+    c.fillRect(x, y, 1 + (i % 3), 1);
   }
-  c.strokeStyle = "#b99a65";
-  c.lineWidth = 2;
-  c.strokeRect(55, 55, 1650, 1130);
-  c.strokeStyle = "rgba(185,154,101,.35)";
-  c.strokeRect(68, 68, 1624, 1104);
+  const gold = c.createLinearGradient(280, 80, 1400, 1200);
+  gold.addColorStop(0, "#94703d");
+  gold.addColorStop(0.28, "#f5dba0");
+  gold.addColorStop(0.48, "#bd9357");
+  gold.addColorStop(0.7, "#f7e5b4");
+  gold.addColorStop(1, "#957242");
+  const ink = dark ? gold : "#7e5c38";
   const text = (
     s: string,
     y: number,
     size: number,
-    color = "#493033",
-    family = '"Birthday Serif"',
+    color: string | CanvasGradient = ink,
   ) => {
     c.fillStyle = color;
     c.textAlign = "center";
-    c.font = `${size}px ${family}`;
-    c.fillText(s, 880, y);
+    c.font = `${size}px "Birthday Serif", serif`;
+    c.fillText(s, WIDTH / 2, y);
   };
-  const star = (x: number, y: number, r: number) => {
+  const star = (x: number, y: number, r: number, opacity = 1) => {
     c.save();
+    c.globalAlpha = opacity;
     c.translate(x, y);
-    c.fillStyle = "#be9a58";
+    c.fillStyle = ink;
     c.beginPath();
     for (let i = 0; i < 8; i++) {
       const a = (i * Math.PI) / 4;
-      const rr = i % 2 ? r * 0.25 : r;
+      const rr = i % 2 ? r * 0.18 : r;
       c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
     }
     c.closePath();
     c.fill();
     c.restore();
   };
-  if (face === "cover") {
-    text("写给  " + story.person.name, 188, 30, "#957950");
-    text("生日快乐", 330, 100, "#755353", '"Birthday Serif"');
-    // Layered patisserie illustration, with soft painted shading and piped icing.
+  const line = (points: number[][], alpha = 1) => {
     c.save();
-    c.translate(880, 720);
-    c.fillStyle = "rgba(117,77,66,.10)";
+    c.globalAlpha = alpha;
+    c.strokeStyle = ink;
+    c.lineWidth = 1.7;
     c.beginPath();
-    c.ellipse(0, 233, 345, 28, 0, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = "#d1b282";
+    points.forEach(([x, y], i) => (i === 0 ? c.moveTo(x, y) : c.lineTo(x, y)));
+    c.stroke();
+    c.restore();
+  };
+  c.strokeStyle = ink;
+  c.lineWidth = 2;
+  c.strokeRect(58, 58, WIDTH - 116, HEIGHT - 116);
+  c.globalAlpha = 0.45;
+  c.lineWidth = 1;
+  c.strokeRect(74, 74, WIDTH - 148, HEIGHT - 148);
+  c.globalAlpha = 1;
+
+  // Engraved botanical corners, drawn into the stock rather than pasted on.
+  for (const [x, y, sx, sy] of [
+    [108, 108, 1, 1],
+    [1652, 108, -1, 1],
+    [108, 1132, 1, -1],
+    [1652, 1132, -1, -1],
+  ]) {
+    c.save();
+    c.translate(x, y);
+    c.scale(sx, sy);
+    c.strokeStyle = ink;
+    c.lineWidth = 2;
     c.beginPath();
-    c.ellipse(0, 218, 329, 30, 0, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = "#e5d7ed";
-    c.beginPath();
-    c.ellipse(0, 209, 317, 26, 0, 0, Math.PI * 2);
-    c.fill();
-    const layer = (
-      x: number,
-      y: number,
-      w: number,
-      h: number,
-      color: string,
-    ) => {
-      const g = c.createLinearGradient(x, y, x + w, y);
-      g.addColorStop(0, color);
-      g.addColorStop(0.55, color);
-      g.addColorStop(1, "#c88391");
-      c.fillStyle = g;
-      c.beginPath();
-      c.roundRect(x, y, w, h, 20);
-      c.fill();
-      c.strokeStyle = "rgba(255,242,219,.85)";
-      c.lineWidth = 14;
-      c.beginPath();
-      c.moveTo(x + 8, y + h * 0.58);
-      c.lineTo(x + w - 8, y + h * 0.58);
-      c.stroke();
-      c.fillStyle = "#fff0d7";
-      c.beginPath();
-      c.moveTo(x, y + 14);
-      c.bezierCurveTo(x, y - 22, x + w, y - 22, x + w, y + 14);
-      c.lineTo(x + w, y + 44);
-      for (let j = 0; j < 10; j++) {
-        const xx = x + w - (j * w) / 10;
-        c.quadraticCurveTo(
-          xx - w / 20,
-          y + 86 + (j % 3) * 7,
-          xx - w / 10,
-          y + 44,
-        );
-      }
-      c.closePath();
-      c.fill();
-      c.fillStyle = "#fff8e9";
-      c.beginPath();
-      c.ellipse(x + w / 2, y + 9, w / 2, 25, 0, 0, Math.PI * 2);
-      c.fill();
-    };
-    layer(-274, 40, 548, 170, "#e9a8b0");
-    layer(-204, -95, 408, 146, "#d9c5e6");
-    const colors = ["#97b6c6", "#dd939e", "#c4a1cb", "#c8ad70", "#8aafbb"];
+    c.moveTo(0, 168);
+    c.bezierCurveTo(0, 65, 26, 22, 165, 0);
+    c.stroke();
     for (let i = 0; i < 5; i++) {
-      const x = (i - 2) * 65,
-        y = -211 - (i % 2) * 18;
-      c.fillStyle = colors[i];
+      const t = i * 21;
       c.beginPath();
-      c.roundRect(x - 9, y, 18, -90 - y, 4);
-      c.fill();
-      c.strokeStyle = "#fff2de";
-      c.lineWidth = 3;
-      c.beginPath();
-      c.moveTo(x - 8, y + 22);
-      c.lineTo(x + 8, y + 10);
+      c.ellipse(14 + t, 91 - t * 0.62, 19, 5.5, -0.82, 0, Math.PI * 2);
       c.stroke();
-      c.fillStyle = "#ddb56d";
-      c.beginPath();
-      c.moveTo(x, y - 43);
-      c.bezierCurveTo(x - 23, y - 17, x - 10, y - 4, x, y - 5);
-      c.bezierCurveTo(x + 16, y - 6, x + 14, y - 22, x, y - 43);
-      c.fill();
-      c.fillStyle = "#fff1ba";
-      c.beginPath();
-      c.ellipse(x, y - 18, 5, 9, 0, 0, Math.PI * 2);
-      c.fill();
-    }
-    for (let i = 0; i < 13; i++) {
-      c.fillStyle = i % 2 ? "#d27b8b" : "#e8b4ba";
-      c.beginPath();
-      c.arc(-250 + i * 42, 200, 9, 0, Math.PI * 2);
-      c.fill();
-    }
-    for (const [x, y] of [
-      [-180, 0],
-      [165, -6],
-      [-243, 131],
-      [221, 130],
-    ]) {
-      c.fillStyle = "#ce7586";
-      c.beginPath();
-      c.ellipse(x, y, 14, 20, 0.3, 0, Math.PI * 2);
-      c.fill();
-      c.fillStyle = "#799e8e";
-      c.beginPath();
-      c.ellipse(x + 6, y - 18, 12, 4, -0.5, 0, Math.PI * 2);
-      c.fill();
     }
     c.restore();
-    for (const [x, y, r] of [
-      [390, 590, 19],
-      [1310, 536, 24],
-      [1410, 833, 17],
-      [426, 883, 13],
-      [1150, 410, 13],
-    ])
-      star(x, y, r);
-    for (let i = 0; i < 18; i++) {
-      const x = 310 + ((i * 173) % 1150),
-        y = 440 + ((i * 89) % 500);
-      c.fillStyle = ["#d3a0af", "#b6bfce", "#ceb587"][i % 3];
+  }
+
+  if (face === "cover") {
+    // A celestial seal leaves the typography as the unmistakable focal point.
+    c.strokeStyle = gold;
+    c.lineWidth = 2.1;
+    for (const radius of [77, 92]) {
       c.beginPath();
-      c.arc(x, y, 3 + (i % 3), 0, Math.PI * 2);
-      c.fill();
+      c.arc(880, 248, radius, 0, Math.PI * 2);
+      c.stroke();
     }
-    text("愿你被温柔与惊喜包围", 1080, 34, "#997e68", '"Birthday Serif"');
+    for (let i = 0; i < 32; i++) {
+      const a = (i / 32) * Math.PI * 2;
+      const inner = i % 4 ? 99 : 101;
+      const outer = i % 4 ? 106 : 117;
+      line(
+        [
+          [880 + Math.cos(a) * inner, 248 + Math.sin(a) * inner],
+          [880 + Math.cos(a) * outer, 248 + Math.sin(a) * outer],
+        ],
+        0.65,
+      );
+    }
+    star(880, 248, 54);
+    star(825, 213, 9);
+    star(925, 286, 8);
+    line(
+      [
+        [370, 247],
+        [676, 247],
+      ],
+      0.4,
+    );
+    line(
+      [
+        [1084, 247],
+        [1390, 247],
+      ],
+      0.4,
+    );
+    star(358, 247, 9);
+    star(1402, 247, 9);
+    text(story.person.name, 590, 174, gold);
+    text("生日快乐", 768, 100, gold);
+    line(
+      [
+        [664, 860],
+        [835, 860],
+      ],
+      0.6,
+    );
+    line(
+      [
+        [925, 860],
+        [1096, 860],
+      ],
+      0.6,
+    );
+    star(880, 860, 15);
+    text("爱与魔法，都送给你", 994, 36, "#d4b783");
+    text("愿你的每一个明天，都闪闪发光", 1071, 27, "#a88a71");
+    // Small constellations along the margins frame the words.
+    for (const [x, y, r] of [
+      [249, 411, 9],
+      [308, 521, 4],
+      [220, 663, 14],
+      [337, 788, 6],
+      [1498, 413, 13],
+      [1420, 563, 5],
+      [1515, 701, 8],
+      [1437, 842, 11],
+    ])
+      star(x, y, r, 0.8);
+    line(
+      [
+        [249, 411],
+        [308, 521],
+        [220, 663],
+        [337, 788],
+      ],
+      0.17,
+    );
+    line(
+      [
+        [1498, 413],
+        [1420, 563],
+        [1515, 701],
+        [1437, 842],
+      ],
+      0.17,
+    );
   } else if (face === "message") {
-    text("亲爱的" + story.person.name, 235, 68, "#8f6461", '"Birthday Serif"');
-    text("生日快乐。", 405, 130, "#7b4c50", '"Birthday Serif"');
-    star(880, 483, 15);
+    text("亲爱的" + story.person.name, 224, 65, "#775446");
+    text("生日快乐。", 400, 130, "#683b40");
+    star(880, 479, 17);
     [
       "愿你心里有光，眼里有星。",
       "愿每一个小小的心愿，",
       "都在未来的某天悄悄实现。",
-    ].forEach((s, i) => text(s, 590 + i * 68, 56));
+    ].forEach((s, i) => text(s, 588 + i * 70, 53, "#62483c"));
     ["愿你一直勇敢，", "也一直被爱。"].forEach((s, i) =>
-      text(s, 843 + i * 64, 56),
+      text(s, 844 + i * 68, 54, "#62483c"),
     );
-    text("爱与魔法，都送给你。", 1060, 56, "#a17b52", '"Birthday Serif"');
+    text("爱与魔法，都送给你。", 1066, 48, "#9c7548");
   } else if (face === "inside") {
-    star(880, 380, 29);
-    text("许个愿吧。", 650, 155, "#937352", '"Birthday Serif"');
-    text("今 天 ， 只 属 于 你", 810, 25, "#a58b6c");
+    c.strokeStyle = "#b5945d";
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.arc(880, 403, 112, 0, Math.PI * 2);
+    c.stroke();
+    star(880, 403, 49);
+    text("许个愿吧。", 742, 148, "#8b6944");
+    text("今 天 ， 星 光 为 你 而 来", 891, 34, "#a38b68");
   } else {
-    text(
-      "只为" + story.person.name + "，认真准备。",
-      690,
-      65,
-      "#a58b6c",
-      '"Birthday Serif"',
-    );
+    star(880, 445, 38);
+    text("只为" + story.person.name + "，认真准备。", 679, 62);
+    text("愿你一直被爱", 798, 32, "#c1a67a");
   }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  texture.anisotropy = 8;
   return texture;
 }

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { AnimatedAtlas } from "./AnimatedAtlas";
+import { reducedMotion } from "../utils/device";
 
 export function MagicWand({
   onCast,
@@ -35,163 +37,193 @@ export function MagicWand({
 }
 
 export function PianoDance({ onPlay }: { onPlay: (note?: number) => void }) {
-  const [dancing, setDancing] = useState(false);
-  const [pressed, setPressed] = useState<number | null>(null);
-  const timer = useRef<number | undefined>(undefined);
-  const keyTimer = useRef<number | undefined>(undefined);
+  const [dancing, setDancing] = useState(false),
+    [pressed, setPressed] = useState<number | null>(null),
+    [beat, setBeat] = useState(0);
+  const timers = useRef<number[]>([]);
+  const clear = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  };
   useEffect(
     () => () => {
-      clearTimeout(timer.current);
-      clearTimeout(keyTimer.current);
+      timers.current.forEach(clearTimeout);
     },
     [],
   );
   const play = (note?: number) => {
-    onPlay(note);
+    clear();
     setDancing(true);
-    setPressed(note ?? null);
-    clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setDancing(false), 9000);
-    clearTimeout(keyTimer.current);
-    keyTimer.current = window.setTimeout(() => setPressed(null), 250);
+    const notes =
+      note === undefined ? [60, 64, 67, 71, 69, 67, 64, 62, 60] : [note];
+    notes.forEach((midi, i) => {
+      const strike = () => {
+        onPlay(midi);
+        setPressed(midi);
+        setBeat((b) => b + 1);
+      };
+      if (i === 0) strike();
+      else timers.current.push(window.setTimeout(strike, i * 470));
+    });
+    timers.current.push(
+      window.setTimeout(() => setPressed(null), notes.length * 470),
+    );
+    timers.current.push(
+      window.setTimeout(() => setDancing(false), notes.length * 470 + 800),
+    );
   };
   return (
     <aside
-      className={"piano-nook " + (dancing ? "is-dancing" : "")}
-      aria-label="星光下的钢琴与舞步"
+      className={"piano-nook cinema-piano " + (dancing ? "is-dancing" : "")}
+      aria-label="暮色中的双人舞与钢琴"
     >
       <div className="piano-night">
-        <span className="piano-moon" />
-        <svg viewBox="0 0 320 210" className="dance-scene" aria-hidden="true">
-          <g className="city-silhouette" fill="currentColor">
-            <path d="M0 174V147h12v15h9v-26h16v33h13v-20h22v24h33v-19h15v20h70v-25h19v22h18v-33h15v31h19v-15h13v20h18v-40h16v41h12v35H0Z" />
-          </g>
-          <path className="dance-ground" d="M25 185H300" />
-          <g className="streetlamp">
-            <path d="M61 180V39M45 43Q61 13 77 43ZM49 45H73L70 66H52Z" />
-            <circle cx="61" cy="50" r="18" className="lamp-glow" />
-          </g>
-          <g className="dancers">
-            <g className="dancer dancer-one">
-              <circle cx="165" cy="84" r="9" />
-              <path d="M162 95L157 124L179 138L170 105Z" />
-              <path
-                className="dance-limb"
-                d="M162 102L142 117L131 104M170 105L185 112L200 96M163 124L151 151L126 170M175 135L185 158L208 165"
-              />
-            </g>
-            <g className="dancer dancer-two">
-              <circle cx="211" cy="91" r="8" />
-              <path
-                className="dance-dress"
-                d="M209 101L202 122Q190 139 188 151Q210 162 230 144L215 120L217 103Z"
-              />
-              <path
-                className="dance-limb"
-                d="M208 105L197 101L191 82M217 108L239 105L251 88M204 151L205 170L219 177M218 152L236 164L259 150"
-              />
-            </g>
-          </g>
-          <g className="grand-piano">
-            <path d="M24 150H103Q104 131 82 129L42 124L24 130Z" />
-            <path d="M24 149V158H98V152M30 156L26 184M91 156L95 184M45 124L94 104L101 126Z" />
-          </g>
-        </svg>
+        <div className="night-perspective" />
+        <div className="night-lamplight" key={beat} />
+        <div className="dance-floor-shadow" />
+        <AnimatedAtlas
+          src="images/dance-atlas.webp"
+          columns={4}
+          rows={2}
+          frames={dancing ? [0, 1, 2, 3, 4, 5, 6, 7] : [0]}
+          fps={4.26}
+          playing={dancing}
+          className="film-dancers"
+        />
+        <div className="night-petals" aria-hidden="true">
+          {Array.from({ length: 10 }, (_, i) => (
+            <i
+              key={i}
+              style={{
+                left: 10 + i * 8 + "%",
+                animationDelay: -i * 1.8 + "s",
+                animationDuration: 12 + (i % 3) * 3 + "s",
+              }}
+            />
+          ))}
+        </div>
+        <span className="night-caption">今晚，星光也为你伴奏。</span>
       </div>
-      <div className="piano-keys" aria-label="小钢琴" data-navigation-lock>
-        {[60, 62, 64, 65, 67, 69, 71, 72].map((note, i) => (
-          <button
-            key={note}
-            className={pressed === note ? "pressed" : ""}
-            onClick={() => play(note)}
-            aria-label={
-              "弹奏 " + ["哆", "来", "咪", "发", "嗦", "拉", "西", "高音哆"][i]
-            }
-          >
-            <span>{["C", "D", "E", "F", "G", "A", "B", "C"][i]}</span>
-          </button>
-        ))}
-        {[0, 1, 3, 4, 5].map((i) => (
-          <span
-            key={i}
-            className="black-key"
-            style={{ left: (i + 1) * 12.5 - 3.4 + "%" }}
-            aria-hidden="true"
-          />
-        ))}
+      <div className="piano-console" data-navigation-lock>
+        <div className="piano-console-label">
+          <span>一首，送给你的夜曲</span>
+          <span aria-hidden="true">♫</span>
+        </div>
+        <div className="piano-keys" aria-label="可弹奏的钢琴">
+          {[60, 62, 64, 65, 67, 69, 71, 72].map((note, i) => (
+            <button
+              key={note}
+              className={pressed === note ? "pressed" : ""}
+              onClick={() => play(note)}
+              aria-label={
+                "弹奏" + ["哆", "来", "咪", "发", "嗦", "拉", "西", "高音哆"][i]
+              }
+            >
+              <span>{["C", "D", "E", "F", "G", "A", "B", "C"][i]}</span>
+            </button>
+          ))}
+          {[0, 1, 3, 4, 5].map((i) => (
+            <span
+              className="black-key"
+              key={i}
+              style={{ left: (i + 1) * 12.5 - 3.4 + "%" }}
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+        <button className="piano-play" onClick={() => play()}>
+          {dancing ? "♫ 再弹一次，让舞步继续" : "♫ 点亮夜色，弹一段小夜曲"}
+        </button>
       </div>
-      <button className="piano-play" onClick={() => play()}>
-        {dancing ? "♫ 星光正在跳舞" : "♫ 弹一段小夜曲"}
-      </button>
-      <p>愿我们都能，跳自己的舞。</p>
     </aside>
   );
 }
 
-export function SavannaLife({ onRoar }: { onRoar: () => void }) {
-  const [roaring, setRoaring] = useState(false);
+export function SavannaLife({
+  onRoar,
+  celebrating = false,
+}: {
+  onRoar: () => void;
+  celebrating?: boolean;
+}) {
+  const [action, setAction] = useState<"run" | "idle" | "roar">(
+    reducedMotion() ? "idle" : "run",
+  );
   const timer = useRef<number | undefined>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    timer.current = window.setTimeout(() => setAction("idle"), 3600);
+    return () => clearTimeout(timer.current);
+  }, []);
+  const roar = () => {
+    clearTimeout(timer.current);
+    setAction("roar");
+    onRoar();
+    timer.current = window.setTimeout(() => setAction("idle"), 1600);
+  };
   return (
-    <div className={"savanna-life " + (roaring ? "lion-roaring" : "")}>
-      <svg className="pride-rock" viewBox="0 0 460 220" aria-hidden="true">
-        <path d="M0 218L100 151L167 141L228 94L185 72L353 42L298 117L353 217Z" />
-        <path className="rock-lit" d="M167 141L228 94L185 72L353 42L272 93Z" />
-        <path
-          className="rock-shade"
-          d="M228 94L272 93L298 117L353 217L227 217Z"
-        />
-      </svg>
-      <button
-        className="lion-crossing"
-        onClick={() => {
-          if (roaring) return;
-          onRoar();
-          setRoaring(true);
-          clearTimeout(timer.current);
-          timer.current = window.setTimeout(() => setRoaring(false), 1500);
-        }}
-        aria-label="听狮子的回应"
-      >
-        <svg viewBox="0 0 220 150" className="lion-form" aria-hidden="true">
-          <path className="lion-tail" d="M64 70Q19 51 17 83Q14 106 4 96" />
-          <path
-            className="lion-body"
-            d="M49 62Q92 52 136 65L149 79L135 101Q103 93 78 99L47 85Z"
+    <div
+      className={
+        "savanna-life cinema-savanna lion-" +
+        action +
+        (celebrating ? " lion-celebrates" : "")
+      }
+    >
+      <div className="savanna-grass" aria-hidden="true">
+        {Array.from({ length: 17 }, (_, i) => (
+          <i
+            key={i}
+            style={{
+              left: i * 6 + "%",
+              height: 30 + ((i * 17) % 60) + "px",
+              animationDelay: -i * 0.31 + "s",
+            }}
           />
-          <g className="lion-leg back-leg">
-            <path d="M61 81L53 113L29 130L25 138L52 138L67 119L82 92Z" />
-          </g>
-          <g className="lion-leg front-leg">
-            <path d="M125 85L127 119L111 132L111 138H140L145 104L143 83Z" />
-          </g>
-          <g className="lion-leg back-leg second">
-            <path d="M71 88L83 119L72 133L75 138H96L99 119L84 86Z" />
-          </g>
-          <g className="lion-leg front-leg second">
-            <path d="M140 88L157 117L149 132L151 138H172L174 115L155 84Z" />
-          </g>
-          <g className="lion-head">
-            <path
-              className="lion-mane"
-              d="M124 56L131 34L151 22L172 23L189 43L184 67L173 90L152 108L127 89L120 72Z"
-            />
-            <path
-              className="lion-face"
-              d="M159 39L180 43L186 52L204 56L204 66L188 70L177 84L161 73Z"
-            />
-            <path className="lion-jaw" d="M176 69L197 68L199 77L184 81Z" />
-            <circle cx="180" cy="51" r="2.1" className="lion-eye" />
-          </g>
-        </svg>
-        <span className="lion-hint">
-          {roaring ? "把勇气，送给你。" : "听听它的生日祝福"}
-        </span>
-      </button>
-      <div className="roar-rings" aria-hidden="true">
-        <i />
-        <i />
-        <i />
+        ))}
+      </div>
+      <div className="lion-stage">
+        <div className="lion-contact-shadow" />
+        <button
+          className="lion-character"
+          onClick={roar}
+          disabled={action === "roar"}
+          aria-label="让狮子仰头吼叫，为生日送上勇气"
+        >
+          <AnimatedAtlas
+            src="images/lion-atlas.webp"
+            columns={4}
+            rows={3}
+            frames={
+              action === "run"
+                ? [0, 1, 2, 3, 4, 5, 6, 7]
+                : action === "roar"
+                  ? [9, 10, 10, 11]
+                  : [8]
+            }
+            fps={action === "roar" ? 2.5 : 12}
+            playing={action !== "idle"}
+            className="film-lion"
+          />
+        </button>
+        <div className="lion-dust" aria-hidden="true">
+          {Array.from({ length: 8 }, (_, i) => (
+            <i key={i} style={{ animationDelay: i * 0.13 + "s" }} />
+          ))}
+        </div>
+      </div>
+      <div className="lion-controls">
+        <button onClick={roar} disabled={action === "roar"}>
+          {action === "roar" ? "把勇气，送给你。" : "听一声，勇敢的祝福"}
+        </button>
+        <button
+          onClick={() => {
+            clearTimeout(timer.current);
+            setAction("run");
+            timer.current = window.setTimeout(() => setAction("idle"), 3600);
+          }}
+          disabled={action === "run"}
+        >
+          再跑一圈 ↗
+        </button>
       </div>
     </div>
   );

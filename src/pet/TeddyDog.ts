@@ -1,379 +1,385 @@
 import * as THREE from "three";
-import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 export type PuppyMood = "welcome" | "curious" | "sleepy" | "happy";
+export type PuppyCue = "magic" | "piano" | "roar" | "wish" | "play";
 
-class Curl extends THREE.Curve<THREE.Vector3> {
-  constructor() {
-    super();
-  }
-  getPoint(t: number, target = new THREE.Vector3()) {
-    const a = t * Math.PI * 2.8;
-    return target.set(Math.cos(a) * 0.7, Math.sin(a) * 0.7, (t - 0.5) * 1.4);
-  }
-}
-
-/** 自建骨骼泰迪：身体蒙皮与卷毛共用关节，动画不依赖远端模型。 */
+/** 两只独立关节驱动的小狗；细小毛簇取代旧版线圈毛发。 */
 export class TeddyDog {
   readonly root = new THREE.Group();
-  readonly bones: THREE.Bone[] = [];
-  readonly body: THREE.SkinnedMesh;
-  private spine: THREE.Bone;
-  private neck: THREE.Bone;
-  private ears: THREE.Bone[] = [];
-  private legs: THREE.Bone[] = [];
-  private ankles: THREE.Bone[] = [];
-  private tail: THREE.Bone;
+  private torso = new THREE.Group();
+  private head = new THREE.Group();
+  private ears: THREE.Group[] = [];
+  private legs: THREE.Group[] = [];
+  private knees: THREE.Group[] = [];
+  private tail = new THREE.Group();
   private eyes: THREE.Mesh[] = [];
-  private furMaterial = new THREE.MeshStandardMaterial({
-    color: "#ffffff",
-    roughness: 0.92,
-  });
-  private curlGeometry = new THREE.TubeGeometry(new Curl(), 8, 0.23, 3, false);
-  private geometries: THREE.BufferGeometry[] = [];
-  private skinParts: THREE.BufferGeometry[] = [];
-  private seed = 723;
-  private time = 0;
+  private tongue: THREE.Mesh;
+  private mouth = new THREE.Group();
+  private time: number;
   private moodTime = 0;
   private delight = 0;
-  private walkTime = 0;
+  private reaction = 0;
+  private reactionTime = 99;
+  private cue: PuppyCue = "magic";
   private sleep = 0;
-  private sit = 0;
+  private look = new THREE.Vector2();
+  private lookTarget = new THREE.Vector2();
   private mood: PuppyMood = "welcome";
-
-  constructor(lowDetail = false) {
-    this.spine = this.bone("spine", this.root, [0, 0, 0]);
-    this.neck = this.bone("neck", this.spine, [0, 1.48, 0.45]);
-    this.tail = this.bone("tail", this.spine, [0, 1.05, -0.62]);
-    const density = lowDetail ? 0.52 : 1;
-    this.coat(
-      this.spine,
-      [0, 0.99, -0.02],
-      [0.43, 0.49, 0.65],
-      Math.round(2100 * density),
-    );
-    this.coat(
-      this.spine,
-      [0, 1.1, 0.42],
-      [0.31, 0.42, 0.3],
-      Math.round(640 * density),
-    );
-    this.coat(
-      this.neck,
-      [0, 0.08, 0],
-      [0.36, 0.38, 0.32],
-      Math.round(1300 * density),
-    );
-    this.coat(
-      this.neck,
-      [0, -0.1, 0.29],
-      [0.245, 0.19, 0.235],
-      Math.round(540 * density),
-      "#d3a16c",
-    );
+  private seed: number;
+  private density: number;
+  private coatColor: THREE.Color;
+  private earColor: THREE.Color;
+  private curl = new THREE.SphereGeometry(1, 7, 5);
+  private wool = new THREE.MeshPhysicalMaterial({
+    color: "#ffffff",
+    roughness: 0.92,
+    sheen: 1,
+    sheenRoughness: 0.8,
+    sheenColor: new THREE.Color("#fff5df"),
+  });
+  constructor(
+    lowDetail = false,
+    readonly variant = 0,
+  ) {
+    this.time = variant * 1.83;
+    this.seed = 7183 + variant * 121;
+    this.density = lowDetail ? 0.55 : 1;
+    this.coatColor = new THREE.Color(variant ? "#e8d5b1" : "#c79460");
+    this.earColor = new THREE.Color(variant ? "#cbb18a" : "#ad7747");
+    this.root.add(this.torso);
+    this.fur(this.torso, [0, 0.8, -0.09], [0.34, 0.37, 0.49], 650);
+    this.fur(this.torso, [0, 0.92, 0.25], [0.29, 0.34, 0.25], 280);
+    this.head.position.set(0, 1.26, 0.32);
+    this.torso.add(this.head);
+    this.fur(this.head, [0, 0.12, 0], [0.38, 0.37, 0.32], 650);
+    // 双侧口鼻毛团，让眼睛与嘴巴从蓬松轮廓中清楚露出。
     for (const side of [-1, 1]) {
-      const ear = this.bone(side < 0 ? "earL" : "earR", this.neck, [
-        side * 0.32,
-        0.1,
-        -0.02,
-      ]);
-      this.ears.push(ear);
-      this.coat(
-        ear,
-        [side * 0.018, -0.25, 0.025],
-        [0.145, 0.34, 0.19],
-        Math.round(700 * density),
-        "#a96e3c",
+      this.fur(
+        this.head,
+        [side * 0.11, -0.07, 0.29],
+        [0.16, 0.13, 0.14],
+        110,
+        this.coatColor.clone().lerp(new THREE.Color("#ffebc9"), 0.33),
       );
-      for (const front of [true, false]) {
-        const upper = this.bone((front ? "front" : "back") + side, this.spine, [
-          side * 0.265,
-          front ? 0.96 : 0.9,
-          front ? 0.42 : -0.43,
-        ]);
-        this.legs.push(upper);
-        this.coat(
-          upper,
-          [0, -0.23, front ? 0 : -0.025],
-          [front ? 0.13 : 0.18, 0.3, front ? 0.15 : 0.21],
-          Math.round(410 * density),
-        );
-        const lower = this.bone(
-          "ankle" + this.bones.length,
-          upper,
-          [0, -0.46, 0],
-        );
-        this.ankles.push(lower);
-        this.coat(
-          lower,
-          [0, -0.17, 0.01],
-          [0.115, 0.23, 0.13],
-          Math.round(280 * density),
-        );
-        this.coat(
-          lower,
-          [0, -0.35, 0.07],
-          [0.15, 0.105, 0.2],
-          Math.round(240 * density),
-          "#bf8c55",
-        );
-      }
-      const eye = this.smooth(
-        this.neck,
-        [side * 0.17, 0.15, 0.284],
-        [0.064, 0.067, 0.048],
-        "#20130c",
-        0.1,
+      const ear = new THREE.Group();
+      ear.position.set(side * 0.32, 0.18, -0.035);
+      this.head.add(ear);
+      this.ears.push(ear);
+      this.fur(
+        ear,
+        [side * 0.055, -0.24, 0],
+        [0.15, 0.28, 0.15],
+        280,
+        this.earColor,
+      );
+      this.ball(
+        this.head,
+        [side * 0.165, 0.145, 0.296],
+        [0.083, 0.086, 0.049],
+        variant ? "#a58b69" : "#88592f",
+        0.9,
+      );
+      const eye = this.ball(
+        this.head,
+        [side * 0.165, 0.147, 0.33],
+        [0.063, 0.069, 0.037],
+        "#180f0b",
+        0.08,
       );
       this.eyes.push(eye);
-      this.smooth(
-        eye,
-        [-0.23, 0.31, 0.85],
-        [0.24, 0.28, 0.17],
-        "#fff0d8",
-        0.15,
-      );
+      this.ball(eye, [-0.26, 0.3, 0.83], [0.23, 0.24, 0.14], "#fff5e8", 0.15);
+      this.ball(eye, [0.3, -0.28, 0.91], [0.09, 0.1, 0.07], "#c9bfac", 0.2);
+      for (const front of [true, false]) {
+        const leg = new THREE.Group();
+        leg.position.set(side * 0.235, 0.73, front ? 0.23 : -0.39);
+        this.torso.add(leg);
+        this.legs.push(leg);
+        this.fur(leg, [0, -0.16, 0], [0.115, 0.21, 0.14], 170);
+        const knee = new THREE.Group();
+        knee.position.set(0, -0.27, 0);
+        leg.add(knee);
+        this.knees.push(knee);
+        this.fur(knee, [0, -0.14, 0.025], [0.1, 0.18, 0.12], 130);
+        this.fur(knee, [0, -0.3, 0.075], [0.135, 0.1, 0.17], 135);
+      }
     }
-    this.coat(
-      this.tail,
-      [0, 0.19, -0.08],
-      [0.1, 0.23, 0.105],
-      Math.round(340 * density),
+    this.tail.position.set(0, 0.96, -0.54);
+    this.torso.add(this.tail);
+    this.fur(this.tail, [0, 0.13, -0.035], [0.1, 0.19, 0.105], 150);
+    this.ball(
+      this.head,
+      [0, -0.018, 0.421],
+      [0.083, 0.059, 0.052],
+      "#251713",
+      0.18,
     );
-    this.smooth(
-      this.neck,
-      [0, -0.035, 0.505],
-      [0.105, 0.073, 0.078],
-      "#271911",
-      0.23,
+    this.ball(
+      this.head,
+      [-0.023, 0.004, 0.457],
+      [0.023, 0.012, 0.008],
+      "#807062",
+      0.28,
     );
-    for (const side of [-1, 1])
-      this.smooth(
-        this.neck,
-        [side * 0.044, -0.044, 0.565],
-        [0.016, 0.012, 0.009],
-        "#070604",
-        0.35,
-      );
-    this.smooth(
-      this.neck,
-      [0, -0.18, 0.465],
-      [0.07, 0.023, 0.03],
-      "#39241e",
-      0.8,
+    this.mouth.position.set(0, -0.142, 0.35);
+    this.head.add(this.mouth);
+    this.ball(this.mouth, [0, 0, 0], [0.083, 0.044, 0.055], "#422323", 0.78);
+    this.tongue = this.ball(
+      this.mouth,
+      [0, -0.022, 0.055],
+      [0.045, 0.06, 0.023],
+      "#d58f91",
+      0.65,
     );
-    // 细丝绒项圈和小小的金色吊牌。
     const collar = new THREE.Mesh(
-      new THREE.TorusGeometry(0.29, 0.028, 8, 40),
-      new THREE.MeshStandardMaterial({ color: "#6c3336", roughness: 0.75 }),
+      new THREE.TorusGeometry(0.24, 0.026, 8, 40),
+      new THREE.MeshStandardMaterial({
+        color: variant ? "#627e78" : "#803e45",
+        roughness: 0.75,
+      }),
     );
     collar.rotation.x = Math.PI / 2;
-    collar.position.set(0, 1.34, 0.43);
-    this.spine.add(collar);
-    this.smooth(
-      this.spine,
-      [0, 1.24, 0.725],
-      [0.068, 0.082, 0.018],
-      "#c3a164",
-      0.4,
-      0.6,
+    collar.position.set(0, 1.15, 0.31);
+    this.torso.add(collar);
+    this.ball(
+      this.torso,
+      [0, 1.05, 0.555],
+      [0.045, 0.057, 0.012],
+      "#d8b66f",
+      0.3,
+      0.65,
     );
-    this.root.updateMatrixWorld(true);
-    const merged = mergeGeometries(this.skinParts);
-    this.body = new THREE.SkinnedMesh(
-      merged,
-      new THREE.MeshStandardMaterial({ color: "#aa7545", roughness: 0.96 }),
-    );
-    this.body.add(this.spine);
-    this.root.add(this.body);
-    this.body.bind(new THREE.Skeleton(this.bones));
-    this.body.castShadow = true;
-    this.body.receiveShadow = true;
-    this.skinParts.forEach((g) => g.dispose());
+    // 耳旁的小丝绒蝴蝶结，两只狗保留各自的辨识度。
+    if (variant) {
+      const bow = new THREE.Group();
+      bow.position.set(-0.31, 0.31, 0.15);
+      bow.rotation.z = -0.22;
+      this.head.add(bow);
+      this.ball(bow, [-0.062, 0, 0], [0.075, 0.047, 0.024], "#839d94", 0.95);
+      this.ball(bow, [0.062, 0, 0], [0.075, 0.047, 0.024], "#839d94", 0.95);
+      this.ball(bow, [0, 0, 0.015], [0.026, 0.032, 0.025], "#b4c1a2", 0.85);
+    }
+    this.root.rotation.y = variant ? -0.18 : 0.18;
   }
   private random() {
     this.seed = (this.seed * 1664525 + 1013904223) >>> 0;
     return this.seed / 4294967296;
   }
-  private bone(name: string, parent: THREE.Object3D, position: number[]) {
-    const b = new THREE.Bone();
-    b.name = name;
-    b.position.fromArray(position);
-    parent.add(b);
-    this.bones.push(b);
-    return b;
-  }
-  private coat(
-    bone: THREE.Bone,
-    center: number[],
-    radii: number[],
-    count: number,
-    color = "#bc8a55",
-  ) {
-    const core = new THREE.SphereGeometry(1, 24, 18);
-    core.scale(radii[0], radii[1], radii[2]);
-    core.translate(center[0], center[1], center[2]);
-    this.root.updateMatrixWorld(true);
-    core.applyMatrix4(bone.matrixWorld);
-    const weights = [],
-      joints = [];
-    for (let i = 0; i < core.attributes.position.count; i++) {
-      joints.push(this.bones.indexOf(bone), 0, 0, 0);
-      weights.push(1, 0, 0, 0);
-    }
-    core.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(joints, 4));
-    core.setAttribute(
-      "skinWeight",
-      new THREE.Float32BufferAttribute(weights, 4),
-    );
-    this.skinParts.push(core);
-    const curls = new THREE.InstancedMesh(
-      this.curlGeometry,
-      this.furMaterial,
-      count,
-    );
-    const object = new THREE.Object3D();
-    const normal = new THREE.Vector3();
-    const tint = new THREE.Color();
-    const base = new THREE.Color(color);
-    for (let i = 0; i < count; i++) {
-      const y = 1 - (2 * (i + 0.5)) / count;
-      const r = Math.sqrt(1 - y * y);
-      const a = i * 2.399963229728653;
-      const x = Math.cos(a) * r,
-        z = Math.sin(a) * r;
-      object.position.set(
-        center[0] + x * radii[0],
-        center[1] + y * radii[1],
-        center[2] + z * radii[2],
-      );
-      normal.set(x / radii[0], y / radii[1], z / radii[2]).normalize();
-      object.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
-      object.rotateZ(this.random() * Math.PI * 2);
-      const size = 0.017 + this.random() * 0.013;
-      object.scale.set(size, size * (0.9 + this.random() * 0.5), size * 1.3);
-      object.updateMatrix();
-      curls.setMatrixAt(i, object.matrix);
-      tint.copy(base).multiplyScalar(0.85 + this.random() * 0.32);
-      curls.setColorAt(i, tint);
-    }
-    curls.castShadow = !count || count < 2000;
-    curls.receiveShadow = true;
-    bone.add(curls);
-  }
-  private smooth(
+  private ball(
     parent: THREE.Object3D,
-    position: number[],
-    scale: number[],
+    p: number[],
+    s: number[],
     color: string,
-    roughness: number,
+    roughness = 0.9,
     metalness = 0,
   ) {
-    const geometry = new THREE.SphereGeometry(1, 20, 14);
-    this.geometries.push(geometry);
     const m = new THREE.Mesh(
-      geometry,
-      new THREE.MeshStandardMaterial({ color, roughness, metalness }),
+      new THREE.SphereGeometry(1, 20, 14),
+      new THREE.MeshPhysicalMaterial({
+        color,
+        roughness,
+        metalness,
+        clearcoat: roughness < 0.3 ? 0.35 : 0,
+      }),
     );
-    m.position.fromArray(position);
-    m.scale.fromArray(scale);
+    m.position.fromArray(p);
+    m.scale.fromArray(s);
     m.castShadow = true;
     parent.add(m);
     return m;
+  }
+  private fur(
+    parent: THREE.Object3D,
+    p: number[],
+    r: number[],
+    amount: number,
+    color = this.coatColor,
+  ) {
+    const undercoat = this.ball(parent, p, r, "#" + color.getHexString());
+    // Matching the fleece finish keeps the shallow curls part of one soft coat.
+    undercoat.material.sheen = 1;
+    undercoat.material.sheenRoughness = 0.8;
+    undercoat.material.sheenColor.copy(this.wool.sheenColor);
+    const count = Math.round(amount * this.density * 1.45);
+    const mesh = new THREE.InstancedMesh(this.curl, this.wool, count);
+    const o = new THREE.Object3D(),
+      normal = new THREE.Vector3(),
+      axis = new THREE.Vector3(0, 1, 0),
+      tint = new THREE.Color();
+    for (let i = 0; i < count; i++) {
+      const y = THREE.MathUtils.clamp(
+          1 - (2 * (i + 0.5)) / count + (this.random() - 0.5) * 0.045,
+          -0.998,
+          0.998,
+        ),
+        a = i * 2.39996323 + this.random() * 0.48,
+        q = Math.sqrt(1 - y * y),
+        x = q * Math.cos(a),
+        z = q * Math.sin(a);
+      o.position.set(p[0] + x * r[0], p[1] + y * r[1], p[2] + z * r[2]);
+      normal.set(x / r[0], y / r[1], z / r[2]).normalize();
+      o.position.addScaledVector(normal, -0.002);
+      o.quaternion.setFromUnitVectors(axis, normal);
+      o.rotateY(this.random() * 6.28);
+      const size = 0.021 + this.random() * 0.008;
+      o.scale.set(size * (0.9 + this.random() * 0.35), size * 0.42, size);
+      o.updateMatrix();
+      mesh.setMatrixAt(i, o.matrix);
+      tint.copy(color).multiplyScalar(0.975 + this.random() * 0.05);
+      mesh.setColorAt(i, tint);
+    }
+    mesh.castShadow = false;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
   }
   setMood(mood: PuppyMood) {
     if (this.mood !== mood) {
       this.mood = mood;
       this.moodTime = 0;
-      this.walkTime = mood === "sleepy" ? 0 : 2.4;
     }
+  }
+  react(cue: PuppyCue) {
+    this.cue = cue;
+    this.reaction = 1;
+    this.reactionTime = 0;
+    if (cue === "play" || cue === "wish") this.delight = 1;
   }
   pet() {
     this.delight = 1;
+    this.react("play");
+  }
+  lookAt(x: number, y: number) {
+    this.lookTarget.set(x, y);
   }
   reset() {
     this.mood = "welcome";
-    this.delight = 0;
-    this.walkTime = 0;
-    this.time = 0;
     this.moodTime = 0;
+    this.delight = 0;
+    this.reaction = 0;
+    this.reactionTime = 99;
+    this.sleep = 0;
+    this.lookTarget.set(0, 0);
   }
   update(dt: number, still = false) {
     this.time += dt;
     this.moodTime += dt;
-    const t = this.time;
-    const k = 1 - Math.exp(-dt * 3);
-    this.sleep += ((this.mood === "sleepy" ? 1 : 0) - this.sleep) * k;
-    this.sit += ((this.mood === "welcome" ? 1 : 0) - this.sit) * k;
-    this.delight *= Math.exp(-dt * 0.6);
-    this.walkTime = Math.max(0, this.walkTime - dt);
-    const walking = !still && this.walkTime > 0;
-    const happy = this.mood === "happy" ? 0.7 : this.delight;
-    const breath = Math.sin(t * 2.2) * (still ? 0 : 0.009);
-    this.spine.position.y =
-      -this.sleep * 0.5 -
-      this.sit * 0.18 +
-      breath +
-      (walking ? Math.abs(Math.sin(t * 8)) * 0.028 : 0);
-    this.spine.rotation.x = -this.sit * 0.3;
-    this.spine.scale.y = 1 + breath * 0.55;
-    this.neck.rotation.set(
-      this.sleep * 0.33 - happy * 0.12,
-      still ? 0 : Math.sin(t * 0.55) * 0.12 + happy * Math.sin(t * 2) * 0.11,
-      happy * 0.16,
+    this.reactionTime += dt;
+    const t = this.time,
+      k = 1 - Math.exp(-dt * 4);
+    this.delight *= Math.exp(-dt * 0.5);
+    this.reaction = Math.max(0, this.reaction - dt * 0.26);
+    this.look.lerp(this.lookTarget, k);
+    this.sleep +=
+      ((this.mood === "sleepy" && this.reaction < 0.2 ? 1 : 0) - this.sleep) *
+      k;
+    const happy = this.mood === "happy" ? 0.85 : this.delight;
+    const startle =
+      this.cue === "roar" ? Math.sin(this.reaction * Math.PI) * 0.7 : 0;
+    const walking =
+      !still &&
+      this.sleep < 0.1 &&
+      ((this.moodTime < 2.7 && this.mood !== "welcome") ||
+        (this.cue === "play" && this.reaction > 0.4));
+    const breath = still ? 0 : Math.sin(t * 2.7) * 0.008;
+    const curious =
+      this.cue === "magic" || this.cue === "piano" ? this.reaction : 0;
+    const neighbor = !still
+      ? Math.sin(t * 0.36 + (this.variant ? 1.4 : 0)) * 0.2
+      : 0;
+    // 先邀玩、再对望、接力小跳，两只狗共享事件时钟而保留动作差异。
+    const playTime = Math.max(0, this.reactionTime - this.variant * 0.23);
+    const play = !still && this.cue === "play" && this.reaction > 0;
+    const bow =
+      play && playTime < 0.7 ? Math.sin((playTime / 0.7) * Math.PI) : 0;
+    const meet = play ? Math.sin(Math.min(1, playTime / 2.6) * Math.PI) : 0;
+    const hop =
+      play && playTime > 0.7 && playTime < 2.1
+        ? Math.max(0, Math.sin((playTime - 0.7) * 7.5)) * 0.105
+        : 0;
+    const listen =
+      !still && this.cue === "piano"
+        ? this.reaction * Math.sin(this.reactionTime * 3.4 + this.variant * 0.5)
+        : 0;
+    this.torso.position.y =
+      -this.sleep * 0.36 + breath - startle * 0.05 - bow * 0.045;
+    this.torso.rotation.x =
+      this.sleep * 0.12 + bow * 0.11 + (walking ? Math.sin(t * 10) * 0.015 : 0);
+    this.torso.scale.y = 1 + breath;
+    this.head.rotation.set(
+      this.sleep * 0.24 - this.look.y * 0.12 - curious * 0.1 - startle * 0.08,
+      this.look.x * 0.2 +
+        neighbor +
+        meet * (this.variant ? -0.24 : 0.24) +
+        startle * (this.variant ? -0.38 : 0.38),
+      this.variant ? 0.055 : -0.055,
     );
-    this.neck.position.y = 1.48 - this.sleep * 0.18;
-    for (let i = 0; i < this.legs.length; i++) {
+    this.head.rotation.z += still
+      ? 0
+      : Math.sin(t * 1.1) * 0.035 +
+        happy * Math.sin(t * 2.1) * 0.085 +
+        listen * 0.06;
+    this.head.position.y = 1.26 - this.sleep * 0.11;
+    this.legs.forEach((leg, i) => {
       const rear = i % 2 === 1;
-      this.legs[i].rotation.x =
-        this.sleep * (rear ? -1.2 : -1.1) +
-        this.sit * (rear ? -0.95 : 0.14) +
+      leg.rotation.x =
+        this.sleep * (rear ? -1.18 : -1.1) +
         (walking
-          ? Math.sin(t * 8 + (i === 0 || i === 3 ? 0 : Math.PI)) * 0.36
+          ? Math.sin(t * 10 + (i === 0 || i === 3 ? 0 : Math.PI)) * 0.4
           : 0);
-      this.ankles[i].rotation.x = rear ? this.sit * 1.4 : 0;
-      this.legs[i].rotation.z = this.sleep * (i < 2 ? -0.16 : 0.16);
-    }
-    this.ears.forEach((e, i) => {
-      e.rotation.z =
-        (i ? -1 : 1) * 0.08 +
+      leg.rotation.z = this.sleep * (i < 2 ? -0.1 : 0.1);
+      this.knees[i].rotation.x =
+        (walking ? Math.max(0, Math.sin(t * 10 + i * Math.PI)) * 0.25 : 0) +
+        (!rear ? bow * 0.3 : 0);
+    });
+    this.ears.forEach((ear, i) => {
+      ear.rotation.z =
+        (i ? -1 : 1) * 0.09 +
         (still
           ? 0
-          : Math.sin(t * (walking ? 8 : 2) + i) * (walking ? 0.09 : 0.012));
+          : Math.sin(t * (walking ? 10 : 3) + i) * 0.035 +
+            startle * (i ? 0.22 : -0.22));
     });
     this.tail.rotation.z = still
       ? 0
-      : Math.sin(t * (5 + happy * 9)) *
-        (0.15 + happy * 0.55) *
+      : Math.sin(t * (7 + happy * 7)) *
+        (0.22 + happy * 0.42) *
         (1 - this.sleep * 0.8);
-    const blink = !still && t % 4.7 > 4.5 ? 0.12 : 1;
-    this.eyes.forEach((e) => {
-      e.scale.y =
-        0.067 * (this.sleep > 0.85 && this.delight < 0.2 ? 0.17 : blink);
-    });
-    this.root.rotation.y =
-      -0.22 +
-      (walking ? Math.sin(((2.4 - this.walkTime) * Math.PI) / 2.4) * 0.35 : 0);
-    this.root.position.x = walking
-      ? Math.sin(((2.4 - this.walkTime) * Math.PI * 2) / 2.4) * 0.15
+    const blink =
+      !still &&
+      t % (this.variant ? 5.3 : 4.6) > 4.42 &&
+      t % (this.variant ? 5.3 : 4.6) < 4.6;
+    this.eyes.forEach(
+      (e) => (e.scale.y = 0.069 * (this.sleep > 0.9 ? 0.12 : blink ? 0.15 : 1)),
+    );
+    this.mouth.scale.y =
+      0.5 + happy * 0.65 + (still ? 0 : Math.sin(t * 4) * 0.05);
+    this.tongue.visible = this.sleep < 0.6;
+    const chase = walking
+      ? Math.sin(this.moodTime * 1.7 + this.variant) * 0.1
       : 0;
-    if (!still && happy > 0.6 && this.mood === "happy" && this.moodTime < 1.2)
-      this.root.position.y =
-        0.07 + Math.max(0, Math.sin((this.moodTime * Math.PI) / 1.2)) * 0.12;
-    else this.root.position.y = 0.07;
+    this.root.position.x = chase + meet * (this.variant ? -0.045 : 0.045);
+    this.root.position.y =
+      0.055 +
+      hop +
+      (walking ? Math.abs(Math.sin(t * 10)) * 0.019 : 0) +
+      (happy > 0.5 && !still && !play
+        ? Math.max(0, Math.sin(t * 4.4)) * happy * 0.1
+        : 0);
+    this.root.rotation.y =
+      (this.variant ? -0.18 : 0.18) +
+      meet * (this.variant ? -0.1 : 0.1) +
+      (walking ? Math.sin(t * 0.9) * 0.12 : 0);
   }
   dispose() {
-    const geometries = new Set<THREE.BufferGeometry>();
-    const materials = new Set<THREE.Material>();
+    const geometry = new Set<THREE.BufferGeometry>(),
+      materials = new Set<THREE.Material>();
     this.root.traverse((o) => {
       if (o instanceof THREE.Mesh) {
-        geometries.add(o.geometry);
+        geometry.add(o.geometry);
         (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) =>
           materials.add(m),
         );
       }
     });
-    geometries.forEach((g) => g.dispose());
+    geometry.forEach((g) => g.dispose());
     materials.forEach((m) => m.dispose());
-    this.body.skeleton.dispose();
   }
 }

@@ -7,7 +7,8 @@ import { useGesture } from "./hooks/useGesture";
 import { story } from "./content/story";
 import { StoryController } from "./story/StoryController";
 import { MemoryBook } from "./story/MemoryBook";
-import { PetCompanion } from "./pet/PetCompanion";
+import { PetCompanion, type SceneCue } from "./pet/PetCompanion";
+import { CinematicAtmosphere } from "./scene/CinematicAtmosphere";
 import { assetUrl } from "./utils/assetUrl";
 import { reducedMotion } from "./utils/device";
 import "./story/story.css";
@@ -31,6 +32,15 @@ export default function App() {
   const [storyReady, setStoryReady] = useState(false);
   const [entering, setEntering] = useState(false);
   const [credits, setCredits] = useState(false);
+  const [cue, setCue] = useState<SceneCue>({ kind: "magic", serial: 0 });
+  const emit = (kind: SceneCue["kind"]) =>
+    setCue((previous) => ({ kind, serial: previous.serial + 1 }));
+  useEffect(() => {
+    if (state === "OPENING") emit("magic");
+  }, [state]);
+  useEffect(() => {
+    if (snapshot.finalState === "extinguishing") emit("wish");
+  }, [snapshot.finalState]);
   const creditsRef = useRef<HTMLDialogElement>(null);
   const gesture = useGesture((open) => {
     if (!inBook && !entering) scene.current?.setOpen(open);
@@ -127,6 +137,18 @@ export default function App() {
   const names = ["生日邀请", "小小美好", "一封心意", "生日愿望"];
   return (
     <main
+      data-cinema-cue={cue.kind}
+      onPointerMove={(event) => {
+        if (reducedMotion() || event.pointerType === "touch") return;
+        event.currentTarget.style.setProperty(
+          "--view-x",
+          `${(event.clientX / innerWidth - 0.5) * 14}px`,
+        );
+        event.currentTarget.style.setProperty(
+          "--view-y",
+          `${(event.clientY / innerHeight - 0.5) * 10}px`,
+        );
+      }}
       className={
         "experience chapter-" +
         chapter +
@@ -137,18 +159,29 @@ export default function App() {
       <div className="world-background" aria-hidden="true">
         <img
           className="castle-background"
-          src={assetUrl("images/castle.jpg")}
+          src={assetUrl("images/castle-night.webp")}
           alt=""
         />
         <img
           className="savanna-background"
-          src={assetUrl("images/savanna.jpg")}
+          src={assetUrl("images/savanna-cinema.webp")}
+          alt=""
+        />
+        <img
+          className="jazz-background"
+          src={assetUrl("images/jazz-night.webp")}
           alt=""
         />
         <div className="world-shade" />
         <div className="world-glow" />
       </div>
       <div className="grain" aria-hidden="true" />
+      <CinematicAtmosphere chapter={chapter} cue={cue} />
+      <div
+        key={cue.serial}
+        className={"scene-response cue-" + cue.kind}
+        aria-hidden="true"
+      />
       <div className="floating-candles" aria-hidden="true">
         {Array.from({ length: 9 }, (_, i) => (
           <i
@@ -323,12 +356,14 @@ export default function App() {
           snapshot={snapshot}
           onReplay={replay}
           onPiano={(note) => {
+            emit("piano");
             void audio.current
               ?.unlock()
               .then(() => audio.current?.playPiano(note))
               .catch(() => setAudioError(true));
           }}
           onEnding={() => {
+            emit("wish");
             unlock();
             audio.current?.setVolume(0.7);
             audio.current?.playEnding();
@@ -339,6 +374,7 @@ export default function App() {
         <MagicWand
           active={entering}
           onCast={() => {
+            emit("magic");
             unlock();
             setStarted(true);
             scene.current?.castSpell();
@@ -347,7 +383,9 @@ export default function App() {
       )}
       {chapter === "finalWish" && (
         <SavannaLife
+          celebrating={snapshot.finalState === "complete"}
           onRoar={() => {
+            emit("roar");
             unlock();
             void audio.current
               ?.unlock()
@@ -361,6 +399,7 @@ export default function App() {
         celebrating={snapshot.finalState === "complete"}
         cardOpen={open}
         session={snapshot.session}
+        cue={cue}
       />
       <aside
         className={

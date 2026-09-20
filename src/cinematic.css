@@ -1,0 +1,965 @@
+/* 同一镜头内的前后景、灯光与角色响应。 */
+.experience {
+  --view-x: 0px;
+  --view-y: 0px;
+  background: #100e13;
+  min-height: 850px;
+}
+.experience .world-background {
+  background: #100e13;
+}
+.experience .world-background img {
+  filter: saturate(0.92);
+  transform: translate3d(
+      calc(var(--view-x) * -0.5),
+      calc(var(--view-y) * -0.5),
+      0
+    )
+    scale(1.055);
+  transition:
+    opacity 1.4s ease,
+    filter 2s;
+  will-change: transform;
+}
+.experience .castle-background {
+  opacity: 0.95;
+  object-position: center 65%;
+}
+.experience .world-shade {
+  background:
+    linear-gradient(
+      90deg,
+      #0f1015c9 0%,
+      #10111788 34%,
+      #0f13152b 62%,
+      #10111711
+    ),
+    linear-gradient(
+      0deg,
+      #0e0f15e6,
+      transparent 26%,
+      transparent 84%,
+      #0a0c155e
+    );
+}
+.experience .world-glow {
+  background: radial-gradient(ellipse at 71% 65%, #edb56518, transparent 40%);
+  mix-blend-mode: screen;
+}
+.experience .jazz-background {
+  opacity: 0;
+}
+.experience .site-header {
+  height: 92px;
+  border-bottom-color: #f5d8b015;
+}
+.experience .hero-copy {
+  margin-left: 8%;
+  width: 37%;
+  padding-top: clamp(40px, 7vh, 85px);
+}
+.experience .hero-copy h1 {
+  font-size: clamp(46px, 4.5vw, 70px);
+  text-shadow: 0 4px 28px #0007;
+}
+.experience .hero-description {
+  color: #ddcbb9;
+  text-shadow: 0 2px 10px #000;
+}
+.experience .hero-footnote {
+  color: #c8b79e;
+}
+.experience .hero-actions .primary {
+  background: linear-gradient(120deg, #e0bc7e, #f1dec0 48%, #cba669);
+  border-color: #fae0ae80;
+  box-shadow:
+    0 10px 35px #0006,
+    inset 0 1px #fff6;
+}
+.experience .scene {
+  top: 13%;
+  bottom: 20%;
+  left: 43%;
+  right: 1%;
+  z-index: 1;
+}
+.experience .scene-caption {
+  left: 69%;
+  bottom: 26%;
+  color: #e2ccb0;
+  text-shadow: 0 2px 8px #000;
+}
+.experience .wand-scene {
+  bottom: 14%;
+  left: 46%;
+}
+.experience .floating-candles {
+  opacity: 0.55;
+}
+.experience .floating-candles i {
+  filter: blur(0.2px);
+}
+.experience .grain {
+  opacity: 0.035;
+}
+.cinema-atmosphere {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+.scene-response {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+.scene-response.cue-magic {
+  background: radial-gradient(ellipse at 69% 52%, #ffce803b, transparent 50%);
+  animation: cinema-light 2.4s ease-out;
+}
+.scene-response.cue-piano {
+  background: radial-gradient(ellipse at 72% 60%, #b7a2ff26, transparent 55%);
+  animation: cinema-light 0.7s ease-out;
+}
+.scene-response.cue-roar {
+  background: linear-gradient(105deg, #f9bc5615, transparent 65%);
+  animation: cinema-light 1.8s ease;
+}
+.scene-response.cue-wish {
+  background: radial-gradient(ellipse at 50% 55%, #ffeac350, transparent 68%);
+  animation: cinema-light 2.7s ease-out;
+}
+@keyframes cinema-light {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.experience.entering-book .scene {
+  transform: scale(1.55) translate(-12%, 7%);
+}
+.experience.entering-book .world-background {
+  animation: camera-through 0.95s ease-in forwards;
+}
+@keyframes camera-through {
+  to {
+    transform: scale(1.12);
+    filter: blur(4px);
+  }
+}
+.experience .pet-companion.pet-duo {
+  position: absolute;
+  right: 2.5%;
+  bottom: 54px;
+  margin: 0;
+}
+.experience.book-experience {
+  padding: 0 5% 90px;
+  min-height: 100svh;
+  height: auto;
+}
+.experience.book-experience .site-header {
+  margin: 0;
+}
+.experience.book-experience .memory-book {
+  max-width: 1220px;
+  margin: 30px auto 0;
+}
+.experience.book-experience .pet-companion.pet-duo {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  margin: 5px 0 0 auto;
+}
+.experience.chapter-moments .castle-background {
+  opacity: 0.42;
+  filter: blur(2px) saturate(0.7);
+}
+.experience.chapter-moments .paper-page {
+  background: #f4eadaf5;
+}
+.experience .paper-page {
+  animation: cinema-page 0.8s ease both;
+}
+@keyframes cinema-page {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.985);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* 夜景就是书信的空间，人物与琴键直接置于其中。 */
+.experience.chapter-letter {
+  min-height: 960px;
+}
+.experience.chapter-letter .jazz-background {
+  opacity: 1;
+  object-position: center bottom;
+}
+.experience.chapter-letter .castle-background {
+  opacity: 0;
+}
+.experience.chapter-letter .world-shade {
+  background:
+    linear-gradient(90deg, #141625a8 0%, #171a2a52 36%, transparent 65%),
+    linear-gradient(0deg, #111321e8, transparent 37%, #17203944);
+}
+.experience.chapter-letter .world-background {
+  position: fixed;
+}
+.experience.chapter-letter .paper-page {
+  background: transparent;
+  box-shadow: none;
+  color: #f3e4d1;
+}
+.experience.chapter-letter .paper-page::before,
+.experience.chapter-letter .paper-page::after {
+  display: none;
+}
+.experience.chapter-letter .page-content {
+  padding: 0;
+}
+.experience .letter-chapter {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.92fr) minmax(400px, 1.35fr);
+  gap: 5%;
+  padding: 0;
+  min-height: 600px;
+  align-items: start;
+}
+.letter-copy {
+  padding: 32px 34px 28px;
+  background: linear-gradient(130deg, #f8efdfef, #eaddc6ee);
+  box-shadow: 0 14px 50px #070a1a50;
+  border: 1px solid #fff1d340;
+  max-width: 490px;
+  backdrop-filter: blur(10px);
+  transform: rotate(-0.4deg);
+}
+.experience .letter-copy h2 {
+  color: #4d3b3c;
+  font-size: 32px;
+  white-space: normal;
+}
+.experience .letter-copy .chapter-kicker {
+  color: #977247;
+}
+.experience .letter-copy .envelope-scene {
+  padding: 22px 0 8px;
+}
+.experience .letter-copy .letter-envelope {
+  height: 205px;
+}
+.experience .letter-copy .letter-paragraph {
+  font-size: 16px;
+  line-height: 2;
+  margin-bottom: 17px;
+}
+.experience .letter-copy .letter-signature {
+  margin-bottom: 22px;
+}
+.experience .cinema-piano {
+  position: relative;
+  top: auto;
+  right: auto;
+  float: none;
+  margin: 0;
+  width: 100%;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 590px;
+}
+.experience .cinema-piano .piano-night {
+  height: 440px;
+  min-height: 350px;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  flex: 1;
+}
+.experience .cinema-piano .piano-night::after {
+  display: none;
+}
+.night-perspective {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.night-lamplight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 53% 72%, #ecc78622, transparent 62%);
+  opacity: 0;
+}
+.is-dancing .night-lamplight {
+  animation: cinema-light 0.8s ease-out;
+}
+.animated-atlas {
+  display: block;
+  background-repeat: no-repeat;
+  aspect-ratio: 1;
+}
+.film-dancers {
+  position: absolute;
+  width: min(100%, 360px);
+  bottom: 30px;
+  left: -10%;
+  filter: drop-shadow(0 5px 3px #10142260) saturate(0.8) brightness(0.84);
+  transform-origin: 50% 90%;
+}
+.is-dancing .film-dancers {
+  animation: dance-drift 3.76s ease-in-out infinite;
+}
+@keyframes dance-drift {
+  0%,
+  100% {
+    transform: translateX(-4px) rotate(-0.5deg);
+  }
+  50% {
+    transform: translateX(10px) rotate(0.5deg);
+  }
+}
+.dance-floor-shadow {
+  position: absolute;
+  width: 180px;
+  height: 25px;
+  left: 30px;
+  bottom: 62px;
+  background: #100e1e66;
+  border-radius: 50%;
+  filter: blur(7px);
+}
+.night-caption {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  right: 0;
+  text-align: right;
+  font-family: "Birthday Serif", serif;
+  font-size: 17px;
+  letter-spacing: 0.12em;
+  color: #f0dfcd;
+  text-shadow: 0 3px 15px #172137;
+}
+.night-petals {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.night-petals i {
+  position: absolute;
+  top: -15px;
+  width: 5px;
+  height: 9px;
+  border-radius: 80% 0 80% 0;
+  background: #b693cba8;
+  animation: petal-drift 16s linear infinite;
+}
+@keyframes petal-drift {
+  to {
+    transform: translate(60px, 510px) rotate(530deg);
+    opacity: 0;
+  }
+}
+.piano-console {
+  position: relative;
+  z-index: 6;
+  width: 320px;
+  max-width: 94%;
+  margin: 0 0 8px auto;
+  padding: 13px 16px 4px;
+  background: linear-gradient(135deg, #17141fea, #282033ed);
+  border: 1px solid #cbb79f42;
+  border-radius: 5px;
+  box-shadow:
+    0 15px 35px #10112070,
+    inset 0 1px #ffffff13;
+}
+.piano-console-label {
+  display: flex;
+  justify-content: space-between;
+  color: #d4bd9b;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  margin-bottom: 10px;
+}
+.experience .piano-console .piano-keys {
+  height: 65px;
+  padding: 0 0 5px;
+  background: #100e19;
+}
+.experience .piano-console .piano-keys > button {
+  background: linear-gradient(95deg, #e9e4d8, #fff8e9 60%, #d3cbbd);
+  box-shadow: inset 0 -4px #d4cbbb;
+  border-color: #938a7b;
+}
+.experience .piano-console .piano-keys > button.pressed {
+  background: linear-gradient(#ccb388, #ffdfa4);
+  box-shadow: inset 0 3px 10px #7c542f50;
+}
+.experience .piano-console .black-key {
+  top: 0;
+  height: 37px;
+}
+.experience .piano-console .piano-play {
+  color: #edcf9d;
+  font-size: 11px;
+  padding: 12px 0;
+}
+.experience.chapter-letter .pet-companion.pet-duo {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  margin: 5px 0 0 auto;
+}
+.experience.chapter-letter .book-navigation {
+  max-width: 490px;
+  margin-top: 22px;
+}
+
+/* 草原结尾：狮子、蛋糕与小狗共享夕阳色温。 */
+.experience.chapter-finalWish {
+  min-height: 980px;
+  height: 100svh;
+  padding: 0 5% 100px;
+}
+.experience.chapter-finalWish .world-background {
+  position: absolute;
+}
+.experience.chapter-finalWish .savanna-background {
+  opacity: 1;
+  object-position: center center;
+}
+.experience.chapter-finalWish .world-shade {
+  background: linear-gradient(
+    0deg,
+    #121318ef 0%,
+    #29192525 45%,
+    #27203345 80%,
+    #18131de0
+  );
+}
+.experience.chapter-finalWish .memory-book {
+  max-width: 810px;
+  margin-top: 28px;
+}
+.experience.chapter-finalWish .page-content {
+  padding-top: 0;
+}
+.experience.chapter-finalWish .final-wish h2 {
+  font-size: clamp(34px, 3.7vw, 54px);
+  margin-top: 14px;
+}
+.experience.chapter-finalWish .personal-wish {
+  color: #f4dfc0;
+  text-shadow: 0 2px 10px #36201d;
+}
+.experience.chapter-finalWish .pet-companion.pet-duo {
+  position: absolute;
+  bottom: 75px;
+  right: 2%;
+}
+.experience .cinema-savanna {
+  position: absolute;
+  left: 0;
+  bottom: 90px;
+  width: 32%;
+  height: 350px;
+  z-index: 5;
+  pointer-events: none;
+}
+.lion-stage {
+  position: relative;
+  height: 310px;
+}
+.lion-character {
+  pointer-events: auto;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  transform: none !important;
+}
+.lion-character:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.film-lion {
+  width: 100%;
+  max-width: 390px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  filter: brightness(0.82) saturate(0.78) drop-shadow(0 8px 6px #341c2050);
+  transform-origin: 50% 90%;
+}
+.lion-idle .film-lion {
+  animation: lion-breath 4s ease-in-out infinite;
+}
+@keyframes lion-breath {
+  50% {
+    transform: scale(1.005, 1.013) rotate(-0.2deg);
+  }
+}
+.lion-run .lion-stage {
+  animation: lion-cinema-run 3.6s ease-out both;
+}
+@keyframes lion-cinema-run {
+  0% {
+    transform: translate(-65%, 16%) scale(0.85);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  78% {
+    transform: translate(0, -2%) scale(1);
+  }
+  100% {
+    transform: none;
+  }
+}
+.lion-roar .film-lion {
+  animation: lion-lift 1.6s ease;
+}
+@keyframes lion-lift {
+  35%,
+  65% {
+    transform: translateY(-3px) scale(1.01);
+  }
+}
+.lion-contact-shadow {
+  position: absolute;
+  bottom: 12%;
+  left: 12%;
+  width: 73%;
+  height: 8%;
+  background: #2b1d24a1;
+  border-radius: 50%;
+  filter: blur(7px);
+}
+.lion-controls {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  position: relative;
+  z-index: 5;
+}
+.lion-controls button {
+  pointer-events: auto;
+  border: 0;
+  background: #1f171580;
+  color: #ecd0a8;
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid #e4c08c35;
+  padding: 9px 5px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.lion-controls button:disabled {
+  opacity: 0.75;
+}
+.lion-dust {
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  width: 60%;
+  height: 30%;
+  pointer-events: none;
+  opacity: 0;
+}
+.lion-run .lion-dust {
+  opacity: 1;
+}
+.lion-dust i {
+  position: absolute;
+  width: 32px;
+  height: 20px;
+  border-radius: 50%;
+  background: #c5a16f3d;
+  filter: blur(7px);
+  animation: lion-dust 1s ease-out 3;
+}
+@keyframes lion-dust {
+  to {
+    transform: translate(-85px, -10px) scale(2.6);
+    opacity: 0;
+  }
+}
+.savanna-grass {
+  position: absolute;
+  bottom: 15px;
+  inset-inline: 0;
+  height: 100px;
+  opacity: 0.75;
+}
+.savanna-grass i {
+  position: absolute;
+  bottom: 0;
+  width: 10px;
+  border-right: 2px solid #847451;
+  border-radius: 0 80% 0 0;
+  transform-origin: bottom;
+  animation: grass-breeze 4s ease-in-out infinite alternate;
+}
+.lion-roar .savanna-grass i {
+  animation-duration: 0.35s;
+}
+@keyframes grass-breeze {
+  from {
+    transform: rotate(-9deg);
+  }
+  to {
+    transform: rotate(15deg);
+  }
+}
+
+@media (min-width: 1600px) {
+  .experience .hero-copy {
+    margin-left: 12%;
+  }
+  .experience .scene {
+    right: 5%;
+  }
+  .experience.chapter-letter .memory-book {
+    max-width: 1380px;
+  }
+  .experience.chapter-letter .letter-chapter {
+    grid-template-columns: 490px 1fr;
+    gap: 10%;
+  }
+  .film-dancers {
+    width: 410px;
+    max-width: none;
+  }
+}
+@media (max-width: 1100px) and (min-width: 701px) {
+  .experience .hero-copy {
+    margin-left: 6%;
+    width: 40%;
+  }
+  .experience .hero-copy h1 {
+    font-size: 52px;
+  }
+  .experience .scene {
+    left: 43%;
+    right: -5%;
+  }
+  .experience .pet-companion.pet-duo {
+    right: 1%;
+    bottom: 40px;
+  }
+  .experience .letter-chapter {
+    grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
+    gap: 24px;
+  }
+  .letter-copy {
+    padding: 25px;
+  }
+  .experience .cinema-piano {
+    min-height: 600px;
+  }
+  .film-dancers {
+    width: 285px;
+    left: 0;
+  }
+  .night-caption {
+    font-size: 13px;
+  }
+  .experience .cinema-savanna {
+    width: 31%;
+    bottom: 70px;
+  }
+  .lion-controls {
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .lion-controls button {
+    font-size: 10px;
+  }
+  .experience.chapter-finalWish .pet-companion.pet-duo {
+    right: 0;
+    bottom: 45px;
+  }
+  .experience.chapter-finalWish .memory-book {
+    max-width: 620px;
+  }
+}
+@media (max-width: 700px) {
+  .experience {
+    height: auto;
+    min-height: 1120px;
+    padding-bottom: 90px;
+    overflow: clip;
+  }
+  .experience .site-header {
+    height: 78px;
+    margin: 0 6%;
+  }
+  .experience .hero-copy {
+    margin: 0 8%;
+    width: auto;
+    padding-top: 35px;
+  }
+  .experience .hero-copy h1 {
+    font-size: 43px;
+    line-height: 1.3;
+  }
+  .experience .hero-copy h1 em {
+    display: inline;
+  }
+  .experience .hero-copy h1 br {
+    display: block;
+  }
+  .experience .hero-wish {
+    font-size: 26px;
+    margin-top: 12px;
+  }
+  .experience .hero-description {
+    font-size: 12px;
+    line-height: 1.9;
+    max-width: 270px;
+  }
+  .experience .hero-actions {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    margin-top: 355px;
+    align-items: center;
+    text-align: center;
+    min-height: 100px;
+  }
+  .experience .scene {
+    top: 346px;
+    height: 310px;
+    left: -4%;
+    right: -4%;
+    bottom: auto;
+  }
+  .experience .scene-caption {
+    top: 635px;
+    left: 50%;
+    bottom: auto;
+    font-size: 10px;
+  }
+  .experience .wand-scene {
+    top: 575px;
+    left: 5%;
+    bottom: auto;
+    transform: scale(0.65);
+  }
+  .experience .castle-background {
+    object-position: 65% center;
+    opacity: 0.95;
+  }
+  .experience .world-shade {
+    background: linear-gradient(
+      180deg,
+      #0e11199c,
+      transparent 36%,
+      #13121b33 55%,
+      #121119ed 88%
+    );
+  }
+  .experience .pet-companion.pet-duo {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    margin: 6px auto 0;
+  }
+  .experience .site-footer {
+    bottom: 22px;
+  }
+  .experience.book-experience {
+    padding: 0 18px 95px;
+    min-height: 100svh;
+  }
+  .experience.book-experience .site-header {
+    margin: 0 4px;
+  }
+  .experience.book-experience .pet-companion.pet-duo {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    margin: 12px auto 0;
+  }
+  .experience.chapter-letter {
+    padding-inline: 18px;
+    min-height: 1100px;
+  }
+  .experience .letter-chapter {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-height: 0;
+  }
+  .letter-copy {
+    width: 100%;
+    max-width: none;
+    order: 2;
+    padding: 26px 25px;
+    transform: none;
+  }
+  .experience .letter-copy h2 {
+    font-size: 29px;
+  }
+  .experience .cinema-piano {
+    order: 1;
+    width: 100%;
+    min-height: 0;
+    height: 435px;
+    margin: 0 0 30px;
+  }
+  .experience .cinema-piano .piano-night {
+    height: 290px;
+    min-height: 290px;
+  }
+  .experience.chapter-letter .jazz-background {
+    object-position: 56% center;
+    filter: saturate(0.85);
+  }
+  .experience.chapter-letter .world-shade {
+    background: linear-gradient(#1b1b3b50, #1e1c3255 35%, #141525d9 75%);
+  }
+  .film-dancers {
+    width: 250px;
+    max-width: none;
+    left: calc(50% - 135px);
+    bottom: -3px;
+  }
+  .dance-floor-shadow {
+    left: calc(50% - 90px);
+    bottom: 18px;
+  }
+  .night-caption {
+    font-size: 13px;
+    top: 2px;
+    text-align: center;
+  }
+  .piano-console {
+    width: 290px;
+    margin: 0 auto;
+  }
+  .experience.chapter-letter .pet-companion.pet-duo {
+    position: relative;
+    margin-top: 15px;
+    right: auto;
+    bottom: auto;
+  }
+  .experience.chapter-letter .book-navigation {
+    max-width: none;
+  }
+  .experience.chapter-finalWish {
+    height: auto;
+    min-height: 1150px;
+    padding-bottom: 95px;
+  }
+  .experience.chapter-finalWish .memory-book {
+    margin-top: 25px;
+  }
+  .experience.chapter-finalWish .final-wish h2 {
+    font-size: 31px;
+    line-height: 1.65;
+    margin-top: 15px;
+  }
+  .experience.chapter-finalWish .savanna-background {
+    object-position: 50% center;
+  }
+  .experience.chapter-finalWish .world-shade {
+    background: linear-gradient(#1b152688, #351f2538 45%, #1b1526ef 86%);
+  }
+  .experience .cinema-savanna {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    width: 270px;
+    height: 290px;
+    margin: 18px auto 0;
+  }
+  .lion-stage {
+    height: 245px;
+  }
+  .film-lion {
+    max-width: 270px;
+    bottom: 0;
+  }
+  .lion-contact-shadow {
+    bottom: 10%;
+  }
+  .lion-controls {
+    gap: 12px;
+  }
+  .lion-controls button {
+    font-size: 10px;
+  }
+  .experience.chapter-finalWish .pet-companion.pet-duo {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    margin: 5px auto 0;
+  }
+  .experience.chapter-finalWish .wish-complete {
+    min-height: 390px;
+  }
+  .experience.chapter-finalWish .wish-complete h2 {
+    font-size: 39px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .experience .world-background img {
+    transform: none;
+    will-change: auto;
+  }
+  .cinema-atmosphere,
+  .scene-response,
+  .night-petals,
+  .lion-dust {
+    display: none;
+  }
+  .film-dancers,
+  .film-lion,
+  .lion-stage,
+  .savanna-grass i {
+    animation: none !important;
+  }
+  .experience .paper-page {
+    filter: none;
+  }
+  .experience.entering-book .world-background {
+    animation: none;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .experience.chapter-finalWish .pet-companion.pet-duo {
+    width: 260px;
+    height: 220px;
+  }
+  .experience.chapter-letter .letter-chapter {
+    grid-template-columns: minmax(280px, 1fr) minmax(270px, 1fr);
+    gap: 20px;
+  }
+}

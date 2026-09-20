@@ -1,0 +1,110 @@
+.final-wish .cinema-cake {
+  position: relative;
+  width: min(360px, 88vw);
+  margin: 6px auto 0;
+  isolation: isolate;
+}
+.final-wish .cinema-cake__stage {
+  position: relative;
+  width: 100%;
+  height: 330px;
+  background: radial-gradient(
+    ellipse at 50% 56%,
+    #f9bf6330 0,
+    #b1844410 30%,
+    transparent 68%
+  );
+}
+.final-wish .cinema-cake__stage::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 62%;
+  height: 18px;
+  bottom: 21px;
+  left: 19%;
+  border-radius: 50%;
+  background: #170f1840;
+  filter: blur(12px);
+  pointer-events: none;
+}
+.final-wish .cinema-cake__stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.final-wish .cinema-cake__description {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.final-wish .cinema-cake__extinguish {
+  position: relative;
+  min-height: 44px;
+  padding: 9px 22px;
+  margin: -3px 0 10px;
+  border: 1px solid #d6b87b70;
+  border-radius: 999px;
+  color: #ffe5b7;
+  background: #2719248a;
+  box-shadow:
+    0 3px 20px #17101720,
+    inset 0 0 18px #a57b3412;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.13em;
+  cursor: pointer;
+  transition:
+    background 180ms,
+    border-color 180ms;
+}
+.final-wish .cinema-cake__extinguish:hover:not(:disabled) {
+  background: #513c36c9;
+  border-color: #f0d6a5;
+}
+.final-wish .cinema-cake__extinguish:focus-visible {
+  outline: 2px solid #fff0c3;
+  outline-offset: 5px;
+}
+.final-wish .cinema-cake__extinguish:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+.final-wish .cinema-cake--fallback canvas {
+  visibility: hidden;
+}
+.final-wish .cinema-cake__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fbe0a9;
+}
+.final-wish .cinema-cake__fallback span {
+  font-size: 76px;
+  text-shadow: 0 0 50px #efbb6690;
+}
+.final-wish .cinema-cake__fallback p {
+  font-size: 13px;
+  letter-spacing: 0.1em;
+}
+@media (max-width: 600px) {
+  .final-wish .cinema-cake {
+    width: min(320px, 86vw);
+  }
+  .final-wish .cinema-cake__stage {
+    height: 285px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .final-wish .cinema-cake__extinguish {
+    transition: none;
+  }
+}

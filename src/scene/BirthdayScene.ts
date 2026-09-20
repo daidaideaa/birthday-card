@@ -3,12 +3,13 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { BirthdayCard } from "./BirthdayCard";
 import { CardMotion, type CardState } from "./CardMotion";
 import { CardParticles } from "./CardParticles";
 import { CandleBackground } from "./CandleBackground";
 import { AudioController } from "./AudioController";
-import { isMobile } from "../utils/device";
+import { isMobile, reducedMotion } from "../utils/device";
 import { clamp } from "../utils/easing";
 export class BirthdayScene {
   readonly motion: CardMotion;
@@ -30,6 +31,9 @@ export class BirthdayScene {
   private drag: { id: number; x: number; y: number } | null = null;
   private yaw = -0.08;
   private tilt = 0;
+  private environment: THREE.Texture;
+  private foilLight = new THREE.PointLight("#ffdb91", 7, 15, 2);
+  private paperLight = new THREE.PointLight("#ffe0aa", 0, 7, 2);
   constructor(
     private host: HTMLElement,
     private audio: AudioController,
@@ -47,7 +51,14 @@ export class BirthdayScene {
     this.renderer.shadowMap.enabled = !isMobile();
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.toneMappingExposure = 1.03;
+    const reflectionRoom = new RoomEnvironment();
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.environment = pmrem.fromScene(reflectionRoom, 0.04).texture;
+    this.scene.environment = this.environment;
+    this.scene.environmentIntensity = 0.28;
+    reflectionRoom.dispose();
+    pmrem.dispose();
     this.renderer.domElement.setAttribute(
       "aria-label",
       "师宝宝的立体生日贺卡，可以拖动旋转。",
@@ -57,9 +68,9 @@ export class BirthdayScene {
       this.contextLost,
     );
     host.appendChild(this.renderer.domElement);
-    this.scene.add(new THREE.HemisphereLight("#fff4e1", "#746063", 1.25));
-    const key = new THREE.DirectionalLight("#fff0d9", 1.65);
-    key.position.set(-2, 7, 5);
+    this.scene.add(new THREE.HemisphereLight("#ffeaca", "#253042", 1.05));
+    const key = new THREE.DirectionalLight("#ffe7c0", 2.15);
+    key.position.set(-3.5, 7, 4);
     key.castShadow = true;
     key.shadow.mapSize.set(isMobile() ? 512 : 1024, isMobile() ? 512 : 1024);
     key.shadow.camera.left = -5;
@@ -68,13 +79,16 @@ export class BirthdayScene {
     key.shadow.camera.bottom = -5;
     key.shadow.normalBias = 0.025;
     this.scene.add(key);
-    const fill = new THREE.DirectionalLight("#ddc4d8", 0.7);
-    fill.position.set(3, 4, -2);
+    const fill = new THREE.DirectionalLight("#a2c7e6", 0.85);
+    fill.position.set(3, 4, -3);
     this.scene.add(fill);
+    this.foilLight.position.set(-2.8, 3.2, 1.5);
+    this.paperLight.position.set(0, 1.3, 0.3);
+    this.scene.add(this.foilLight, this.paperLight);
     this.scene.add(this.card.root, this.particles.group, this.candles.group);
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(200, 200),
-      new THREE.ShadowMaterial({ opacity: 0.18 }),
+      new THREE.ShadowMaterial({ opacity: 0.28 }),
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.14;
@@ -84,16 +98,16 @@ export class BirthdayScene {
     this.composer.addPass(new RenderPass(this.scene, this.camera));
     this.bloom = new UnrealBloomPass(
       new THREE.Vector2(1, 1),
-      isMobile() ? 0.12 : 0.2,
-      0.55,
-      3.0,
+      isMobile() ? 0.16 : 0.24,
+      0.62,
+      2.4,
     );
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     this.motion = new CardMotion(() => {
       this.card.root.updateWorldMatrix(true, false);
       const origin = this.card.root.localToWorld(new THREE.Vector3(0, 0.13, 0));
-      this.particles.burst(origin);
+      if (!reducedMotion()) this.particles.burst(origin);
       this.audio.play();
       this.candles.boost = 1;
     }, onState);
@@ -130,9 +144,11 @@ export class BirthdayScene {
   }
   castSpell() {
     this.card.root.updateWorldMatrix(true, false);
-    this.particles.burst(
-      this.card.root.localToWorld(new THREE.Vector3(0, 0.2, 0)),
-    );
+    if (!reducedMotion()) {
+      this.particles.burst(
+        this.card.root.localToWorld(new THREE.Vector3(0, 0.2, 0)),
+      );
+    }
     this.candles.boost = 1;
     this.setOpen(true);
   }
@@ -145,7 +161,7 @@ export class BirthdayScene {
       h = this.host.clientHeight;
     if (!w || !h) return;
     this.camera.aspect = w / h;
-    const distance = Math.max(7.9, 5.8 / this.camera.aspect);
+    const distance = Math.max(7.6, 5.6 / this.camera.aspect);
     this.cameraDistance = distance;
     this.camera.position.set(0, distance * 0.77, distance * 0.68);
     this.camera.lookAt(0, 0.65, -0.15);
@@ -194,9 +210,16 @@ export class BirthdayScene {
     const dt = Math.min(elapsed, 0.05);
     this.last = now;
     this.time += dt;
-    this.motion.update(elapsed);
-    const distance = this.cameraDistance + this.motion.progress * 0.35;
-    this.camera.position.set(0, distance * 0.77, distance * 0.68);
+    const still = reducedMotion();
+    this.motion.update(still ? 2 : elapsed);
+    const progress = this.motion.progress;
+    const reveal = Math.sin(progress * Math.PI);
+    const distance = this.cameraDistance + progress * 0.48;
+    this.camera.position.set(
+      still ? 0 : reveal * 0.22,
+      distance * 0.77 + (still ? 0 : reveal * 0.12),
+      distance * 0.68,
+    );
     this.camera.lookAt(
       0,
       0.35 + this.motion.progress * 0.85,
@@ -208,8 +231,14 @@ export class BirthdayScene {
       (this.yaw - this.card.root.rotation.y) * damping;
     this.card.root.rotation.x +=
       (this.tilt - this.card.root.rotation.x) * damping;
-    this.particles.update(dt);
-    this.candles.update(this.time, dt);
+    if (still) this.particles.clear();
+    else this.particles.update(dt);
+    this.candles.update(still ? 0 : this.time, dt);
+    this.foilLight.position.x = still
+      ? -2.8
+      : -2.8 + Math.sin(this.time * 0.36) * 0.85 + reveal * 2.2;
+    this.foilLight.intensity = 7 + reveal * 6;
+    this.paperLight.intensity = progress * 1.6 + reveal * 1.4;
     this.composer.render();
     this.frame = requestAnimationFrame(this.animate);
   };
@@ -237,6 +266,7 @@ export class BirthdayScene {
         });
       }
     });
+    this.environment.dispose();
     this.composer.passes.forEach((p) => p.dispose());
     this.composer.dispose();
     this.renderer.dispose();

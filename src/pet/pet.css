@@ -1,0 +1,133 @@
+.experience .pet-companion.pet-duo {
+  position: relative;
+  inset: auto;
+  width: 330px;
+  height: 260px;
+  max-width: 100%;
+  margin: 16px auto 0;
+  flex: 0 0 auto;
+  z-index: 4;
+  isolation: isolate;
+  pointer-events: none;
+}
+.experience .pet-duo .pet-canvas {
+  position: absolute;
+  inset: 0 0 39px;
+  width: auto;
+  height: auto;
+  filter: drop-shadow(0 12px 14px #0b080b24);
+}
+.experience .pet-duo .pet-canvas canvas {
+  width: 100%;
+  height: 100%;
+}
+.experience .pet-duo .pet-touch-zones {
+  position: absolute;
+  inset: 13% 18% 25%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  pointer-events: none;
+}
+.experience .pet-duo .pet-touch-zones button {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 44%;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.experience .pet-duo .pet-touch-zones button:focus-visible {
+  outline: 1px solid #ebcfa5;
+  outline-offset: 3px;
+  background: #fff4db08;
+}
+.experience .pet-duo .pet-dialogue {
+  position: absolute;
+  inset: auto 0 31px;
+  color: #ead3b4;
+  font-size: 11px;
+  line-height: 1.65;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-shadow: 0 1px 10px #130d17;
+}
+.experience .pet-duo .pet-play {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: max-content;
+  min-width: 76px;
+  min-height: 28px;
+  padding: 4px 13px;
+  border: 1px solid #c5a87948;
+  border-radius: 20px;
+  color: #e8cba4;
+  background: #30231c99;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  transform: translateX(-50%);
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+  transition:
+    color 180ms,
+    border-color 180ms,
+    background 180ms;
+}
+.experience .pet-duo .pet-play:hover {
+  border-color: #e8cba490;
+  color: #fff0d7;
+  background: #5a4030b3;
+  transform: translateX(-50%);
+}
+.experience .pet-duo .pet-play:focus-visible {
+  outline: 2px solid #ebcfa5;
+  outline-offset: 3px;
+}
+.experience .pet-duo .pet-heart {
+  right: 46%;
+  top: 12%;
+  font-size: 25px;
+  color: #f3c5b5;
+}
+.experience .pet-unavailable {
+  position: relative;
+  inset: auto;
+  margin: 24px auto;
+  max-width: 280px;
+  color: #dbc7ab;
+  text-align: center;
+  line-height: 1.8;
+}
+@media (max-width: 700px) {
+  .experience .pet-companion.pet-duo {
+    position: relative;
+    inset: auto;
+    width: 280px;
+    height: 210px;
+    margin: 6px auto 0;
+  }
+  .experience .pet-duo .pet-canvas {
+    inset: -2px 0 34px;
+  }
+  .experience .pet-duo .pet-dialogue {
+    bottom: 30px;
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .experience .pet-duo .pet-heart.visible {
+    animation: none;
+    opacity: 1;
+  }
+}
