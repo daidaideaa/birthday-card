@@ -62,3 +62,7 @@ GitHub Pages 地址：<https://daidaideaa.github.io/birthday-card/>。Vite 基�
 `scripts/models/` 保留 Blender 制作脚本；运行需要 Blender 4.3+。各模型的来源、再分发许可与修改说明随 `public/models/` 提供。网站运行不需要 Blender。动作通过 GLTFLoader / AnimationMixer 播放，参考 [Three.js 官方骨骼动画示例](https://threejs.org/examples/webgl_animation_skinning_blending.html)。
 
 模型使用原生离线渲染检查造型与动作，并用 Khronos glTF Validator 校验文件。离线模型渲染不能替代整页浏览器和手机布局验收。
+
+## AI 协作
+
+项目约定见 [AGENTS.md](AGENTS.md)。场景与角色的视觉改进可使用 [birthday-visual-review](.agents/skills/birthday-visual-review/SKILL.md)；下一轮需求可参考 [任务提示词](docs/TASK_PROMPTS.md)。资料按任务选择，无需每次全部读取。
