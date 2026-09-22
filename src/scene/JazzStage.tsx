@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import "./JazzStage.css";
+import { createJazzEnvironment } from "./JazzEnvironment";
 
 type JazzProps = {
   dancing: boolean;
@@ -68,18 +69,19 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
     mount.appendChild(renderer.domElement);
     renderer.domElement.setAttribute("aria-hidden", "true");
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 35);
-    camera.position.set(4.8, 3.7, 8);
-    camera.lookAt(0, 0.85, 0.15);
+    scene.add(createJazzEnvironment());
+    const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+    camera.position.set(1.4, 2.2, 7.4);
+    camera.lookAt(-0.05, 1.0, 0.1);
     const environment = new RoomEnvironment();
     const pmrem = new THREE.PMREMGenerator(renderer);
     const env = pmrem.fromScene(environment, 0.04);
     environment.dispose();
     pmrem.dispose();
     scene.environment = env.texture;
-    scene.environmentIntensity = 0.45;
-    const warm = new THREE.DirectionalLight("#ffe0a4", 2.4);
-    warm.position.set(-3, 5, 4);
+    scene.environmentIntensity = 0.3;
+    const warm = new THREE.DirectionalLight("#ffdbad", 2.0);
+    warm.position.set(-3, 4, 2);
     warm.castShadow = true;
     warm.shadow.mapSize.set(1024, 1024);
     warm.shadow.camera.left = -4;
@@ -88,7 +90,7 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
     warm.shadow.camera.bottom = -4;
     warm.shadow.normalBias = 0.035;
     warm.shadow.bias = -0.0002;
-    scene.add(warm, new THREE.HemisphereLight("#d9e1f6", "#282332", 0.95));
+    scene.add(warm, new THREE.HemisphereLight("#c3c9f6", "#252033", 0.8));
     const rim = new THREE.DirectionalLight("#91b9ee", 2.8);
     rim.position.set(2, 3, -3);
     scene.add(rim);
@@ -131,12 +133,19 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
     const render = (dt: number) => {
       noteEnvelope = Math.max(0, noteEnvelope - dt * 2.4);
       eased.lerp(pointer, 1 - Math.exp(-dt * 4));
-      if (!media.matches) {
-        mixer?.update(dt);
-        camera.position.x = 4.8 + eased.x * 0.15;
-        camera.position.y = 3.7 + eased.y * 0.09;
-        camera.lookAt(0, 0.85, 0.15);
-      }
+      if (!media.matches) mixer?.update(dt);
+      // 与舞步使用同一时钟，手机保留全身构图，镜头缓缓推进后停留。
+      const t = media.matches ? 0 : Math.min(action?.time ?? 0, 12);
+      const approach = THREE.MathUtils.smoothstep(t, 0, 3);
+      const turn = THREE.MathUtils.smoothstep(t, 6, 9.5);
+      const portrait = camera.aspect < 1;
+      const distance = portrait ? Math.max(5.9, 4.1 / camera.aspect) : 7.7;
+      camera.position.set(
+        (portrait ? 0.85 : 1.6) - approach * 0.32 + turn * 0.2 + eased.x * 0.08,
+        2.05 - approach * 0.10 + eased.y * 0.04,
+        distance - approach * 0.24,
+      );
+      camera.lookAt(portrait ? 0.20 : -0.05, 1.0, 0.05);
       if (action && action.time >= action.getClip().duration) moving = false;
       glow.intensity = media.matches ? 0 : noteEnvelope * 1.6;
       noteKeys.forEach((key, index) => {
@@ -177,6 +186,8 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
       if (canAnimate()) frame = requestAnimationFrame(tick);
     };
     const sync = () => {
+      const strike = state.current.note !== null && state.current.beat !== lastBeat;
+      const finished = action && action.time >= action.getClip().duration;
       if (state.current.note !== lastNote || state.current.beat !== lastBeat) {
         lastNote = state.current.note;
         lastBeat = state.current.beat;
@@ -184,12 +195,16 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
       }
       if (
         state.current.dancing &&
-        (!lastDancing || state.current.performance !== lastPerformance) &&
+        (!lastDancing || state.current.performance !== lastPerformance || (strike && finished)) &&
         action
       ) {
         action.reset().play();
         if (media.matches) mixer?.setTime(0);
         moving = !media.matches;
+      }
+      if (!state.current.dancing && lastDancing && action) {
+        action.paused = true;
+        moving = false;
       }
       lastPerformance = state.current.performance;
       lastDancing = state.current.dancing;
@@ -204,7 +219,7 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
           loader.loadAsync(`${import.meta.env.BASE_URL}models/jazz-duo.glb`),
         ]);
         if (
-          disposed ||
+          disposed || failed ||
           results.some((result) => result.status === "rejected")
         ) {
           results.forEach((result) => {
@@ -222,9 +237,9 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
         )
           return;
         const piano = pianoResult.value.scene;
-        piano.scale.setScalar(0.165);
-        piano.position.set(-1.45, 0.025, -0.4);
-        piano.rotation.y = -0.35;
+        piano.scale.setScalar(0.135);
+        piano.position.set(-1.35, 0.025, -1.1);
+        piano.rotation.y = -0.55;
         piano.traverse((object) => {
           if (!(object instanceof THREE.Mesh)) return;
           object.castShadow = true;
@@ -273,7 +288,7 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
             piano.add(leg);
           }
         duet = duoResult.value.scene;
-        duet.position.set(1.1, 0, 0.7);
+        duet.position.set(0.3, 0, 0.75);
         duet.traverse((object) => {
           if (object instanceof THREE.Mesh) {
             object.castShadow = true;
@@ -308,8 +323,8 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
       if (!bounds.width || !bounds.height) return;
       renderer.setSize(bounds.width, bounds.height, false);
       camera.aspect = bounds.width / bounds.height;
-      // Preserve the full stage on narrow displays without clipping the piano.
-      camera.fov = camera.aspect < 1.3 ? 39 : 32;
+      // Prioritize both dancers' full bodies; the piano sits behind them on phones.
+      camera.fov = camera.aspect < 1 ? 43 : 34;
       camera.updateProjectionMatrix();
       resume();
     };
@@ -383,7 +398,7 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
     <div className={`jazz-stage jazz-stage--${status}`}>
       <div className="jazz-stage__viewport" ref={host} />
       <p className="jazz-stage__accessible">
-        黑色三角钢琴旁，黄裙女孩与白衬衫男孩轻轻侧步，牵手转身，回到彼此身边。
+        暮色山顶的路灯下，黄裙女孩与白衬衫男孩并肩侧步、轻踢、牵手转身，三角钢琴在身后伴奏。
       </p>
       {status !== "ready" && (
         <p className="jazz-stage__status" role="status">

@@ -67,10 +67,10 @@ export function PianoDance({ onPlay }: { onPlay: (note?: number) => void }) {
   const play = (note?: number) => {
     clear();
     setDancing(true);
-    setPerformance((value) => value + 1);
+    if (note === undefined || !dancing) setPerformance((value) => value + 1);
     const notes =
       note === undefined
-        ? [60, 64, 67, 71, 69, 67, 64, 62, 60, 64, 67, 72, 71, 67, 64, 60]
+        ? [60, 64, 67, 71, 69, 67, 64, 62, 60, 64, 67, 72, 71, 67, 64, 60, 62, 65, 69, 72, 71, 67, 64, 60]
         : [note];
     notes.forEach((midi, i) => {
       const strike = () => {
@@ -79,13 +79,13 @@ export function PianoDance({ onPlay }: { onPlay: (note?: number) => void }) {
         setBeat((b) => b + 1);
       };
       if (i === 0) strike();
-      else timers.current.push(window.setTimeout(strike, i * 470));
+      else timers.current.push(window.setTimeout(strike, i * 500));
     });
     timers.current.push(
-      window.setTimeout(() => setPressed(null), notes.length * 470),
+      window.setTimeout(() => setPressed(null), notes.length * 500),
     );
     timers.current.push(
-      window.setTimeout(() => setDancing(false), notes.length * 470 + 800),
+      window.setTimeout(() => setDancing(false), note === undefined ? 12300 : 12000),
     );
   };
   return (
@@ -113,11 +113,11 @@ export function PianoDance({ onPlay }: { onPlay: (note?: number) => void }) {
             />
           ))}
         </div>
-        <span className="night-caption">今晚，星光也为你伴奏。</span>
+        <span className="night-caption">暮色里，和你跳一支舞。</span>
       </div>
       <div className="piano-console" data-navigation-lock>
         <div className="piano-console-label">
-          <span>一首，送给你的夜曲</span>
+          <span>山顶的夜曲 · 送给你</span>
           <span aria-hidden="true">♫</span>
         </div>
         <div className="piano-keys" aria-label="可弹奏的钢琴">
@@ -143,7 +143,7 @@ export function PianoDance({ onPlay }: { onPlay: (note?: number) => void }) {
           ))}
         </div>
         <button className="piano-play" onClick={() => play()}>
-          {dancing ? "♫ 再弹一次，让舞步继续" : "♫ 点亮夜色，弹一段小夜曲"}
+          {dancing ? "♫ 从头再跳一支舞" : "♫ 开始我们的双人舞"}
         </button>
       </div>
     </aside>
