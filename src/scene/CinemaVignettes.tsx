@@ -37,7 +37,13 @@ export function MagicWand({
   );
 }
 
-export function PianoDance({ onPlay }: { onPlay: (note?: number) => void }) {
+export function PianoDance({
+  onPlay,
+  onComplete,
+}: {
+  onPlay: (note?: number) => void;
+  onComplete?: () => void;
+}) {
   const [dancing, setDancing] = useState(false),
     [pressed, setPressed] = useState<number | null>(null),
     [beat, setBeat] = useState(0),
@@ -47,30 +53,36 @@ export function PianoDance({ onPlay }: { onPlay: (note?: number) => void }) {
     timers.current.forEach(clearTimeout);
     timers.current = [];
   };
-  useEffect(
-    () => {
-      const pause = () => {
-        if (!document.hidden) return;
-        timers.current.forEach(clearTimeout);
-        timers.current = [];
-        setDancing(false);
-        setPressed(null);
-      };
-      document.addEventListener("visibilitychange", pause);
-      return () => {
-        timers.current.forEach(clearTimeout);
-        document.removeEventListener("visibilitychange", pause);
-      };
-    },
-    [],
-  );
+  const finish = () => {
+    clear();
+    setDancing(false);
+    setPressed(null);
+    onComplete?.();
+  };
+  useEffect(() => {
+    const pause = () => {
+      if (!document.hidden) return;
+      timers.current.forEach(clearTimeout);
+      timers.current = [];
+      setDancing(false);
+      setPressed(null);
+    };
+    document.addEventListener("visibilitychange", pause);
+    return () => {
+      timers.current.forEach(clearTimeout);
+      document.removeEventListener("visibilitychange", pause);
+    };
+  }, []);
   const play = (note?: number) => {
     clear();
     setDancing(true);
     if (note === undefined || !dancing) setPerformance((value) => value + 1);
     const notes =
       note === undefined
-        ? [60, 64, 67, 71, 69, 67, 64, 62, 60, 64, 67, 72, 71, 67, 64, 60, 62, 65, 69, 72, 71, 67, 64, 60]
+        ? [
+            60, 64, 67, 71, 69, 67, 64, 62, 60, 64, 67, 72, 71, 67, 64, 60, 62,
+            65, 69, 72, 71, 67, 64, 60,
+          ]
         : [note];
     notes.forEach((midi, i) => {
       const strike = () => {
@@ -85,7 +97,7 @@ export function PianoDance({ onPlay }: { onPlay: (note?: number) => void }) {
       window.setTimeout(() => setPressed(null), notes.length * 500),
     );
     timers.current.push(
-      window.setTimeout(() => setDancing(false), note === undefined ? 12300 : 12000),
+      window.setTimeout(finish, note === undefined ? 12300 : 12000),
     );
   };
   return (
@@ -100,6 +112,7 @@ export function PianoDance({ onPlay }: { onPlay: (note?: number) => void }) {
           note={pressed}
           beat={beat}
           performance={performance}
+          onFinished={finish}
         />
         <div className="night-petals" aria-hidden="true">
           {Array.from({ length: 10 }, (_, i) => (

@@ -10,6 +10,7 @@ type JazzProps = {
   note: number | null;
   beat: number;
   performance: number;
+  onFinished?: () => void;
 };
 
 function disposeObject(root: THREE.Object3D) {
@@ -36,10 +37,16 @@ function disposeObject(root: THREE.Object3D) {
 }
 
 /** Both dancers and the piano live in the same lit, shadowed 3D stage. */
-export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
+export function JazzStage({
+  dancing,
+  note,
+  beat,
+  performance,
+  onFinished,
+}: JazzProps) {
   const host = useRef<HTMLDivElement>(null);
-  const state = useRef({ dancing, note, beat, performance });
-  state.current = { dancing, note, beat, performance };
+  const state = useRef({ dancing, note, beat, performance, onFinished });
+  state.current = { dancing, note, beat, performance, onFinished };
   const synchronize = useRef<(() => void) | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
@@ -142,10 +149,10 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
       const distance = portrait ? Math.max(5.9, 4.1 / camera.aspect) : 7.7;
       camera.position.set(
         (portrait ? 0.85 : 1.6) - approach * 0.32 + turn * 0.2 + eased.x * 0.08,
-        2.05 - approach * 0.10 + eased.y * 0.04,
+        2.05 - approach * 0.1 + eased.y * 0.04,
         distance - approach * 0.24,
       );
-      camera.lookAt(portrait ? 0.20 : -0.05, 1.0, 0.05);
+      camera.lookAt(portrait ? 0.2 : -0.05, 1.0, 0.05);
       if (action && action.time >= action.getClip().duration) moving = false;
       glow.intensity = media.matches ? 0 : noteEnvelope * 1.6;
       noteKeys.forEach((key, index) => {
@@ -186,7 +193,8 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
       if (canAnimate()) frame = requestAnimationFrame(tick);
     };
     const sync = () => {
-      const strike = state.current.note !== null && state.current.beat !== lastBeat;
+      const strike =
+        state.current.note !== null && state.current.beat !== lastBeat;
       const finished = action && action.time >= action.getClip().duration;
       if (state.current.note !== lastNote || state.current.beat !== lastBeat) {
         lastNote = state.current.note;
@@ -195,7 +203,9 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
       }
       if (
         state.current.dancing &&
-        (!lastDancing || state.current.performance !== lastPerformance || (strike && finished)) &&
+        (!lastDancing ||
+          state.current.performance !== lastPerformance ||
+          (strike && finished)) &&
         action
       ) {
         action.reset().play();
@@ -219,7 +229,8 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
           loader.loadAsync(`${import.meta.env.BASE_URL}models/jazz-duo.glb`),
         ]);
         if (
-          disposed || failed ||
+          disposed ||
+          failed ||
           results.some((result) => result.status === "rejected")
         ) {
           results.forEach((result) => {
@@ -297,6 +308,7 @@ export function JazzStage({ dancing, note, beat, performance }: JazzProps) {
         });
         scene.add(duet);
         mixer = new THREE.AnimationMixer(duet);
+        mixer.addEventListener("finished", () => state.current.onFinished?.());
         const clips = duoResult.value.animations;
         if (clips.length) {
           const clip =
