@@ -44,7 +44,7 @@ def coat_normal():
     fx,fy=np.meshgrid(frequency,frequency)
     # Isotropic, periodic fleece: no regular stripes and no painted dark speckles.
     field=rng.standard_normal((n,n))
-    kernel=np.exp(-(fx*fx+fy*fy)/(2*.15*.15))
+    kernel=np.exp(-(fx*fx+fy*fy)/(2*.075*.075))
     h=np.fft.ifft2(np.fft.fft2(field)*kernel).real
     h=h/max(.001,h.std())*.45
     dx = (np.roll(h,-1,1)-np.roll(h,1,1))*.30
@@ -68,7 +68,7 @@ def material(name, color, roughness=.75, fleece=False):
         bs.inputs['Roughness'].default_value=.92
         bs.inputs['Sheen Weight'].default_value=.4
         tex=m.node_tree.nodes.new('ShaderNodeTexImage');tex.image=NORMAL
-        normal=m.node_tree.nodes.new('ShaderNodeNormalMap');normal.inputs['Strength'].default_value=.45
+        normal=m.node_tree.nodes.new('ShaderNodeNormalMap');normal.inputs['Strength'].default_value=.7
         m.node_tree.links.new(tex.outputs['Color'],normal.inputs['Color'])
         m.node_tree.links.new(normal.outputs['Normal'],bs.inputs['Normal'])
     return m
@@ -98,7 +98,7 @@ def unwrap(ob):
         local_y=.10-.40*smoothstep(.80,1.10,z) if ob.name=='Continuous coat' else cy
         layer.data[loop.index].uv=((math.atan2(y-local_y,x-cx)/math.tau+.5)*2,(z-low)/max(.001,high-low)*2)
 
-def sculpt(parts,name,mat,voxel=.027,texture_amount=.001):
+def sculpt(parts,name,mat,voxel=.024,texture_amount=.004):
     print('SCULPT',name,flush=True)
     ob=join(parts,name)
     remesh=ob.modifiers.new('Continuous sculpt','REMESH');remesh.mode='VOXEL';remesh.voxel_size=voxel;remesh.use_smooth_shade=True
@@ -204,46 +204,47 @@ def make_dog(variant):
     rose=material('Rose tongue',(.57,.19,.20),.72)
     ribbon=material('Sage ribbon' if variant else 'Berry collar',(.20,.36,.29) if variant else (.28,.055,.069),.78)
     gold=material('Brass tag',(.58,.37,.12),.36)
-    parts=[sphere('body',(0,.13,.68),(.30,.49,.32)),sphere('chest',(0,-.18,.81),(.28,.29,.35)),sphere('neck',(0,-.23,1.02),(.26,.25,.28)),sphere('head',(0,-.29,1.26),(.427,.335,.342)),sphere('crown',(0,-.235,1.435),(.33,.282,.22))]
-    for x,z,r in [(-.23,1.485,.12),(0,1.55,.125),(.21,1.49,.125)]:
+    # 保留四足犬的胸腹、口鼻与圆润修剪轮廓，避免玩偶式方头和粗脚掌。
+    parts=[sphere('body',(0,.16,.68),(.28,.52,.29)),sphere('chest',(0,-.18,.79),(.255,.27,.32)),sphere('neck',(0,-.23,1.00),(.22,.23,.28)),sphere('head',(0,-.29,1.25),(.36,.30,.31)),sphere('crown',(0,-.235,1.405),(.29,.26,.205))]
+    for x,z,r in [(-.18,1.46,.10),(0,1.51,.10),(.18,1.46,.10)]:
         parts.append(sphere('Integrated crown curl',(x,-.25,z),(r,.21,r)))
     for sign in [-1,1]:
-        parts += [sphere('cheek',(sign*.10,-.566,1.095),(.16,.127,.103))]
+        parts += [sphere('cheek',(sign*.09,-.595,1.10),(.145,.165,.112))]
         for y in [-.23,.38]:
-            parts += [sphere('upper leg',(sign*.225,y,.45),(.112,.127,.255)),sphere('paw',(sign*.225,y-.035,.125),(.13,.168,.104))]
+            parts += [sphere('upper leg',(sign*.225,y,.45),(.10,.113,.255)),sphere('paw',(sign*.225,y-.035,.125),(.112,.146,.098))]
     body=sculpt(parts,'Continuous coat',coat)
     meshes=[(body,'Body')]
     for side,sign in [('L',-1),('R',1)]:
-        ear=sphere('Ear '+side,(sign*.405,-.255,1.235),(.17,.195,.31),rotation=(.10,sign*-.19,0))
+        ear=sphere('Ear '+side,(sign*.365,-.23,1.21),(.145,.177,.28),rotation=(.10,sign*-.19,0))
         # Taper the ear root, leaving a broad, soft hanging end.
         for v in ear.data.vertices:
             v.co.x*=1-.23*smoothstep(-.10,.26,v.co.z)
         earparts=[ear]
         for z in [1.075,1.235,1.39]:
-            earparts.append(sphere('Integrated ear curl',(sign*.48,-.26,z),(.09,.165,.105)))
+            earparts.append(sphere('Integrated ear curl',(sign*.43,-.24,z-.02),(.075,.15,.09)))
         ear=sculpt(earparts,'Velvet ear '+side,ears,voxel=.019,texture_amount=.001)
         meshes.append((ear,'Ear'+side))
-        eye=sphere('Eye '+side,(sign*.162,-.590,1.29),(.071,.033,.074),black,rotation=(0,sign*.10,sign*-.09))
-        glint=sphere('Glint '+side,(sign*.162-.018,-.628,1.321),(.011,.006,.015),white,segments=20)
+        eye=sphere('Eye '+side,(sign*.146,-.570,1.29),(.054,.027,.058),black,rotation=(0,sign*.10,sign*-.09))
+        glint=sphere('Glint '+side,(sign*.146-.012,-.599,1.313),(.008,.005,.010),white,segments=20)
         eye=join([eye,glint],'Eye '+side)
         eye.shape_key_add(name='Basis');blink=eye.shape_key_add(name='Blink')
         for v in blink.data:v.co.z=1.29+(v.co.z-1.29)*.08
         meshes.append((eye,'Head'))
-    nose=sphere('Rounded triangle nose',(0,-.716,1.14),(.081,.047,.053),nose_mat)
+    nose=sphere('Rounded triangle nose',(0,-.77,1.15),(.076,.044,.050),nose_mat)
     for v in nose.data.vertices:v.co.x*=.85+.30*v.co.z/.053
     bpy.ops.object.transform_apply(location=True,rotation=True,scale=True);meshes.append((nose,'Head'))
     # A modest upturned dog smile, tucked underneath the muzzle.
     for sign in [-1,1]:
-        smile=line('Smile',[(0,-.688,1.097),(sign*.052,-.688,1.070),(sign*.10,-.667,1.089)],.006,mouth_mat)
+        smile=line('Smile',[(0,-.744,1.10),(sign*.047,-.734,1.080),(sign*.087,-.699,1.096)],.0045,mouth_mat)
         bpy.ops.object.transform_apply(location=True,rotation=True,scale=True);meshes.append((smile,'Head'))
-    tongue=sphere('Tongue',(0,-.683,1.050),(.028,.016,.029),rose);bpy.ops.object.transform_apply(location=True,rotation=True,scale=True);meshes.append((tongue,'Head'))
+    tongue=sphere('Tongue',(0,-.726,1.062),(.024,.014,.025),rose);bpy.ops.object.transform_apply(location=True,rotation=True,scale=True);meshes.append((tongue,'Head'))
     tail=line('Teddy tail',[(0,.51,.81),(0,.66,.96),(.018,.73,1.10),(.02,.72,1.17)],.077,coat)
     tail=sculpt([tail],'Soft tail',coat,voxel=.018,texture_amount=.0015);meshes.append((tail,'Tail'))
     # A small textile accent rather than a second ring around the face.
     if variant:
-        bow=sphere('Ribbon left',(-.325,-.435,1.53),(.072,.027,.038),ribbon,rotation=(0,.2,-.25))
-        bow2=sphere('Ribbon right',(-.215,-.435,1.55),(.072,.027,.038),ribbon,rotation=(0,-.2,-.25))
-        knot=sphere('Ribbon knot',(-.272,-.462,1.54),(.027,.024,.027),ribbon)
+        bow=sphere('Ribbon left',(-.285,-.405,1.49),(.058,.022,.031),ribbon,rotation=(0,.2,-.25))
+        bow2=sphere('Ribbon right',(-.195,-.405,1.51),(.058,.022,.031),ribbon,rotation=(0,-.2,-.25))
+        knot=sphere('Ribbon knot',(-.24,-.432,1.50),(.023,.02,.023),ribbon)
         bow=join([bow,bow2,knot],'Sage bow');meshes.append((bow,'Head'))
     else:
         tag=sphere('Little brass heart tag',(0,-.436,.81),(.035,.013,.042),gold)
