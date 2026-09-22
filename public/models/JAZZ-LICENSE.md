@@ -1,8 +1,8 @@
 # Jazz duet: source and license
 
-`jazz-duo.glb` combines **Quaternius** humanoid character and clothing meshes
-licensed under **CC0 1.0 Universal**, with original choreography, hairstyle
-geometry, and skirt geometry authored for this project.
+`jazz-duo.glb` combines **Quaternius** humanoid anatomy and a compatible outfit
+skeleton licensed under **CC0 1.0 Universal**, with original contemporary
+clothing, shoes, hairstyles, and choreography authored for this project.
 
 ## Original packs and license evidence
 
@@ -36,14 +36,15 @@ All four downloads are pinned to commit
 
 ## Changes in this project
 
-- Retained the source anatomy, face meshes, garment meshes, skeletal hierarchy,
+- Retained the source anatomy, face meshes, skeletal hierarchy,
   and corresponding skin weights; mapped source bone names where necessary.
-- Removed unused body regions, unused morph targets, and fantasy forearm cuffs.
-- Added original short/bob hairstyles and an overlapping ochre skirt with a
-  subtle follow-through morph; recolored clothing and footwear.
+- Removed hidden body regions, unused morph targets, and fantasy garment meshes.
+- Authored a white shirt with rolled sleeves, collar and narrow tie, straight
+  trousers, a gold dress and low dance shoes. Clothes follow the source skeleton.
+- Added short/bob hairstyles and skirt morphs for turn follow-through and kicks.
 - Reduced textures to 512 px, normalized scale, and optimized animation tracks.
-- Created an original eight-second paired sequence with preparation, shared
-  side steps, a hand-guided turn, and return. Blender hand/foot IK is baked into
+- Created an original twelve-second paired sequence with preparation, shared
+  side steps, two low kicks, a hand-guided turn, and return. Blender hand/foot IK is baked into
   the exported skeletal clip. This is authored animation, not motion capture.
 - The modified combined model is provided under CC0 1.0 Universal as well.
 
