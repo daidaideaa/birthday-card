@@ -880,3 +880,68 @@
     transition: none;
   }
 }
+
+
+/* 手机优先的双人舞：全身动作占据主画面，触控与书信留在舞台之外。 */
+.experience .cinema-piano .piano-night {
+  overflow: hidden;
+  isolation: isolate;
+}
+.experience .cinema-piano .night-caption {
+  top: 23px;
+  bottom: auto;
+  left: 18px;
+  right: 18px;
+  text-align: center;
+  z-index: 2;
+  pointer-events: none;
+  color: #fff0dc;
+  font-size: 16px;
+  text-shadow: 0 2px 14px #131324;
+}
+.experience .cinema-piano .night-petals { display: none; }
+.experience .piano-console .piano-play {
+  min-height: 48px;
+  font-size: 14px;
+  touch-action: manipulation;
+}
+@media (max-width: 700px) {
+  .experience.chapter-letter { min-height: 100svh; }
+  .experience.chapter-letter .memory-book { margin-top: 12px; }
+  .experience .cinema-piano {
+    width: calc(100% + 36px);
+    margin: 0 -18px 30px;
+    height: auto;
+    display: block;
+  }
+  .experience .cinema-piano .piano-night {
+    height: clamp(430px, 64svh, 570px);
+    min-height: 0;
+  }
+  .experience .cinema-piano .piano-console {
+    width: min(340px, calc(100% - 32px));
+    max-width: none;
+    margin: 14px auto 0;
+    padding: 14px 15px 2px;
+    border-radius: 8px;
+  }
+  .experience .piano-console .piano-keys { height: 72px; }
+  .experience .piano-console .piano-keys > button { touch-action: manipulation; }
+  .experience .piano-console .piano-console-label { font-size: 12px; }
+  .experience .letter-copy { padding: 25px 22px; }
+  .experience .pet-companion.pet-duo {
+    width: min(350px, 100%);
+    height: 265px;
+  }
+  .experience .pet-duo .pet-dialogue { font-size: 12px; }
+  .experience .pet-duo .pet-play {
+    min-height: 44px;
+    min-width: 100px;
+    font-size: 13px;
+  }
+  .experience .pet-duo .pet-canvas { inset: 0 0 55px; }
+  .experience .pet-duo .pet-dialogue { bottom: 44px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .experience .cinema-piano .piano-night { height: 360px; min-height: 360px; }
+}
