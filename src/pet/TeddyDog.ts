@@ -14,6 +14,11 @@ export class TeddyDog {
   private actions = new Map<string, THREE.AnimationAction>();
   private current?: THREE.AnimationAction;
   private head?: THREE.Bone;
+  private headPose = new THREE.Quaternion();
+  private gazePose = new THREE.Quaternion();
+  private gazeAngles = new THREE.Euler();
+  private gazeUntil = 0;
+  private tongue?: THREE.Mesh;
   private blinkMeshes: THREE.Mesh[] = [];
   private disposed = false;
   private time: number;
@@ -38,9 +43,12 @@ export class TeddyDog {
           return;
         }
         this.model.traverse((object) => {
-          if (object instanceof THREE.Bone && object.name === "Head")
+          if (object instanceof THREE.Bone && object.name === "Head") {
             this.head = object;
+            this.headPose.copy(object.quaternion);
+          }
           if (object instanceof THREE.Mesh) {
+            if (object.name === "Tongue") this.tongue = object;
             object.castShadow = !lowDetail;
             object.receiveShadow = true;
             object.frustumCulled = false;
@@ -96,6 +104,7 @@ export class TeddyDog {
     this.react("play");
   }
   lookAt(x: number, y: number) {
+    this.gazeUntil = this.time + 2.5;
     this.lookTarget.set(
       THREE.MathUtils.clamp(x, -1, 1),
       THREE.MathUtils.clamp(y, -1, 1),
@@ -113,13 +122,25 @@ export class TeddyDog {
     const previousReaction = this.reaction;
     this.reaction = Math.max(0, this.reaction - dt);
     if (previousReaction > 0 && this.reaction === 0) this.selectAnimation();
-    // The authored skeleton is the source of motion. These small offsets add gaze.
+    // 先还原上一帧的骨骼姿态，避免静态动作上的注视偏移逐帧累积。
+    this.head?.quaternion.copy(this.headPose);
     this.mixer.update(still ? 0 : dt);
-    this.look.lerp(this.lookTarget, 1 - Math.exp(-dt * 4));
-    if (this.head && !still) {
-      this.head.rotation.z += this.look.x * 0.065;
-      this.head.rotation.x -= this.look.y * 0.035;
+    if (this.time > this.gazeUntil) {
+      this.lookTarget.set(
+        Math.sin(this.time * 0.43 + this.variant * 2) * 0.32,
+        Math.sin(this.time * 0.27) * 0.14,
+      );
     }
+    this.look.lerp(this.lookTarget, 1 - Math.exp(-dt * 4));
+    if (this.head) {
+      this.headPose.copy(this.head.quaternion);
+      if (!still) {
+        this.gazeAngles.set(-this.look.y * 0.07, 0, this.look.x * 0.12);
+        this.gazePose.setFromEuler(this.gazeAngles);
+        this.head.quaternion.multiply(this.gazePose);
+      }
+    }
+    if (this.tongue) this.tongue.visible = this.reaction > 0 || this.mood === "happy";
     const blinkPhase = this.time % (this.variant ? 5.7 : 4.9);
     const blink =
       !still && blinkPhase > 4.55 && blinkPhase < 4.76
