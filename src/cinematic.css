@@ -495,7 +495,7 @@
 @media (max-width: 700px) {
   .experience {
     height: auto;
-    min-height: 1120px;
+    min-height: 100svh;
     padding-bottom: 90px;
     overflow: clip;
   }
@@ -532,7 +532,7 @@
     top: auto;
     left: auto;
     right: auto;
-    margin-top: 355px;
+    margin-top: 18px;
     align-items: center;
     text-align: center;
     min-height: 100px;
@@ -944,4 +944,463 @@
 }
 @media (max-height: 500px) and (orientation: landscape) {
   .experience .cinema-piano .piano-night { height: 360px; min-height: 360px; }
+}
+
+/* 阅读节奏：同一套纸张、灯光和转场，章节保留自己的色彩。 */
+.experience {
+  --motion-page: 650ms;
+  --motion-ui: 240ms;
+  --story-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.invitation-stage {
+  display: contents;
+}
+.experience .paper-page {
+  --page-shift: 14px;
+  --page-angle: -3deg;
+  animation: story-page var(--motion-page) var(--story-ease) both;
+}
+.experience .paper-page.turn-previous {
+  --page-shift: -14px;
+  --page-angle: 3deg;
+}
+@keyframes story-page {
+  from {
+    opacity: 0;
+    transform: translateX(var(--page-shift)) rotateY(var(--page-angle));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.experience .chapter-action,
+.experience .primary,
+.experience .text-button {
+  min-height: 44px;
+  transition:
+    color var(--motion-ui),
+    background var(--motion-ui),
+    transform var(--motion-ui);
+}
+
+/* 烛光下的硬壳相册：暗色桌面、布面书脊、纸边和接触阴影。 */
+.experience.chapter-moments .paper-page {
+  background: transparent;
+  color: #f0e3ce;
+  box-shadow: none;
+}
+.experience.chapter-moments .paper-page::before,
+.experience.chapter-moments .paper-page::after {
+  display: none;
+}
+.experience.chapter-moments .page-content {
+  padding: 20px 0;
+}
+.experience.chapter-moments .chapter-heading {
+  padding: 0 22px;
+}
+.experience.chapter-moments h2 em {
+  color: #e4c493;
+}
+.experience.chapter-moments .chapter-kicker {
+  color: #d7b787;
+}
+.experience.chapter-moments .chapter-heading > p {
+  color: #d0baa0;
+}
+.album-surface {
+  position: relative;
+  margin-top: 18px;
+  padding: 26px 30px 34px;
+  border: 1px solid #efd7ab5e;
+  border-left: 24px solid #45302d;
+  border-radius: 5px 10px 10px 5px;
+  color: #493c32;
+  background:
+    linear-gradient(
+      90deg,
+      #886c4830,
+      transparent 4%,
+      transparent 97%,
+      #fff8e580
+    ),
+    repeating-linear-gradient(0deg, #a68b6410 0 1px, transparent 1px 5px),
+    #efe0c7;
+  box-shadow:
+    inset 6px 0 12px #58402830,
+    0 3px #d8c3a2,
+    0 6px #9b8063,
+    0 9px #45302d,
+    0 22px 30px #06070bc0;
+}
+.album-surface::before {
+  content: "";
+  position: absolute;
+  left: -17px;
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  border-left: 1px dashed #d1ad784f;
+  pointer-events: none;
+}
+.album-inscription {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #856c4a;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  margin-bottom: 22px;
+}
+.album-surface .memory-gallery {
+  position: relative;
+  gap: 26px;
+}
+.album-surface .memory-print {
+  box-shadow:
+    0 2px 3px #47301e25,
+    0 12px 18px #47301e33;
+  background: #fff8e9;
+}
+.album-surface .memory-print:nth-child(2) {
+  margin-top: 26px;
+}
+.album-surface .memory-print:nth-child(3) {
+  margin-top: 6px;
+}
+.album-surface .photo-mat img {
+  filter: saturate(0.86) sepia(0.06);
+}
+.album-surface .memory-print p {
+  color: #77634f;
+}
+.album-controls {
+  display: none;
+}
+.experience.chapter-moments .album-closing,
+.experience.chapter-moments .preview-note {
+  color: #c9b598;
+}
+
+/* 先看舞蹈，再拆信；打开信件后卸载舞台，留出安静的阅读空间。 */
+.experience .letter-chapter.letter-sequence {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  min-height: 0;
+  width: 100%;
+  padding: 0;
+}
+.dance-introduction {
+  text-align: center;
+}
+.dance-introduction .chapter-kicker {
+  color: #cdb9d8;
+}
+.experience .dance-introduction h2 {
+  margin: 12px 0;
+  font-size: clamp(28px, 3.3vw, 44px);
+}
+.experience .dance-introduction h2 em {
+  color: #efd1a4;
+}
+.dance-introduction p {
+  font-size: 13px;
+  color: #d1c2cf;
+  line-height: 1.9;
+}
+.experience .letter-sequence .cinema-piano {
+  order: initial;
+  display: block;
+  min-height: 0;
+  height: auto;
+  width: min(900px, 100%);
+  align-self: center;
+  margin: 0;
+}
+.experience .letter-sequence .piano-night {
+  position: relative;
+  height: clamp(400px, 56svh, 560px);
+  min-height: 0;
+  border: 1px solid #ead5eb22;
+  border-radius: 12px;
+  box-shadow: 0 24px 50px #090b2440;
+}
+.experience .letter-sequence .piano-console {
+  margin: 16px auto 0;
+}
+.experience .letter-sequence .letter-skip {
+  color: #e6d4bf;
+  font-size: 13px;
+}
+.experience .letter-sequence .letter-copy {
+  order: initial;
+  width: min(640px, 100%);
+  max-width: 640px;
+  padding: clamp(24px, 4vw, 48px);
+  transform: none;
+  border-radius: 3px;
+  box-shadow:
+    0 3px #d7c6aa,
+    0 7px #ac977c,
+    0 24px 50px #070a1a55;
+  color: #4c3b35;
+  animation: letter-unfold var(--motion-page) var(--story-ease) both;
+}
+.experience .letter-sequence .letter-copy:focus {
+  outline: none;
+}
+.experience .letter-sequence .letter-copy h2 {
+  line-height: 1.5;
+  margin-bottom: 22px;
+}
+.experience .letter-sequence .letter-paragraph {
+  font-size: 16px;
+  line-height: 2.1;
+}
+.experience.chapter-letter .book-navigation {
+  max-width: 780px;
+  margin: 28px auto 0;
+}
+.experience .letter-sequence .envelope-scene {
+  padding-top: 6px;
+}
+.experience .letter-sequence.letter-open {
+  padding: 20px 0;
+}
+
+@media (max-width: 700px) {
+  .experience.chapter-birthday {
+    min-height: 100svh;
+    padding-bottom: 100px;
+  }
+  .experience .site-header {
+    height: 64px;
+  }
+  .experience .invitation-stage {
+    display: grid;
+    grid-template-areas: "eyebrow" "title" "wish" "description" "card" "caption" "actions" "footnote";
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px 22px 0;
+    text-align: center;
+  }
+  .experience .invitation-stage .hero-copy {
+    display: contents;
+  }
+  .experience .invitation-stage .eyebrow {
+    grid-area: eyebrow;
+    justify-content: center;
+    margin: 0 0 12px;
+    font-size: 10px;
+  }
+  .experience .invitation-stage h1 {
+    grid-area: title;
+    margin: 0;
+    font-size: clamp(28px, 7.7vw, 40px);
+    line-height: 1.4;
+  }
+  .experience .invitation-stage h1 br {
+    display: none;
+  }
+  .experience .invitation-stage h1 em {
+    display: inline;
+  }
+  .experience .invitation-stage .title-dot {
+    position: static;
+  }
+  .experience .invitation-stage .hero-wish {
+    grid-area: wish;
+    font-size: 24px;
+    margin: 5px 0 12px;
+  }
+  .experience .invitation-stage .hero-description {
+    grid-area: description;
+    max-width: none;
+    font-size: 12px;
+    line-height: 1.8;
+    margin: 0;
+  }
+  .experience .invitation-stage .scene {
+    grid-area: card;
+    position: relative;
+    inset: auto;
+    width: calc(100% + 28px);
+    margin: 0 -14px;
+    height: clamp(200px, 32svh, 310px);
+  }
+  .experience .invitation-stage .scene-caption {
+    grid-area: caption;
+    position: static;
+    transform: none;
+    margin: 0 0 12px;
+    font-size: 10px;
+  }
+  .experience .invitation-stage .hero-actions {
+    grid-area: actions;
+    position: static;
+    min-height: 0;
+    margin: 0;
+    gap: 4px;
+    align-items: center;
+    pointer-events: auto;
+  }
+  .experience .invitation-stage .hero-actions .primary {
+    min-height: 48px;
+  }
+  .experience .invitation-stage .hero-footnote {
+    grid-area: footnote;
+  }
+  .experience.chapter-birthday .wand-scene {
+    position: relative;
+    inset: auto;
+    width: 240px;
+    height: 95px;
+    margin: 12px auto 0;
+    transform: scale(0.7);
+    transform-origin: center;
+  }
+  .experience.chapter-birthday .pet-companion.pet-duo {
+    margin: 0 auto;
+  }
+  .experience.chapter-moments .page-content {
+    padding: 8px 0;
+  }
+  .experience.chapter-moments .chapter-heading {
+    padding: 0 10px;
+  }
+  .experience.chapter-moments .chapter-heading h2 {
+    font-size: 30px;
+    margin-bottom: 12px;
+  }
+  .album-surface {
+    border-left-width: 16px;
+    padding: 20px 12px 18px;
+    margin-top: 20px;
+  }
+  .album-surface::before {
+    left: -10px;
+  }
+  .album-inscription {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    margin: 0 0 12px;
+  }
+  .album-surface .memory-gallery {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(100% - 18px);
+    gap: 14px;
+    padding: 8px 0 20px;
+    margin: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: #aa8b66 transparent;
+  }
+  .album-surface .memory-print,
+  .album-surface .memory-print:nth-child(2),
+  .album-surface .memory-print:nth-child(3) {
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 8px 8px 18px;
+    transform: none;
+    scroll-snap-align: start;
+  }
+  .album-surface .photo-mat {
+    aspect-ratio: 4 / 5;
+    max-height: 48svh;
+  }
+  .album-surface .memory-print h3 {
+    font-size: 16px;
+  }
+  .album-surface .memory-print figcaption {
+    padding: 14px 6px 0;
+  }
+  .album-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .album-controls button {
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid #ac90694f;
+    border-radius: 50%;
+    color: #74583e;
+    background: #fff8e950;
+  }
+  .album-controls button:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+  .album-controls > span {
+    color: #755b3f;
+    text-align: center;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .album-controls small {
+    display: block;
+    margin-top: 5px;
+    font-size: 10px;
+    color: #876c50;
+  }
+  .experience .letter-chapter.letter-sequence {
+    gap: 20px;
+  }
+  .experience .letter-sequence .cinema-piano {
+    width: 100%;
+  }
+  .experience .letter-sequence .piano-night {
+    height: clamp(360px, 55svh, 490px);
+  }
+  .experience .letter-sequence .letter-copy {
+    padding: 28px 24px;
+  }
+  .experience .letter-sequence .letter-copy h2 {
+    font-size: 28px;
+  }
+  .experience .letter-sequence.letter-open {
+    padding-top: 4px;
+  }
+  .experience .dance-introduction h2 {
+    font-size: 28px;
+  }
+}
+@media (max-width: 700px) and (max-height: 700px) {
+  .experience .invitation-stage {
+    padding-top: 12px;
+  }
+  .experience .invitation-stage .eyebrow {
+    margin-bottom: 6px;
+  }
+  .experience .invitation-stage .hero-wish {
+    margin-bottom: 6px;
+  }
+  .experience .invitation-stage .scene {
+    height: 200px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .experience .paper-page,
+  .experience .letter-sequence .letter-copy {
+    animation: none;
+  }
+  .experience .album-surface .memory-gallery {
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+  .experience .chapter-action,
+  .experience .primary,
+  .experience .text-button {
+    transition: none;
+  }
 }

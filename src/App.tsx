@@ -18,6 +18,8 @@ export default function App() {
   const snapshot = useSyncExternalStore(book.subscribe, book.getSnapshot);
   const inBook = snapshot.index > 0;
   const chapter = book.chapters[snapshot.index].id;
+  const pianoAllowed = useRef(false);
+  pianoAllowed.current = chapter === "letter" && !snapshot.letterOpen;
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<BirthdayScene | null>(null);
   const audio = useRef<AudioController | null>(null);
@@ -48,8 +50,16 @@ export default function App() {
 
   useEffect(() => {
     scene.current?.setActive(!inBook);
-    audio.current?.setVolume(chapter === "letter" ? 0.16 : inBook ? 0.38 : 0.7);
-  }, [inBook, chapter]);
+    audio.current?.setVolume(
+      chapter === "letter"
+        ? snapshot.letterOpen
+          ? 0.08
+          : 0.28
+        : inBook
+          ? 0.38
+          : 0.7,
+    );
+  }, [inBook, chapter, snapshot.letterOpen]);
   useEffect(() => {
     setStoryReady(false);
     if (state !== "OPEN" || inBook) return;
@@ -182,20 +192,22 @@ export default function App() {
         className={"scene-response cue-" + cue.kind}
         aria-hidden="true"
       />
-      <div className="floating-candles" aria-hidden="true">
-        {Array.from({ length: 9 }, (_, i) => (
-          <i
-            key={i}
-            style={{
-              left: 8 + i * 10.5 + "%",
-              top: 8 + ((i * 17) % 30) + "%",
-              animationDelay: -i * 1.7 + "s",
-            }}
-          >
-            <b />
-          </i>
-        ))}
-      </div>
+      {(chapter === "birthday" || chapter === "moments") && (
+        <div className="floating-candles" aria-hidden="true">
+          {Array.from({ length: 9 }, (_, i) => (
+            <i
+              key={i}
+              style={{
+                left: 8 + i * 10.5 + "%",
+                top: 8 + ((i * 17) % 30) + "%",
+                animationDelay: -i * 1.7 + "s",
+              }}
+            >
+              <b />
+            </i>
+          ))}
+        </div>
+      )}
       <header className="site-header">
         <button className="wordmark" onClick={replay} aria-label="回到生日邀请">
           <span className="brand-spark" aria-hidden="true">
@@ -226,129 +238,133 @@ export default function App() {
         </div>
         <span className="header-dedication">一份只属于你的惊喜</span>
       </header>
-      {!inBook && (
-        <section className="hero-copy" aria-label="生日邀请">
-          <p className="eyebrow">
-            <span /> 今天的魔法，为你而来
-          </p>
-          <h1>
-            亲爱的
-            <br />
-            <em>{story.person.name}</em>
-            <span className="title-dot">，</span>
-          </h1>
-          <p className="hero-wish">生日快乐。</p>
-          <p className="hero-description">
-            把一点魔法、一点温柔，
-            <br />
-            和满满的喜欢，都藏进这份礼物里。
-          </p>
-          <div className="hero-actions">
-            {sceneError ? (
-              <>
-                <p className="fallback-note" role="status">
-                  贺卡正在休息，心意一样在这里。
-                </p>
-                <button
-                  className="primary"
-                  onClick={() => {
-                    setStarted(true);
-                    unlock();
-                    enterBook();
-                  }}
-                >
-                  打开生日故事 <span>→</span>
-                </button>
-              </>
-            ) : !started ? (
-              <>
-                <button
-                  className="primary"
-                  disabled={!ready}
-                  onClick={() => start(false)}
-                >
-                  {ready ? "打开这份惊喜" : "正在点亮烛光…"} <span>↗</span>
-                </button>
-                <button
-                  className="text-button camera-start"
-                  disabled={!ready}
-                  onClick={() => start(true)}
-                >
-                  也可以用手势打开 <span aria-hidden="true">✧</span>
-                </button>
-              </>
-            ) : (
-              <>
-                {storyReady ? (
+      <div className="invitation-stage" hidden={inBook}>
+        {!inBook && (
+          <section className="hero-copy" aria-label="生日邀请">
+            <p className="eyebrow">
+              <span /> 今天的魔法，为你而来
+            </p>
+            <h1>
+              亲爱的
+              <br />
+              <em>{story.person.name}</em>
+              <span className="title-dot">，</span>
+            </h1>
+            <p className="hero-wish">生日快乐。</p>
+            <p className="hero-description">
+              把一点魔法、一点温柔，
+              <br />
+              和满满的喜欢，都藏进这份礼物里。
+            </p>
+            <div className="hero-actions">
+              {sceneError ? (
+                <>
+                  <p className="fallback-note" role="status">
+                    贺卡正在休息，心意一样在这里。
+                  </p>
                   <button
                     className="primary"
-                    disabled={entering}
-                    onClick={enterBook}
-                  >
-                    翻开{book.chapters[1].label} <span>→</span>
-                  </button>
-                ) : (
-                  <button
-                    className="primary"
-                    disabled={entering}
                     onClick={() => {
+                      setStarted(true);
                       unlock();
-                      scene.current?.setOpen(!scene.current.motion.targetOpen);
+                      enterBook();
                     }}
                   >
-                    {open ? "合上贺卡" : "打开贺卡"}{" "}
-                    <span>{open ? "−" : "+"}</span>
+                    打开生日故事 <span>→</span>
                   </button>
-                )}
-                {storyReady && (
+                </>
+              ) : !started ? (
+                <>
                   <button
-                    className="text-button"
-                    disabled={entering}
-                    onClick={() => scene.current?.setOpen(false)}
+                    className="primary"
+                    disabled={!ready}
+                    onClick={() => start(false)}
                   >
-                    再看看封面
+                    {ready ? "打开这份惊喜" : "正在点亮烛光…"} <span>↗</span>
                   </button>
-                )}
-                {gesture.mode === "ready" && !storyReady && (
-                  <p className="gesture-hint" aria-live="polite">
-                    张开手掌，打开惊喜；握拳，合上贺卡。
-                  </p>
-                )}
-                {gesture.mode === "loading" && (
-                  <>
-                    <p className="gesture-hint">正在准备手势识别…</p>
+                  <button
+                    className="text-button camera-start"
+                    disabled={!ready}
+                    onClick={() => start(true)}
+                  >
+                    也可以用手势打开 <span aria-hidden="true">✧</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  {storyReady ? (
+                    <button
+                      className="primary"
+                      disabled={entering}
+                      onClick={enterBook}
+                    >
+                      翻开{book.chapters[1].label} <span>→</span>
+                    </button>
+                  ) : (
+                    <button
+                      className="primary"
+                      disabled={entering}
+                      onClick={() => {
+                        unlock();
+                        scene.current?.setOpen(
+                          !scene.current.motion.targetOpen,
+                        );
+                      }}
+                    >
+                      {open ? "合上贺卡" : "打开贺卡"}{" "}
+                      <span>{open ? "−" : "+"}</span>
+                    </button>
+                  )}
+                  {storyReady && (
                     <button
                       className="text-button"
-                      onClick={() => start(false)}
+                      disabled={entering}
+                      onClick={() => scene.current?.setOpen(false)}
                     >
-                      直接点击打开
+                      再看看封面
                     </button>
-                  </>
-                )}
-                {gesture.mode === "fallback" &&
-                  gesture.status.startsWith("暂时") && (
-                    <p className="fallback-note" role="status">
-                      {gesture.status}
+                  )}
+                  {gesture.mode === "ready" && !storyReady && (
+                    <p className="gesture-hint" aria-live="polite">
+                      张开手掌，打开惊喜；握拳，合上贺卡。
                     </p>
                   )}
-              </>
-            )}
-          </div>
-          <p className="hero-footnote">
-            <span aria-hidden="true">✧</span> 不着急，今天的时间都属于你。
-          </p>
-        </section>
-      )}
-      <div
-        ref={host}
-        className="scene"
-        hidden={inBook || sceneError}
-        data-card-state={state}
-        aria-label="可以拖动旋转的立体生日贺卡"
-      />
-      {!inBook && !sceneError && (
-        <span className="scene-caption">轻轻拖动，换个角度看看</span>
-      )}
+                  {gesture.mode === "loading" && (
+                    <>
+                      <p className="gesture-hint">正在准备手势识别…</p>
+                      <button
+                        className="text-button"
+                        onClick={() => start(false)}
+                      >
+                        直接点击打开
+                      </button>
+                    </>
+                  )}
+                  {gesture.mode === "fallback" &&
+                    gesture.status.startsWith("暂时") && (
+                      <p className="fallback-note" role="status">
+                        {gesture.status}
+                      </p>
+                    )}
+                </>
+              )}
+            </div>
+            <p className="hero-footnote">
+              <span aria-hidden="true">✧</span> 不着急，今天的时间都属于你。
+            </p>
+          </section>
+        )}
+        <div
+          ref={host}
+          className="scene"
+          hidden={inBook || sceneError}
+          data-card-state={state}
+          aria-label="可以拖动旋转的立体生日贺卡"
+        />
+        {!inBook && !sceneError && (
+          <span className="scene-caption">轻轻拖动，换个角度看看</span>
+        )}
+      </div>
       {inBook && (
         <MemoryBook
           key={snapshot.session}
@@ -359,7 +375,9 @@ export default function App() {
             emit("piano");
             void audio.current
               ?.unlock()
-              .then(() => audio.current?.playPiano(note))
+              .then(() => {
+                if (pianoAllowed.current) audio.current?.playPiano(note);
+              })
               .catch(() => setAudioError(true));
           }}
           onRoar={() => {
@@ -483,12 +501,45 @@ export default function App() {
             </p>
           )}
           <p>
-            风景照片来自 Unsplash，场景背景为生成绘画。幼狮与钢琴使用公开授权模型，作者与许可见项目素材说明。
+            风景照片来自
+            Unsplash，场景背景为生成绘画。幼狮与钢琴使用公开授权模型，作者与许可见项目素材说明。
           </p>
           <p>
-            幼狮：<a href="https://sketchfab.com/3d-models/baby-lion-c9599625dc474262aab754d7b63841f5" target="_blank" rel="noreferrer">kenchoo</a>（<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>）；
-            钢琴：<a href="https://poly.pizza/m/7U-93vxPOER" target="_blank" rel="noreferrer">jeremy</a>（<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer">CC BY 3.0</a>）。
-            本项目调整了材质，制作成年狮衍生与新动作。舞者基础网格与服装来自 Quaternius（CC0）。
+            幼狮：
+            <a
+              href="https://sketchfab.com/3d-models/baby-lion-c9599625dc474262aab754d7b63841f5"
+              target="_blank"
+              rel="noreferrer"
+            >
+              kenchoo
+            </a>
+            （
+            <a
+              href="https://creativecommons.org/licenses/by/4.0/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              CC BY 4.0
+            </a>
+            ）； 钢琴：
+            <a
+              href="https://poly.pizza/m/7U-93vxPOER"
+              target="_blank"
+              rel="noreferrer"
+            >
+              jeremy
+            </a>
+            （
+            <a
+              href="https://creativecommons.org/licenses/by/3.0/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              CC BY 3.0
+            </a>
+            ）。
+            本项目调整了材质，制作成年狮衍生与新动作。舞者基础网格与服装来自
+            Quaternius（CC0）。
           </p>
           <p>
             两只泰迪为本项目制作的三维角色，点击可以摸摸。摄像头只用于本地手势识别，不会上传画面。

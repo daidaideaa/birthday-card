@@ -58,19 +58,37 @@ export function CinematicAtmosphere({
       const age = (now - signal.current.time) / 1000,
         kind = signal.current.cue.kind,
         pulse = Math.max(0, 1 - age / 3);
+      const city = current.current === "letter";
+      const savanna = current.current === "finalWish";
+      const album = current.current === "moments";
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
+        if ((city || album) && i % 2) continue;
         let x =
             (s.x * w + Math.sin(time * 0.11 + s.phase) * 22 * s.depth + w) % w,
           y = (s.y * h - time * (3 + s.depth * 7) + h * 100) % h;
         let alpha = 0.15 + Math.sin(time * 0.7 + s.phase) ** 2 * 0.35;
-        if (kind === "roar" && pulse) {
+        if (city) {
+          // 城市灯光停在远处，不让满屏漂浮的魔法粒子穿过书信。
+          x = s.x * w;
+          y = h * (0.65 + s.y * 0.29);
+          alpha *= 0.55;
+        } else if (savanna) {
+          x = (s.x * w + time * (2 + s.depth * 5)) % w;
+          y = s.y * h;
+          alpha *= 0.75;
+        } else if (album) alpha *= 0.35;
+        if (savanna && kind === "roar" && pulse) {
           x = (x + age * 220 * s.depth) % w;
           y += Math.sin(age * 3 + s.phase) * pulse * 14;
         }
-        if (kind === "piano" && pulse)
-          y -= Math.sin((age * Math.PI) / 3) * 25 * s.depth;
-        if ((kind === "magic" || kind === "wish") && pulse && i < 32) {
+        if (city && kind === "piano" && pulse) alpha += pulse * 0.14;
+        if (
+          ((current.current === "birthday" && kind === "magic") ||
+            (savanna && kind === "wish")) &&
+          pulse &&
+          i < 32
+        ) {
           const a = s.phase,
             r = age * (60 + s.depth * 100);
           x =
@@ -82,8 +100,14 @@ export function CinematicAtmosphere({
           alpha = Math.min(0.85, pulse);
         }
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = current.current === "letter" ? "#ead9ff" : "#ffe2a8";
-        ctx.shadowColor = "#f4c676";
+        ctx.fillStyle = city
+          ? i % 4
+            ? "#ead9ff"
+            : "#ffd49c"
+          : savanna && s.y < 0.4
+            ? "#eee4da"
+            : "#ffe2a8";
+        ctx.shadowColor = city ? "#bba5dc" : "#f4c676";
         ctx.shadowBlur = i % 4 === 0 ? 9 : 0;
         ctx.beginPath();
         ctx.arc(x, y, s.size * (1 + pulse * 0.2), 0, Math.PI * 2);
