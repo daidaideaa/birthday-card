@@ -956,18 +956,48 @@
   display: contents;
 }
 .experience .paper-page {
-  --page-shift: 14px;
-  --page-angle: -3deg;
-  animation: story-page var(--motion-page) var(--story-ease) both;
+  --page-shift: 22px;
+  --page-angle: -4deg;
+  --page-lift: 26px;
+  animation: story-page 780ms cubic-bezier(0.16, 1, 0.3, 1) 210ms both;
 }
 .experience .paper-page.turn-previous {
-  --page-shift: -14px;
-  --page-angle: 3deg;
+  --page-shift: -22px;
+  --page-angle: 4deg;
 }
 @keyframes story-page {
   from {
     opacity: 0;
-    transform: translateX(var(--page-shift)) rotateY(var(--page-angle));
+    transform: translate(var(--page-shift), var(--page-lift))
+      rotateY(var(--page-angle)) scale(0.982);
+    filter: blur(9px) brightness(0.94);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+/* 章节内容分层入场：标题先行，正文随后浮起。 */
+.experience .page-content > * {
+  animation: content-rise 700ms var(--story-ease) 330ms both;
+}
+.experience .page-content > *:nth-child(2) {
+  animation-delay: 420ms;
+}
+.experience .page-content > *:nth-child(3) {
+  animation-delay: 500ms;
+}
+.experience .page-content > *:nth-child(n + 4) {
+  animation-delay: 560ms;
+}
+@keyframes content-rise {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -1391,6 +1421,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .experience .paper-page,
+  .experience .page-content > *,
   .experience .letter-sequence .letter-copy {
     animation: none;
   }

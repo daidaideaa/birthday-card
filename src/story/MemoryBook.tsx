@@ -31,7 +31,7 @@ export function MemoryBook({
     (delta: 1 | -1) => {
       if (performance.now() < lockUntil.current) return;
       if (controller.go(delta)) {
-        lockUntil.current = performance.now() + (reducedMotion() ? 180 : 650);
+        lockUntil.current = performance.now() + (reducedMotion() ? 180 : 950);
         setTurning(true);
       }
     },
@@ -40,7 +40,7 @@ export function MemoryBook({
   useEffect(() => {
     const timer = window.setTimeout(
       () => setTurning(false),
-      reducedMotion() ? 180 : 650,
+      reducedMotion() ? 180 : 950,
     );
     window.scrollTo({ top: 0, behavior: "instant" });
     root.current
@@ -187,6 +187,13 @@ export function MemoryBook({
           onNext={() => go(1)}
         />
       </PageTurn>
+      {!reducedMotion() && turning && (
+        <div key={`veil-${turn}`} className="cinema-veil" aria-hidden="true">
+          <i className="veil-bar veil-bar--top" />
+          <i className="veil-bar veil-bar--bottom" />
+          <i className="veil-flash" />
+        </div>
+      )}
       <button
         className="page-edge edge-left"
         aria-label="上一章"

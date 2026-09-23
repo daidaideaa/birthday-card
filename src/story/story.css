@@ -92,6 +92,68 @@
     transform: none;
   }
 }
+
+/* 章节切换的电影帷幕：黑边收拢、暖光扫过，再展开新一页。 */
+.cinema-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+.veil-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8.5vh;
+  background: #0b090d;
+  box-shadow: 0 0 34px #0009;
+}
+.veil-bar--top {
+  top: 0;
+  transform: translateY(-102%);
+  animation: veil-edge 940ms cubic-bezier(0.72, 0, 0.28, 1) both;
+}
+.veil-bar--bottom {
+  bottom: 0;
+  transform: translateY(102%);
+  animation: veil-edge 940ms cubic-bezier(0.72, 0, 0.28, 1) both;
+}
+.veil-flash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 46%, #f4ddb526, transparent 55%),
+    linear-gradient(#0b090d88, #0b090d2e 45%, #0b090d88);
+  opacity: 0;
+  animation: veil-flash 940ms ease both;
+}
+@keyframes veil-edge {
+  0% {
+    transform: translateY(var(--veil-from, -102%));
+  }
+  26%,
+  62% {
+    transform: none;
+  }
+  100% {
+    transform: translateY(var(--veil-from, -102%));
+  }
+}
+.veil-bar--bottom {
+  --veil-from: 102%;
+}
+@keyframes veil-flash {
+  0% {
+    opacity: 0;
+  }
+  24%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 .book-navigation {
   display: flex;
   align-items: center;

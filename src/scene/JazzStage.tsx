@@ -8,6 +8,52 @@ import { qualityPolicy } from "../cinematic/quality";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import "./JazzStage.css";
 import { createJazzEnvironment } from "./JazzEnvironment";
+import { injectFuzz, toPhysical } from "../utils/characterPolish";
+
+/** Silk, cotton and skin read differently under stage light; upgrade each. */
+function polishDancerMaterial(material: THREE.Material): THREE.Material {
+  const physical =
+    material instanceof THREE.MeshPhysicalMaterial
+      ? material
+      : toPhysical(material);
+  const name = physical.name.toLowerCase();
+  physical.envMapIntensity = 0.75;
+  if (/dress|skirt|cloth|fabric|yellow/.test(name)) {
+    // Flowing silk dress: strong sheen catching the lamp.
+    physical.sheen = 1;
+    physical.sheenRoughness = 0.42;
+    physical.sheenColor = new THREE.Color("#ffe9b8");
+    physical.roughness = 0.62;
+    injectFuzz(physical, { color: "#ffcf8e", strength: 0.22, power: 3 });
+  } else if (/shirt|white|cotton|pants|trouser/.test(name)) {
+    physical.sheen = 0.55;
+    physical.sheenRoughness = 0.6;
+    physical.sheenColor = new THREE.Color("#dfe8ff");
+    physical.roughness = Math.min(0.8, physical.roughness);
+  } else if (/skin|face|hand|arm|leg|body/.test(name)) {
+    // Soft subsurface warmth rather than flat plastic.
+    physical.roughness = 0.55;
+    physical.sheen = 0.35;
+    physical.sheenRoughness = 0.5;
+    physical.sheenColor = new THREE.Color("#ffc9a3");
+    injectFuzz(physical, { color: "#ff9d6e", strength: 0.14, power: 3.2 });
+  } else if (/hair/.test(name)) {
+    physical.roughness = 0.42;
+    physical.sheen = 0.5;
+    physical.sheenColor = new THREE.Color("#8a6a4a");
+  } else if (/shoe|leather|heel/.test(name)) {
+    physical.roughness = 0.3;
+    physical.clearcoat = 0.6;
+    physical.clearcoatRoughness = 0.25;
+  } else {
+    // Fallback: keep the original colour, add gentle stage softness.
+    physical.roughness = Math.min(0.85, physical.roughness ?? 0.8);
+    physical.sheen = 0.3;
+    physical.sheenRoughness = 0.55;
+    physical.sheenColor = new THREE.Color("#e8d9ff");
+  }
+  return physical;
+}
 
 type JazzProps = {
   dancing: boolean;
@@ -83,7 +129,7 @@ export function JazzStage({
     renderer.domElement.setAttribute("aria-hidden", "true");
     const scene = new THREE.Scene();
     scene.add(createJazzEnvironment());
-    scene.fog = new THREE.FogExp2("#514761", 0.012);
+    scene.fog = new THREE.FogExp2("#473c56", 0.026);
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
     camera.position.set(1.4, 2.2, 7.4);
     camera.lookAt(-0.05, 1.0, 0.1);
@@ -108,6 +154,10 @@ export function JazzStage({
     const rim = new THREE.DirectionalLight("#91b9ee", 2.8);
     rim.position.set(2, 3, -3);
     scene.add(rim);
+    // Cool back wash keeps the dancers separated from the black piano.
+    const separation = new THREE.DirectionalLight("#b9c8f2", 1.5);
+    separation.position.set(0.6, 2.6, -4.2);
+    scene.add(separation);
     const glow = new THREE.PointLight("#ffd58a", 0, 3.5, 2);
     glow.position.set(-0.75, 1.15, 0.6);
     scene.add(glow);
@@ -155,14 +205,22 @@ export function JazzStage({
       renderer.toneMappingExposure = look.exposure;
       warm.intensity = look.key;
       rim.intensity = look.rim;
+      // Handheld micro sway keeps the frame breathing between beats.
+      const t = director.time;
+      const swayX = media.matches ? 0 : Math.sin(t * 0.5) * 0.045;
+      const swayY = media.matches ? 0 : Math.sin(t * 0.34 + 1.2) * 0.028;
       const portrait = camera.aspect < 1;
-      const distance = portrait ? Math.max(5.9, 4.1 / camera.aspect) : 7.7;
+      const distance = portrait ? Math.max(5.6, 4.0 / camera.aspect) : 7.2;
       camera.position.set(
-        (portrait ? 0.85 : 1.6) - approach * 0.32 + turn * 0.2 + eased.x * 0.08,
-        2.05 - approach * 0.1 + eased.y * 0.04,
-        distance - approach * 0.24,
+        (portrait ? 0.85 : 1.35) -
+          approach * 0.3 +
+          turn * 0.2 +
+          eased.x * 0.08 +
+          swayX,
+        1.95 - approach * 0.06 + eased.y * 0.04 + swayY,
+        distance - approach * 0.35,
       );
-      camera.lookAt(portrait ? 0.2 : -0.05, 1.0, 0.05);
+      camera.lookAt(portrait ? 0.2 : -0.22, 1.25 + approach * 0.05, 0.05);
 
       glow.intensity = media.matches ? 0 : noteEnvelope * 1.6;
       noteKeys.forEach((key, index) => {
@@ -235,7 +293,7 @@ export function JazzStage({
           return;
         const piano = pianoResult.value.scene;
         piano.scale.setScalar(0.135);
-        piano.position.set(-1.35, 0.025, -1.1);
+        piano.position.set(-1.8, 0.025, -1.45);
         piano.rotation.y = -0.55;
         piano.traverse((object) => {
           if (!(object instanceof THREE.Mesh)) return;
@@ -290,6 +348,13 @@ export function JazzStage({
           if (object instanceof THREE.Mesh) {
             object.castShadow = true;
             object.receiveShadow = true;
+            // Fabric sheen and warm skin stop the dancers reading as plastic.
+            const materials = Array.isArray(object.material)
+              ? object.material
+              : [object.material];
+            object.material = Array.isArray(object.material)
+              ? materials.map(polishDancerMaterial)
+              : polishDancerMaterial(materials[0]);
           }
         });
         scene.add(duet);

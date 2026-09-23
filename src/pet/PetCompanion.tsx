@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { TeddyDog, type PuppyMood, type PuppyCue } from "./TeddyDog";
 import type { ChapterId } from "../content/storyTypes";
 import { qualityPolicy } from "../cinematic/quality";
 import { isMobile, reducedMotion } from "../utils/device";
+import { makeGlowTexture } from "../utils/characterPolish";
 import "./pet.css";
 export type SceneCue = { kind: PuppyCue; serial: number };
 
@@ -111,9 +113,17 @@ export function PetCompanion({
       renderer.domElement.setAttribute("aria-hidden", "true");
       renderer.domElement.addEventListener("webglcontextlost", lost);
       el.appendChild(renderer.domElement);
-      world.add(new THREE.HemisphereLight("#fff2dc", "#655064", 2.5));
-      const key = new THREE.DirectionalLight("#ffdfb1", 2.4);
-      key.position.set(-3, 5, 5);
+      // Soft studio reflections give the plush coat its gentle sheen.
+      const room = new RoomEnvironment();
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const envMap = pmrem.fromScene(room, 0.04);
+      room.dispose();
+      pmrem.dispose();
+      world.environment = envMap.texture;
+      world.environmentIntensity = 0.5;
+      world.add(new THREE.HemisphereLight("#fff2dc", "#5c4a5e", 1.15));
+      const key = new THREE.DirectionalLight("#ffdcae", 2.9);
+      key.position.set(-2.6, 4.6, 4.4);
       key.castShadow = !mobile && quality.shadows;
       key.shadow.mapSize.set(512, 512);
       key.shadow.camera.left = -3;
@@ -123,9 +133,12 @@ export function PetCompanion({
       key.shadow.bias = -0.001;
       key.shadow.radius = 4;
       world.add(key);
-      const rim = new THREE.DirectionalLight("#c6d8fc", 1.5);
-      rim.position.set(3, 3, -3);
+      const rim = new THREE.DirectionalLight("#ffc98f", 2.6);
+      rim.position.set(1.8, 3.4, -3.6);
       world.add(rim);
+      const fill = new THREE.DirectionalLight("#b9ccf5", 0.65);
+      fill.position.set(3.2, 1.6, 2.6);
+      world.add(fill);
       dogs.current = [
         new TeddyDog(mobile, 0, renderer),
         new TeddyDog(mobile, 1, renderer),
@@ -156,6 +169,30 @@ export function PetCompanion({
       ground.rotation.x = -Math.PI / 2;
       ground.receiveShadow = true;
       world.add(ground);
+      // Soft blob shadows keep the dogs grounded where real shadows are off.
+      const blobTexture = makeGlowTexture(
+        128,
+        "rgba(24,12,8,0.85)",
+        "rgba(24,12,8,0.4)",
+        "rgba(24,12,8,0)",
+      );
+      for (const [x, z, s] of [
+        [-0.52, 0.06, 1.15],
+        [0.53, -0.09, 1.02],
+      ] as const) {
+        const blob = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.05 * s, 0.62 * s),
+          new THREE.MeshBasicMaterial({
+            map: blobTexture,
+            transparent: true,
+            opacity: 0.34,
+            depthWrite: false,
+          }),
+        );
+        blob.rotation.x = -Math.PI / 2;
+        blob.position.set(x, 0.004, z + 0.08);
+        world.add(blob);
+      }
       const resize = () => {
         const w = el.clientWidth,
           h = el.clientHeight;
@@ -193,6 +230,7 @@ export function PetCompanion({
       world.traverse((o) => {
         if (o instanceof THREE.DirectionalLight) o.shadow.dispose();
       });
+      world.environment?.dispose();
       renderer?.dispose();
       renderer?.forceContextLoss();
       renderer?.domElement.remove();

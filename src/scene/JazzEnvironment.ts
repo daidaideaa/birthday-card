@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { makeGlowTexture, makeShaftTexture } from "../utils/characterPolish";
 
 /** 暮色、远山、城市和路灯处于同一三维空间，随镜头产生自然视差。 */
 export function createJazzEnvironment() {
@@ -9,22 +10,79 @@ export function createJazzEnvironment() {
       side: THREE.BackSide,
       depthWrite: false,
       uniforms: {
-        zenith: { value: new THREE.Color("#22234f") },
-        horizon: { value: new THREE.Color("#b87b96") },
+        zenith: { value: new THREE.Color("#1c1e45") },
+        horizon: { value: new THREE.Color("#c97f96") },
+        dusk: { value: new THREE.Color("#f2a674") },
       },
       vertexShader: `varying vec3 vPosition;
         void main() { vPosition = position;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `uniform vec3 zenith; uniform vec3 horizon;
+      fragmentShader: `uniform vec3 zenith; uniform vec3 horizon; uniform vec3 dusk;
         varying vec3 vPosition;
-        void main() { float h = smoothstep(-0.01, 0.32, normalize(vPosition).y);
-          gl_FragColor = vec4(mix(horizon, zenith, h), 1.0);
+        void main() {
+          vec3 dir = normalize(vPosition);
+          float h = smoothstep(-0.01, 0.34, dir.y);
+          vec3 col = mix(horizon, zenith, h);
+          // Warm dusk band hugging the horizon on the sunset side.
+          float band = exp(-abs(dir.y - 0.02) * 9.0) * smoothstep(0.4, -0.6, dir.x);
+          col = mix(col, dusk, band * 0.55);
+          gl_FragColor = vec4(col, 1.0);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
         }`,
     }),
   );
   group.add(sky);
+
+  // A rising moon with a soft halo, kept clear of the viewport edge.
+  const glowTexture = makeGlowTexture(96);
+  const moon = new THREE.Mesh(
+    new THREE.CircleGeometry(0.5, 32),
+    new THREE.MeshBasicMaterial({ color: "#ffeecf", toneMapped: false }),
+  );
+  moon.position.set(6.2, 7.6, -18);
+  moon.lookAt(0, 1.5, 8);
+  const moonHalo = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: "#ffe9c4",
+      transparent: true,
+      opacity: 0.38,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  moonHalo.position.copy(moon.position);
+  moonHalo.scale.setScalar(2.5);
+  group.add(moon, moonHalo);
+
+  // A scatter of early stars.
+  const starGeometry = new THREE.BufferGeometry();
+  const starCount = 130;
+  const starPositions = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount; i++) {
+    const angle = ((i * 0.754877) % 1) * Math.PI * 2;
+    const radius = 18 + ((i * 0.618034) % 1) * 16;
+    starPositions[i * 3] = Math.cos(angle) * radius;
+    starPositions[i * 3 + 1] = 4 + ((i * 0.381966) % 1) * 14;
+    starPositions[i * 3 + 2] = -14 - ((i * 0.5) % 1) * 10;
+  }
+  starGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(starPositions, 3),
+  );
+  const stars = new THREE.Points(
+    starGeometry,
+    new THREE.PointsMaterial({
+      color: "#dfe8ff",
+      size: 0.05,
+      transparent: true,
+      opacity: 0.75,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  group.add(stars);
 
   for (let layer = 0; layer < 3; layer++) {
     const ridge = new THREE.Shape();
@@ -42,27 +100,76 @@ export function createJazzEnvironment() {
     group.add(hill);
   }
 
-  const lights = new THREE.InstancedMesh(
-    new THREE.PlaneGeometry(0.035, 0.016),
-    new THREE.MeshBasicMaterial({ color: "#ffd8aa", toneMapped: false }),
-    260,
-  );
-  const transform = new THREE.Object3D();
-  for (let i = 0; i < 260; i++) {
+  // City bokeh: soft round lights at varied sizes instead of hard rectangles.
+  const bokehCount = 240;
+  const bokehGeometry = new THREE.BufferGeometry();
+  const bokehPositions = new Float32Array(bokehCount * 3);
+  const bokehColors = new Float32Array(bokehCount * 3);
+  const palette = [
+    new THREE.Color("#ffd8aa"),
+    new THREE.Color("#ffc37e"),
+    new THREE.Color("#f7e7c3"),
+    new THREE.Color("#d9b8ff"),
+  ];
+  for (let i = 0; i < bokehCount; i++) {
     const x = ((i * 0.618034) % 1) * 26 - 13;
-    transform.position.set(x, -0.3 + ((i * 0.381966) % 1) * 0.72, -9.6);
-    transform.scale.setScalar(0.55 + (i % 5) * 0.17);
-    transform.updateMatrix();
-    lights.setMatrixAt(i, transform.matrix);
+    bokehPositions[i * 3] = x;
+    bokehPositions[i * 3 + 1] = -0.3 + ((i * 0.381966) % 1) * 0.78;
+    bokehPositions[i * 3 + 2] = -9.6 - ((i * 0.754877) % 1) * 1.6;
+    const color = palette[i % palette.length];
+    bokehColors[i * 3] = color.r;
+    bokehColors[i * 3 + 1] = color.g;
+    bokehColors[i * 3 + 2] = color.b;
   }
-  group.add(lights);
+  bokehGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(bokehPositions, 3),
+  );
+  bokehGeometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(bokehColors, 3),
+  );
+  const bokeh = new THREE.Points(
+    bokehGeometry,
+    new THREE.PointsMaterial({
+      map: glowTexture,
+      size: 0.19,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false,
+    }),
+  );
+  group.add(bokeh);
 
-  const stone = new THREE.MeshStandardMaterial({ color: "#4a4659", roughness: 0.96 });
-  const terrace = new THREE.Mesh(new THREE.PlaneGeometry(22, 14), stone);
+  const stone = new THREE.MeshStandardMaterial({
+    color: "#33324a",
+    roughness: 0.46,
+    metalness: 0.14,
+    envMapIntensity: 1.1,
+  });
+  const terrace = new THREE.Mesh(new THREE.PlaneGeometry(30, 18), stone);
   terrace.rotation.x = -Math.PI / 2;
-  terrace.position.set(0, -0.012, 2.8);
+  terrace.position.set(0, -0.012, 3.4);
   terrace.receiveShadow = true;
   group.add(terrace);
+  // Follow-spot pool grounding the duet, like a stage light finding them.
+  const spotPool = new THREE.Mesh(
+    new THREE.CircleGeometry(2.1, 40),
+    new THREE.MeshBasicMaterial({
+      map: glowTexture,
+      color: "#e8b87e",
+      transparent: true,
+      opacity: 0.16,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  spotPool.rotation.x = -Math.PI / 2;
+  spotPool.position.set(0.3, 0.004, 0.75);
+  group.add(spotPool);
   const railMaterial = new THREE.MeshStandardMaterial({ color: "#27263b", roughness: 0.85 });
   const rail = new THREE.Mesh(new THREE.BoxGeometry(20, 0.055, 0.055), railMaterial);
   rail.position.set(0, 0.5, -3.7);
@@ -81,5 +188,63 @@ export function createJazzEnvironment() {
   const lamp = new THREE.PointLight("#ffd5a0", 5, 7, 2);
   lamp.position.copy(globe.position);
   group.add(pole, globe, lamp);
+
+  // Volumetric cone under the lamp plus a warm pool on the terrace.
+  const cone = new THREE.Mesh(
+    new THREE.ConeGeometry(0.95, 2.7, 24, 1, true),
+    new THREE.MeshBasicMaterial({
+      map: makeShaftTexture(64, 128),
+      color: "#ffbe78",
+      transparent: true,
+      opacity: 0.13,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    }),
+  );
+  cone.position.set(-1.68, 1.4, -1.5);
+  group.add(cone);
+  const pool = new THREE.Mesh(
+    new THREE.CircleGeometry(1.15, 32),
+    new THREE.MeshBasicMaterial({
+      map: glowTexture,
+      color: "#ffbe78",
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  pool.rotation.x = -Math.PI / 2;
+  pool.position.set(-1.68, 0.005, -1.5);
+  group.add(pool);
+
+  // Slow dust motes drifting through the lamplight.
+  const moteGeometry = new THREE.BufferGeometry();
+  const moteCount = 42;
+  const motePositions = new Float32Array(moteCount * 3);
+  for (let i = 0; i < moteCount; i++) {
+    motePositions[i * 3] = -1.68 + (((i * 0.618034) % 1) - 0.5) * 2.4;
+    motePositions[i * 3 + 1] = 0.3 + ((i * 0.381966) % 1) * 2.6;
+    motePositions[i * 3 + 2] = -1.5 + (((i * 0.754877) % 1) - 0.5) * 2.2;
+  }
+  moteGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(motePositions, 3),
+  );
+  const motes = new THREE.Points(
+    moteGeometry,
+    new THREE.PointsMaterial({
+      map: glowTexture,
+      color: "#ffdca6",
+      size: 0.045,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  motes.name = "lamp-motes";
+  group.add(motes);
   return group;
 }
