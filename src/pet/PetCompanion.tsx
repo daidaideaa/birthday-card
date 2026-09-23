@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { TeddyDog, type PuppyMood, type PuppyCue } from "./TeddyDog";
 import type { ChapterId } from "../content/storyTypes";
+import { qualityPolicy } from "../cinematic/quality";
 import { isMobile, reducedMotion } from "../utils/device";
 import "./pet.css";
 export type SceneCue = { kind: PuppyCue; serial: number };
@@ -51,6 +52,8 @@ export function PetCompanion({
     if (!host.current) return;
     const el = host.current,
       mobile = isMobile();
+    const quality = qualityPolicy();
+    let visible = false;
     let renderer: THREE.WebGLRenderer | undefined,
       frame = 0,
       last = 0,
@@ -61,9 +64,9 @@ export function PetCompanion({
     camera.position.set(0.4, 1.8, 4.7);
     camera.lookAt(0, 0.86, 0);
     const render = (now: number) => {
-      if (stopped || document.hidden || !renderer) return;
+      if (stopped || document.hidden || !visible || !renderer) return;
       frame = requestAnimationFrame(render);
-      if (last && now - last < (mobile ? 32 : 20)) return;
+      if (last && now - last < (quality.tier === "high" ? 20 : 32)) return;
       const dt = last ? Math.min((now - last) / 1000, 0.06) : 0;
       last = now;
       dogs.current.forEach((d) => d.update(dt, reducedMotion()));
@@ -72,7 +75,8 @@ export function PetCompanion({
     const visibility = () => {
       last = 0;
       cancelAnimationFrame(frame);
-      if (!document.hidden && !stopped) frame = requestAnimationFrame(render);
+      if (!document.hidden && !stopped && visible)
+        frame = requestAnimationFrame(render);
     };
     const lost = (e: Event) => {
       e.preventDefault();
@@ -80,6 +84,11 @@ export function PetCompanion({
       cancelAnimationFrame(frame);
       setFailed(true);
     };
+    const intersection = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      visibility();
+    });
+    intersection.observe(el);
     const pointer = (e: PointerEvent) => {
       dogs.current.forEach((d) =>
         d.lookAt(
@@ -91,13 +100,13 @@ export function PetCompanion({
     try {
       renderer = new THREE.WebGLRenderer({
         alpha: true,
-        antialias: !mobile,
+        antialias: quality.tier === "high",
         powerPreference: "low-power",
       });
-      renderer.setPixelRatio(Math.min(devicePixelRatio, mobile ? 1.25 : 1.7));
+      renderer.setPixelRatio(Math.min(quality.pixelRatio, 1.5));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.12;
-      renderer.shadowMap.enabled = !mobile;
+      renderer.shadowMap.enabled = !mobile && quality.shadows;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.domElement.setAttribute("aria-hidden", "true");
       renderer.domElement.addEventListener("webglcontextlost", lost);
@@ -105,7 +114,7 @@ export function PetCompanion({
       world.add(new THREE.HemisphereLight("#fff2dc", "#655064", 2.5));
       const key = new THREE.DirectionalLight("#ffdfb1", 2.4);
       key.position.set(-3, 5, 5);
-      key.castShadow = !mobile;
+      key.castShadow = !mobile && quality.shadows;
       key.shadow.mapSize.set(512, 512);
       key.shadow.camera.left = -3;
       key.shadow.camera.right = 3;
@@ -117,14 +126,21 @@ export function PetCompanion({
       const rim = new THREE.DirectionalLight("#c6d8fc", 1.5);
       rim.position.set(3, 3, -3);
       world.add(rim);
-      dogs.current = [new TeddyDog(mobile, 0), new TeddyDog(mobile, 1)];
-      void Promise.all(dogs.current.map((dog) => dog.ready)).catch(() => {
-        if (!stopped) {
-          stopped = true;
-          cancelAnimationFrame(frame);
-          setFailed(true);
-        }
-      });
+      dogs.current = [
+        new TeddyDog(mobile, 0, renderer),
+        new TeddyDog(mobile, 1, renderer),
+      ];
+      void Promise.all(dogs.current.map((dog) => dog.ready))
+        .then(() => {
+          if (!stopped) el.dataset.ready = "true";
+        })
+        .catch(() => {
+          if (!stopped) {
+            stopped = true;
+            cancelAnimationFrame(frame);
+            setFailed(true);
+          }
+        });
       dogs.current.forEach((dog, i) => {
         const place = new THREE.Group();
         place.position.set(i ? 0.53 : -0.52, 0, i ? -0.09 : 0.06);
@@ -162,6 +178,7 @@ export function PetCompanion({
       cancelAnimationFrame(frame);
       clearTimeout(timer.current);
       observer?.disconnect();
+      intersection.disconnect();
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("pointermove", pointer);
       dogs.current.forEach((d) => d.dispose());
@@ -173,7 +190,11 @@ export function PetCompanion({
         }
       });
       renderer?.domElement.removeEventListener("webglcontextlost", lost);
+      world.traverse((o) => {
+        if (o instanceof THREE.DirectionalLight) o.shadow.dispose();
+      });
       renderer?.dispose();
+      renderer?.forceContextLoss();
       renderer?.domElement.remove();
     };
   }, []);

@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { createModelLoader } from "../utils/modelLoader";
+import type { CinematicDirector } from "../cinematic/CinematicDirector";
+import { choreographJazz, jazzLook } from "../cinematic/timelines/jazzTimeline";
+import { CinemaPost } from "../cinematic/CinemaPost";
+import { qualityPolicy } from "../cinematic/quality";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import "./JazzStage.css";
 import { createJazzEnvironment } from "./JazzEnvironment";
@@ -9,8 +13,8 @@ type JazzProps = {
   dancing: boolean;
   note: number | null;
   beat: number;
-  performance: number;
-  onFinished?: () => void;
+  director: CinematicDirector;
+  onReady: () => void;
 };
 
 function disposeObject(root: THREE.Object3D) {
@@ -41,12 +45,12 @@ export function JazzStage({
   dancing,
   note,
   beat,
-  performance,
-  onFinished,
+  director,
+  onReady,
 }: JazzProps) {
   const host = useRef<HTMLDivElement>(null);
-  const state = useRef({ dancing, note, beat, performance, onFinished });
-  state.current = { dancing, note, beat, performance, onFinished };
+  const state = useRef({ dancing, note, beat, onReady });
+  state.current = { dancing, note, beat, onReady };
   const synchronize = useRef<(() => void) | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
@@ -55,28 +59,31 @@ export function JazzStage({
   useEffect(() => {
     const mount = host.current;
     if (!mount) return;
+    const quality = qualityPolicy();
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
-        antialias: true,
+        antialias: quality.tier === "high",
         alpha: true,
         powerPreference: "low-power",
       });
     } catch {
       setStatus("error");
+      state.current.onReady();
       return;
     }
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(quality.pixelRatio);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = quality.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor(0x000000, 0);
     mount.appendChild(renderer.domElement);
     renderer.domElement.setAttribute("aria-hidden", "true");
     const scene = new THREE.Scene();
     scene.add(createJazzEnvironment());
+    scene.fog = new THREE.FogExp2("#514761", 0.012);
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
     camera.position.set(1.4, 2.2, 7.4);
     camera.lookAt(-0.05, 1.0, 0.1);
@@ -90,7 +97,7 @@ export function JazzStage({
     const warm = new THREE.DirectionalLight("#ffdbad", 2.0);
     warm.position.set(-3, 4, 2);
     warm.castShadow = true;
-    warm.shadow.mapSize.set(1024, 1024);
+    warm.shadow.mapSize.set(quality.shadowSize, quality.shadowSize);
     warm.shadow.camera.left = -4;
     warm.shadow.camera.right = 4;
     warm.shadow.camera.top = 4;
@@ -112,6 +119,9 @@ export function JazzStage({
     floor.position.y = -0.008;
     floor.receiveShadow = true;
     scene.add(floor);
+    const post = new CinemaPost(renderer, scene, camera, quality.bloom);
+    const look = jazzLook();
+    choreographJazz(director, look);
     const keyMaterial = new THREE.MeshStandardMaterial({
       color: "#fff0c9",
       roughness: 0.4,
@@ -125,14 +135,9 @@ export function JazzStage({
     let disposed = false;
     let failed = false;
     let visible = true;
-    let frame = 0;
-    let previous = 0;
     let noteEnvelope = 0;
     let lastNote: number | null = null;
     let lastBeat = -1;
-    let lastPerformance = -1;
-    let lastDancing = false;
-    let moving = false;
     const media = matchMedia("(prefers-reduced-motion: reduce)");
     const pointer = new THREE.Vector2();
     const eased = new THREE.Vector2();
@@ -140,11 +145,16 @@ export function JazzStage({
     const render = (dt: number) => {
       noteEnvelope = Math.max(0, noteEnvelope - dt * 2.4);
       eased.lerp(pointer, 1 - Math.exp(-dt * 4));
-      if (!media.matches) mixer?.update(dt);
+      if (mixer && action) {
+        action.paused = false;
+        mixer.setTime(media.matches ? 0 : director.time);
+      }
       // 与舞步使用同一时钟，手机保留全身构图，镜头缓缓推进后停留。
-      const t = media.matches ? 0 : Math.min(action?.time ?? 0, 12);
-      const approach = THREE.MathUtils.smoothstep(t, 0, 3);
-      const turn = THREE.MathUtils.smoothstep(t, 6, 9.5);
+      const approach = media.matches ? 0 : look.approach;
+      const turn = media.matches ? 0 : look.turn;
+      renderer.toneMappingExposure = look.exposure;
+      warm.intensity = look.key;
+      rim.intensity = look.rim;
       const portrait = camera.aspect < 1;
       const distance = portrait ? Math.max(5.9, 4.1 / camera.aspect) : 7.7;
       camera.position.set(
@@ -153,7 +163,7 @@ export function JazzStage({
         distance - approach * 0.24,
       );
       camera.lookAt(portrait ? 0.2 : -0.05, 1.0, 0.05);
-      if (action && action.time >= action.getClip().duration) moving = false;
+
       glow.intensity = media.matches ? 0 : noteEnvelope * 1.6;
       noteKeys.forEach((key, index) => {
         const active =
@@ -165,63 +175,36 @@ export function JazzStage({
           ? 0.9 * (media.matches ? 0.4 : noteEnvelope)
           : 0;
       });
-      renderer.render(scene, camera);
-    };
-    const canAnimate = () =>
-      !disposed &&
-      !failed &&
-      visible &&
-      !document.hidden &&
-      !media.matches &&
-      (moving || noteEnvelope > 0);
-    const tick = (now: number) => {
-      frame = 0;
-      if (!canAnimate()) return;
-      if (!previous || now - previous >= 32) {
-        const dt = previous ? Math.min((now - previous) / 1000, 0.075) : 0;
-        previous = now;
-        render(dt);
-      }
-      if (canAnimate()) frame = requestAnimationFrame(tick);
+      post.render(media.matches ? 0 : look.bloom);
+      mount.dataset.time = director.time.toFixed(3);
     };
     const resume = () => {
-      cancelAnimationFrame(frame);
-      frame = 0;
-      previous = 0;
-      if (disposed || failed || !visible || document.hidden) return;
-      render(0);
-      if (canAnimate()) frame = requestAnimationFrame(tick);
+      if (!disposed && !failed && visible && !document.hidden) render(0);
     };
+    let renderDelta = 0;
+    const unsubscribe = director.subscribe((_time, dt) => {
+      renderDelta += dt;
+      if (
+        !disposed &&
+        !failed &&
+        visible &&
+        !document.hidden &&
+        (dt === 0 || renderDelta >= (quality.tier === "high" ? 1 / 60 : 1 / 30))
+      ) {
+        render(renderDelta);
+        renderDelta = 0;
+      }
+    });
     const sync = () => {
-      const strike =
-        state.current.note !== null && state.current.beat !== lastBeat;
-      const finished = action && action.time >= action.getClip().duration;
       if (state.current.note !== lastNote || state.current.beat !== lastBeat) {
         lastNote = state.current.note;
         lastBeat = state.current.beat;
         if (lastNote !== null) noteEnvelope = 1;
       }
-      if (
-        state.current.dancing &&
-        (!lastDancing ||
-          state.current.performance !== lastPerformance ||
-          (strike && finished)) &&
-        action
-      ) {
-        action.reset().play();
-        if (media.matches) mixer?.setTime(0);
-        moving = !media.matches;
-      }
-      if (!state.current.dancing && lastDancing && action) {
-        action.paused = true;
-        moving = false;
-      }
-      lastPerformance = state.current.performance;
-      lastDancing = state.current.dancing;
       resume();
     };
     synchronize.current = sync;
-    const loader = new GLTFLoader();
+    const { loader, dispose: disposeLoader } = createModelLoader(renderer);
     const load = async () => {
       try {
         const results = await Promise.allSettled([
@@ -237,7 +220,10 @@ export function JazzStage({
             if (result.status === "fulfilled")
               disposeObject(result.value.scene);
           });
-          if (!disposed) setStatus("error");
+          if (!disposed) {
+            setStatus("error");
+            state.current.onReady();
+          }
           return;
         }
         const pianoResult = results[0];
@@ -308,7 +294,7 @@ export function JazzStage({
         });
         scene.add(duet);
         mixer = new THREE.AnimationMixer(duet);
-        mixer.addEventListener("finished", () => state.current.onFinished?.());
+
         const clips = duoResult.value.animations;
         if (clips.length) {
           const clip =
@@ -318,14 +304,15 @@ export function JazzStage({
           action.clampWhenFinished = true;
           action.play();
           mixer.setTime(0);
-          moving = state.current.dancing && !media.matches;
-          if (!moving) action.paused = true;
         }
         setStatus("ready");
-        lastDancing = false;
+        state.current.onReady();
         sync();
       } catch {
-        if (!disposed) setStatus("error");
+        if (!disposed) {
+          setStatus("error");
+          state.current.onReady();
+        }
       }
     };
     void load();
@@ -334,6 +321,7 @@ export function JazzStage({
       const bounds = mount.getBoundingClientRect();
       if (!bounds.width || !bounds.height) return;
       renderer.setSize(bounds.width, bounds.height, false);
+      post.resize(bounds.width, bounds.height);
       camera.aspect = bounds.width / bounds.height;
       // Prioritize both dancers' full bodies; the piano sits behind them on phones.
       camera.fov = camera.aspect < 1 ? 43 : 34;
@@ -349,20 +337,11 @@ export function JazzStage({
       );
     };
     const leave = () => pointer.set(0, 0);
-    const motionChange = () => {
-      if (media.matches) {
-        mixer?.setTime(0);
-        moving = false;
-      } else if (state.current.dancing && action) {
-        action.reset().play();
-        moving = true;
-      }
-      resume();
-    };
+    const motionChange = () => resume();
     const contextLost = (event: Event) => {
       event.preventDefault();
       failed = true;
-      cancelAnimationFrame(frame);
+      state.current.onReady();
       setStatus("error");
     };
     const resizeObserver = new ResizeObserver(resize);
@@ -384,7 +363,7 @@ export function JazzStage({
     return () => {
       disposed = true;
       synchronize.current = null;
-      cancelAnimationFrame(frame);
+
       resizeObserver.disconnect();
       intersection.disconnect();
       document.removeEventListener("visibilitychange", resume);
@@ -392,6 +371,9 @@ export function JazzStage({
       mount.removeEventListener("pointermove", move);
       mount.removeEventListener("pointerleave", leave);
       renderer.domElement.removeEventListener("webglcontextlost", contextLost);
+      unsubscribe();
+      post.dispose();
+      disposeLoader();
       mixer?.stopAllAction();
       if (duet) mixer?.uncacheRoot(duet);
       disposeObject(scene);
@@ -402,9 +384,9 @@ export function JazzStage({
       renderer.forceContextLoss();
       renderer.domElement.remove();
     };
-  }, []);
+  }, [director]);
 
-  useEffect(() => synchronize.current?.(), [dancing, note, beat, performance]);
+  useEffect(() => synchronize.current?.(), [dancing, note, beat]);
 
   return (
     <div className={`jazz-stage jazz-stage--${status}`}>

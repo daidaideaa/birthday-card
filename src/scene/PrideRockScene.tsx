@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { createModelLoader } from "../utils/modelLoader";
+import { qualityPolicy } from "../cinematic/quality";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { assetUrl } from "../utils/assetUrl";
 import "./pride-rock.css";
@@ -24,57 +25,81 @@ type Actor = {
 };
 
 function makeRock() {
-  const geometry = new THREE.BufferGeometry();
-  // A weathered projecting ledge, with a broad safe surface for the two lions.
-  const vertices = [
-    [-2.5, 0, 1.55],
-    [2.2, 0, 1.4],
-    [2.65, 0, -0.15],
-    [1.7, 0, -1.1],
-    [-2.15, 0, -1.3],
-    [-1.8, -0.78, 1.3],
-    [1.95, -0.72, 1.05],
-    [2.1, -1.02, -0.12],
-    [1.55, -0.87, -0.95],
-    [-1.8, -0.75, -1.15],
+  // Preserve a flat walking surface, bevel the rim, and break the lower strata silhouette.
+  const outline = [
+    [-2.5, 1.55],
+    [-1.1, 1.66],
+    [0.4, 1.54],
+    [2.2, 1.4],
+    [2.65, -0.15],
+    [1.7, -1.1],
+    [0.3, -1.22],
+    [-2.15, -1.3],
+    [-2.48, -0.2],
   ];
-  const faces = [
-    [0, 1, 2],
-    [0, 2, 3],
-    [0, 3, 4],
-    [0, 5, 6],
-    [0, 6, 1],
-    [1, 6, 7],
-    [1, 7, 2],
-    [2, 7, 8],
-    [2, 8, 3],
-    [3, 8, 9],
-    [3, 9, 4],
-    [4, 9, 5],
-    [4, 5, 0],
-  ];
-  const positions: number[] = [];
-  const colors: number[] = [];
-  faces.forEach((face, index) => {
-    const color = new THREE.Color(
-      index < 3 ? "#927556" : index % 2 ? "#675140" : "#534536",
-    );
-    face.forEach((vertex) => {
-      positions.push(...vertices[vertex]);
+  const vertices: number[] = [],
+    colors: number[] = [],
+    indices: number[] = [],
+    uv: number[] = [];
+  for (let layer = 0; layer < 4; layer++)
+    for (let i = 0; i < outline.length; i++) {
+      const [x, z] = outline[i],
+        scale = [0.96, 1, 0.92, 0.78][layer];
+      const y =
+        [0, -0.1, -0.4, -0.85][layer] +
+        (layer > 1 ? Math.sin(i * 2.7 + layer) * 0.095 : 0);
+      vertices.push(
+        x * scale + (layer > 1 ? Math.sin(i * 1.8) * 0.12 : 0),
+        y,
+        z * scale,
+      );
+      uv.push((x + 3) / 6, (z + 2) / 4);
+      const color = new THREE.Color(
+        ["#94795d", "#85694e", "#6f5945", "#534537"][layer],
+      );
       colors.push(color.r, color.g, color.b);
-    });
-  });
+      if (layer < 3) {
+        const n = outline.length,
+          a = layer * n + i,
+          b = layer * n + ((i + 1) % n);
+        indices.push(a, a + n, b, b, a + n, b + n);
+      }
+    }
+  for (let i = 1; i < outline.length - 1; i++) indices.push(0, i, i + 1);
+  const geometry = new THREE.BufferGeometry();
   geometry.setAttribute(
     "position",
-    new THREE.Float32BufferAttribute(positions, 3),
+    new THREE.Float32BufferAttribute(vertices, 3),
   );
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+  geometry.setIndex(indices);
   geometry.computeVertexNormals();
+  const pixels = new Uint8Array(128 * 128 * 4);
+  for (let y = 0; y < 128; y++)
+    for (let x = 0; x < 128; x++) {
+      const offset = (y * 128 + x) * 4;
+      const grain = Math.sin(x * 1.7 + y * 0.6) * Math.cos(y * 2.3 - x * 0.8);
+      const seam = Math.pow(
+        Math.max(0, Math.cos(y * 0.36 + Math.sin(x * 0.085) * 0.8)),
+        18,
+      );
+      const value = 205 + grain * 12 - seam * 35;
+      pixels.set([value, value, value, 255], offset);
+    }
+  const stone = new THREE.DataTexture(pixels, 128, 128);
+  stone.needsUpdate = true;
+  stone.wrapS = stone.wrapT = THREE.RepeatWrapping;
+  stone.repeat.set(3, 2);
   const mesh = new THREE.Mesh(
     geometry,
     new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 1,
+      map: stone,
+      flatShading: true,
+      roughness: 0.94,
+      bumpMap: stone,
+      bumpScale: 0.05,
       side: THREE.DoubleSide,
     }),
   );
@@ -98,7 +123,7 @@ function makeActor(gltf: GLTF, scale: number): Actor {
       ? object.material
       : [object.material];
     const copies = source.map((material) => {
-      const next = material.clone() as THREE.MeshStandardMaterial;
+      const next = material as THREE.MeshStandardMaterial;
       next.transparent = true;
       next.roughness = Math.max(0.7, next.roughness ?? 0.7);
       next.metalness = 0;
@@ -138,6 +163,7 @@ function disposeTree(root: THREE.Object3D) {
     if (!(object instanceof THREE.Mesh || object instanceof THREE.Points))
       return;
     object.geometry.dispose();
+    if (object instanceof THREE.SkinnedMesh) object.skeleton.dispose();
     (Array.isArray(object.material)
       ? object.material
       : [object.material]
@@ -172,11 +198,12 @@ export function PrideRockScene({
   useEffect(() => {
     const container = host.current;
     if (!container) return;
+    const quality = qualityPolicy();
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
         alpha: true,
-        antialias: true,
+        antialias: quality.tier === "high",
         powerPreference: "high-performance",
       });
     } catch {
@@ -184,14 +211,12 @@ export function PrideRockScene({
       readyCallback.current?.();
       return;
     }
-    renderer.setPixelRatio(
-      Math.min(devicePixelRatio, innerWidth < 700 ? 1.5 : 2),
-    );
+    renderer.setPixelRatio(quality.pixelRatio);
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = quality.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.domElement.setAttribute("aria-hidden", "true");
     container.appendChild(renderer.domElement);
@@ -201,7 +226,7 @@ export function PrideRockScene({
     const sun = new THREE.DirectionalLight("#ffd095", 3.3);
     sun.position.set(-3, 5, -2);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(quality.shadowSize, quality.shadowSize);
     sun.shadow.camera.left = -4;
     sun.shadow.camera.right = 4;
     sun.shadow.camera.top = 4;
@@ -211,8 +236,9 @@ export function PrideRockScene({
     faceLight.position.set(3, 3, 6);
     scene.add(ambient, sun, faceLight, makeRock());
     const dustGeometry = new THREE.BufferGeometry();
-    const dust = new Float32Array(180);
-    for (let i = 0; i < 60; i++) {
+    const dustCount = Math.round(60 * quality.particleScale);
+    const dust = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
       dust[i * 3] = Math.sin(i * 2.399) * (1 + (i % 9) * 0.3);
       dust[i * 3 + 1] = 0.4 + ((i * 17) % 35) / 10;
       dust[i * 3 + 2] = -1.5 - ((i * 11) % 25) / 10;
@@ -396,7 +422,7 @@ export function PrideRockScene({
     renderer.domElement.addEventListener("webglcontextlost", lost);
     size();
     resume();
-    const loader = new GLTFLoader();
+    const { loader, dispose: disposeLoader } = createModelLoader(renderer);
     Promise.allSettled([
       loader.loadAsync(assetUrl("models/lions/father-lion.glb")),
       loader.loadAsync(assetUrl("models/lions/lion-cub.glb")),
@@ -444,8 +470,14 @@ export function PrideRockScene({
       renderer.domElement.removeEventListener("webglcontextlost", lost);
       actors?.father.mixer.stopAllAction();
       actors?.cub.mixer.stopAllAction();
+      if (actors)
+        for (const actor of [actors.father, actors.cub])
+          actor.mixer.uncacheRoot(actor.root.children[0]);
+      disposeLoader();
+      sun.shadow.dispose();
       disposeTree(scene);
       renderer.dispose();
+      renderer.forceContextLoss();
       renderer.domElement.remove();
     };
   }, []);

@@ -2,11 +2,21 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import globals from "globals";
 export default tseslint.config(
-  { ignores: ["dist/**", "node_modules/**"] },
+  {
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "public/basis/**",
+      ".asset-build/**",
+      "model-sources/**",
+      "test-results/**",
+      "playwright-report/**",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["**/*.{ts,tsx,js}"],
+    files: ["**/*.{ts,tsx,js,mjs}"],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
 );

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { createModelLoader } from "../utils/modelLoader";
 import { assetUrl } from "../utils/assetUrl";
 
 export type PuppyMood = "welcome" | "curious" | "sleepy" | "happy";
@@ -21,6 +21,8 @@ export class TeddyDog {
   private tongue?: THREE.Mesh;
   private blinkMeshes: THREE.Mesh[] = [];
   private disposed = false;
+  private pending?: { cue: PuppyCue; delay: number };
+  private loaderDispose: () => void;
   private time: number;
   private mood: PuppyMood = "welcome";
   private cue: PuppyCue = "magic";
@@ -31,10 +33,13 @@ export class TeddyDog {
   constructor(
     lowDetail = false,
     readonly variant = 0,
+    renderer: THREE.WebGLRenderer,
   ) {
     this.time = variant * 1.73;
     this.root.rotation.y = variant ? -0.16 : 0.16;
-    this.ready = new GLTFLoader()
+    const { loader, dispose } = createModelLoader(renderer);
+    this.loaderDispose = dispose;
+    this.ready = loader
       .loadAsync(assetUrl(`models/teddy-${variant ? "cream" : "apricot"}.glb`))
       .then((gltf) => {
         this.model = gltf.scene;
@@ -96,12 +101,17 @@ export class TeddyDog {
     this.selectAnimation();
   }
   react(cue: PuppyCue) {
+    // 第二只在同一可见场景时钟中错峰，后台不会积压定时器。
+    this.pending = { cue, delay: this.variant ? 0.24 : 0 };
+  }
+  private respond(cue: PuppyCue) {
     this.cue = cue;
     this.reaction = cue === "play" || cue === "wish" ? 3.0 : 2.5;
     this.selectAnimation();
   }
   pet() {
-    this.react("play");
+    this.pending = undefined;
+    this.respond("play");
   }
   lookAt(x: number, y: number) {
     this.gazeUntil = this.time + 2.5;
@@ -111,6 +121,7 @@ export class TeddyDog {
     );
   }
   reset() {
+    this.pending = undefined;
     this.mood = "welcome";
     this.reaction = 0;
     this.lookTarget.set(0, 0);
@@ -119,6 +130,14 @@ export class TeddyDog {
   update(dt: number, still = false) {
     if (!this.mixer) return;
     this.time += dt;
+    if (this.pending) {
+      this.pending.delay -= dt;
+      if (still || this.pending.delay <= 0) {
+        const cue = this.pending.cue;
+        this.pending = undefined;
+        this.respond(cue);
+      }
+    }
     const previousReaction = this.reaction;
     this.reaction = Math.max(0, this.reaction - dt);
     if (previousReaction > 0 && this.reaction === 0) this.selectAnimation();
@@ -140,7 +159,8 @@ export class TeddyDog {
         this.head.quaternion.multiply(this.gazePose);
       }
     }
-    if (this.tongue) this.tongue.visible = this.reaction > 0 || this.mood === "happy";
+    if (this.tongue)
+      this.tongue.visible = this.reaction > 0 || this.mood === "happy";
     const blinkPhase = this.time % (this.variant ? 5.7 : 4.9);
     const blink =
       !still && blinkPhase > 4.55 && blinkPhase < 4.76
@@ -158,6 +178,7 @@ export class TeddyDog {
     this.model?.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
       object.geometry.dispose();
+      if (object instanceof THREE.SkinnedMesh) object.skeleton.dispose();
       const materials = Array.isArray(object.material)
         ? object.material
         : [object.material];
@@ -172,6 +193,7 @@ export class TeddyDog {
   }
   dispose() {
     this.disposed = true;
+    this.loaderDispose();
     this.mixer?.stopAllAction();
     if (this.model) this.mixer?.uncacheRoot(this.model);
     this.releaseModel();

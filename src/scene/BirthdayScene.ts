@@ -10,9 +10,11 @@ import { CardParticles } from "./CardParticles";
 import { CandleBackground } from "./CandleBackground";
 import { AudioController } from "./AudioController";
 import { isMobile, reducedMotion } from "../utils/device";
+import { qualityPolicy } from "../cinematic/quality";
 import { clamp } from "../utils/easing";
 export class BirthdayScene {
   readonly motion: CardMotion;
+  private quality = qualityPolicy();
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(36, 1, 0.1, 60);
   private renderer: THREE.WebGLRenderer;
@@ -45,10 +47,8 @@ export class BirthdayScene {
       alpha: true,
       powerPreference: "high-performance",
     });
-    this.renderer.setPixelRatio(
-      Math.min(devicePixelRatio, isMobile() ? 1.5 : 2),
-    );
-    this.renderer.shadowMap.enabled = !isMobile();
+    this.renderer.setPixelRatio(this.quality.pixelRatio);
+    this.renderer.shadowMap.enabled = this.quality.shadows;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.03;
@@ -102,6 +102,7 @@ export class BirthdayScene {
       0.62,
       2.4,
     );
+    this.bloom.enabled = this.quality.bloom;
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     this.motion = new CardMotion(() => {
@@ -168,6 +169,10 @@ export class BirthdayScene {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
     this.composer.setSize(w, h);
+    this.bloom.setSize(
+      w * this.quality.pixelRatio * 0.5,
+      h * this.quality.pixelRatio * 0.5,
+    );
   };
   private pointerDown = (e: PointerEvent) => {
     if (this.drag) return;
@@ -239,7 +244,8 @@ export class BirthdayScene {
       : -2.8 + Math.sin(this.time * 0.36) * 0.85 + reveal * 2.2;
     this.foilLight.intensity = 7 + reveal * 6;
     this.paperLight.intensity = progress * 1.6 + reveal * 1.4;
-    this.composer.render();
+    if (this.quality.bloom) this.composer.render();
+    else this.renderer.render(this.scene, this.camera);
     this.frame = requestAnimationFrame(this.animate);
   };
   dispose() {
@@ -269,7 +275,11 @@ export class BirthdayScene {
     this.environment.dispose();
     this.composer.passes.forEach((p) => p.dispose());
     this.composer.dispose();
+    this.scene.traverse((o) => {
+      if (o instanceof THREE.DirectionalLight) o.shadow.dispose();
+    });
     this.renderer.dispose();
+    this.renderer.forceContextLoss();
     this.renderer.domElement.remove();
   }
 }

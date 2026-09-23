@@ -1,3 +1,4 @@
+import { CinematicDirector } from "../../cinematic/CinematicDirector";
 import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 import type { StoryController, StorySnapshot } from "../StoryController";
@@ -16,19 +17,34 @@ export function FinalWish({
   onEnding: () => void;
   onRoar: () => void;
 }) {
+  const stage = useRef<HTMLElement>(null);
   const state = snapshot.finalState;
   const ending = useRef(onEnding);
   ending.current = onEnding;
   useEffect(() => {
     if (state !== "extinguishing") return;
-    const timer = window.setTimeout(() => {
-      ending.current();
-      controller.finishWish();
-    }, 1600);
-    return () => clearTimeout(timer);
+    const director = new CinematicDirector(1.6);
+    director.timeline.call(
+      () => {
+        ending.current();
+        controller.finishWish();
+      },
+      [],
+      1.6,
+    );
+    const detach = director.attach(stage.current!);
+    director.play();
+    return () => {
+      detach();
+      director.dispose();
+    };
   }, [controller, state]);
   return (
-    <article className={`final-wish wish-${state}`} data-candle-state={state}>
+    <article
+      ref={stage}
+      className={`final-wish wish-${state}`}
+      data-candle-state={state}
+    >
       {state !== "complete" ? (
         <>
           <span className="chapter-kicker">把愿望，交给今晚的星光</span>

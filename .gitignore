@@ -6,3 +6,10 @@ dist/
 .DS_Store
 *.tsbuildinfo
 test-results/
+model-sources/
+.asset-build/
+public/basis/
+playwright-report/
+*.blend
+*.blend1
+__pycache__/

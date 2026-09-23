@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { qualityPolicy } from "../cinematic/quality";
 import { CelebrationCake } from "./CelebrationCake";
 import "./cake.css";
 
@@ -22,10 +23,11 @@ export function CakeViewport({
   useEffect(() => {
     const host = mount.current;
     if (!host) return;
+    const quality = qualityPolicy();
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
-        antialias: true,
+        antialias: quality.tier === "high",
         alpha: true,
         powerPreference: "low-power",
       });
@@ -44,7 +46,7 @@ export function CakeViewport({
     const fill = new THREE.DirectionalLight("#c0d6ef", 1.6);
     fill.position.set(3, 3, -2);
     scene.add(key, fill);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+    renderer.setPixelRatio(quality.pixelRatio);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.88;

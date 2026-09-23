@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { CinematicDirector } from "./cinematic/CinematicDirector";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { MagicWand } from "./scene/CinemaVignettes";
 import { BirthdayScene } from "./scene/BirthdayScene";
 import { AudioController } from "./scene/AudioController";
@@ -6,8 +14,13 @@ import type { CardState } from "./scene/CardMotion";
 import { useGesture } from "./hooks/useGesture";
 import { story } from "./content/story";
 import { StoryController } from "./story/StoryController";
-import { MemoryBook } from "./story/MemoryBook";
-import { PetCompanion, type SceneCue } from "./pet/PetCompanion";
+const MemoryBook = lazy(() =>
+  import("./story/MemoryBook").then((m) => ({ default: m.MemoryBook })),
+);
+import type { SceneCue } from "./pet/PetCompanion";
+const PetCompanion = lazy(() =>
+  import("./pet/PetCompanion").then((m) => ({ default: m.PetCompanion })),
+);
 import { CinematicAtmosphere } from "./scene/CinematicAtmosphere";
 import { assetUrl } from "./utils/assetUrl";
 import { reducedMotion } from "./utils/device";
@@ -23,7 +36,7 @@ export default function App() {
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<BirthdayScene | null>(null);
   const audio = useRef<AudioController | null>(null);
-  const transitionTimer = useRef<number | undefined>(undefined);
+  const transition = useRef<(() => void) | undefined>(undefined);
   const [ready, setReady] = useState(false);
   const [started, setStarted] = useState(false);
   const [state, setState] = useState<CardState>("CLOSED");
@@ -43,6 +56,18 @@ export default function App() {
   useEffect(() => {
     if (snapshot.finalState === "extinguishing") emit("wish");
   }, [snapshot.finalState]);
+  useEffect(() => {
+    if (snapshot.turn > 0) audio.current?.foley("paper");
+  }, [snapshot.turn]);
+  useEffect(() => {
+    if (snapshot.letterOpen) {
+      audio.current?.fadeOut();
+      audio.current?.foley("envelope");
+    }
+  }, [snapshot.letterOpen]);
+  useEffect(() => {
+    if (snapshot.finalState === "extinguishing") audio.current?.foley("candle");
+  }, [snapshot.finalState]);
   const creditsRef = useRef<HTMLDialogElement>(null);
   const gesture = useGesture((open) => {
     if (!inBook && !entering) scene.current?.setOpen(open);
@@ -50,6 +75,8 @@ export default function App() {
 
   useEffect(() => {
     scene.current?.setActive(!inBook);
+    if (chapter === "letter" && !snapshot.letterOpen)
+      audio.current?.preloadPiano();
     audio.current?.setVolume(
       chapter === "letter"
         ? snapshot.letterOpen
@@ -63,11 +90,16 @@ export default function App() {
   useEffect(() => {
     setStoryReady(false);
     if (state !== "OPEN" || inBook) return;
-    const timer = window.setTimeout(
-      () => setStoryReady(true),
-      reducedMotion() ? 100 : 650,
+    const director = new CinematicDirector(reducedMotion() ? 0.1 : 0.65);
+    director.timeline.call(() => setStoryReady(true), [], director.duration);
+    const detach = director.attach(
+      (host.current!.closest("main") as HTMLElement) ?? host.current!,
     );
-    return () => clearTimeout(timer);
+    director.play();
+    return () => {
+      detach();
+      director.dispose();
+    };
   }, [state, inBook]);
   useEffect(() => {
     let disposed = false;
@@ -91,7 +123,7 @@ export default function App() {
     void init();
     return () => {
       disposed = true;
-      clearTimeout(transitionTimer.current);
+      transition.current?.();
       scene.current?.dispose();
       audio.current?.dispose();
       scene.current = null;
@@ -127,17 +159,32 @@ export default function App() {
   const enterBook = () => {
     if (entering) return;
     setEntering(true);
-    transitionTimer.current = window.setTimeout(
+    if (reducedMotion() || !host.current || sceneError) {
+      book.go(1);
+      setEntering(false);
+      return;
+    }
+    const director = new CinematicDirector(0.9);
+    director.timeline.call(
       () => {
         book.go(1);
         setEntering(false);
       },
-      reducedMotion() ? 0 : 900,
+      [],
+      0.9,
     );
+    const detach = director.attach(
+      (host.current.closest("main") as HTMLElement) ?? host.current,
+    );
+    transition.current = () => {
+      detach();
+      director.dispose();
+    };
+    director.play();
   };
   const replay = () =>
     book.replay(() => {
-      clearTimeout(transitionTimer.current);
+      transition.current?.();
       setEntering(false);
       setStarted(false);
       setStoryReady(false);
@@ -174,12 +221,20 @@ export default function App() {
         />
         <img
           className="savanna-background"
-          src={assetUrl("images/savanna-cinema.webp")}
+          src={
+            chapter === "finalWish"
+              ? assetUrl("images/savanna-cinema.webp")
+              : undefined
+          }
           alt=""
         />
         <img
           className="jazz-background"
-          src={assetUrl("images/jazz-night.webp")}
+          src={
+            chapter === "letter"
+              ? assetUrl("images/jazz-night.webp")
+              : undefined
+          }
           alt=""
         />
         <div className="world-shade" />
@@ -366,34 +421,36 @@ export default function App() {
         )}
       </div>
       {inBook && (
-        <MemoryBook
-          key={snapshot.session}
-          controller={book}
-          snapshot={snapshot}
-          onReplay={replay}
-          onPiano={(note) => {
-            emit("piano");
-            void audio.current
-              ?.unlock()
-              .then(() => {
-                if (pianoAllowed.current) audio.current?.playPiano(note);
-              })
-              .catch(() => setAudioError(true));
-          }}
-          onRoar={() => {
-            emit("roar");
-            void audio.current
-              ?.unlock()
-              .then(() => audio.current?.roar())
-              .catch(() => setAudioError(true));
-          }}
-          onEnding={() => {
-            emit("wish");
-            unlock();
-            audio.current?.setVolume(0.7);
-            audio.current?.playEnding();
-          }}
-        />
+        <Suspense fallback={<p role="status">正在翻开故事…</p>}>
+          <MemoryBook
+            key={snapshot.session}
+            controller={book}
+            snapshot={snapshot}
+            onReplay={replay}
+            onPiano={(note) => {
+              emit("piano");
+              void audio.current
+                ?.unlock()
+                .then(() => {
+                  if (pianoAllowed.current) audio.current?.playPiano(note);
+                })
+                .catch(() => setAudioError(true));
+            }}
+            onRoar={() => {
+              emit("roar");
+              void audio.current
+                ?.unlock()
+                .then(() => audio.current?.roar())
+                .catch(() => setAudioError(true));
+            }}
+            onEnding={() => {
+              emit("wish");
+              unlock();
+              audio.current?.setVolume(0.7);
+              audio.current?.playEnding();
+            }}
+          />
+        </Suspense>
       )}
       {!inBook && !sceneError && (
         <MagicWand
@@ -406,13 +463,17 @@ export default function App() {
           }}
         />
       )}
-      <PetCompanion
-        chapter={chapter}
-        celebrating={snapshot.finalState === "complete"}
-        cardOpen={open}
-        session={snapshot.session}
-        cue={cue}
-      />
+      {ready && started && (
+        <Suspense fallback={null}>
+          <PetCompanion
+            chapter={chapter}
+            celebrating={snapshot.finalState === "complete"}
+            cardOpen={open}
+            session={snapshot.session}
+            cue={cue}
+          />
+        </Suspense>
+      )}
       <aside
         className={
           "camera " +
@@ -540,6 +601,17 @@ export default function App() {
             ）。
             本项目调整了材质，制作成年狮衍生与新动作。舞者基础网格与服装来自
             Quaternius（CC0）。
+          </p>
+          <p>
+            钢琴采样：Alexander Holm · Salamander Grand Piano V3（
+            <a
+              href="https://creativecommons.org/licenses/by/3.0/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              CC BY 3.0
+            </a>
+            ）。使用单音采样与原创短句，没有使用电影原声。
           </p>
           <p>
             两只泰迪为本项目制作的三维角色，点击可以摸摸。摄像头只用于本地手势识别，不会上传画面。

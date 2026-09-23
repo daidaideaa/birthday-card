@@ -1,6 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { JazzStage } from "./JazzStage";
-import { PrideRockScene } from "./PrideRockScene";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { CinematicDirector } from "../cinematic/CinematicDirector";
+import { JAZZ_DURATION, jazzNotes } from "../cinematic/timelines/jazzTimeline";
+const JazzStage = lazy(() =>
+  import("./JazzStage").then((m) => ({ default: m.JazzStage })),
+);
+const PrideRockScene = lazy(() =>
+  import("./PrideRockScene").then((m) => ({ default: m.PrideRockScene })),
+);
 import { reducedMotion } from "../utils/device";
 
 export function MagicWand({
@@ -44,76 +57,86 @@ export function PianoDance({
   onPlay: (note?: number) => void;
   onComplete?: () => void;
 }) {
-  const [dancing, setDancing] = useState(false),
-    [pressed, setPressed] = useState<number | null>(null),
-    [beat, setBeat] = useState(0),
-    [performance, setPerformance] = useState(0);
-  const timers = useRef<number[]>([]);
-  const clear = () => {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-  };
-  const finish = () => {
-    clear();
-    setDancing(false);
-    setPressed(null);
-    onComplete?.();
-  };
+  const [dancing, setDancing] = useState(false);
+  const [pressed, setPressed] = useState<number | null>(null);
+  const [beat, setBeat] = useState(0);
+  const [ready, setReady] = useState(false);
+  const [director] = useState(() => new CinematicDirector(JAZZ_DURATION));
+  const root = useRef<HTMLElement>(null);
+  const autoNotes = useRef(true);
+  const callbacks = useRef({ onPlay, onComplete });
+  callbacks.current = { onPlay, onComplete };
   useEffect(() => {
-    const pause = () => {
-      if (!document.hidden) return;
-      timers.current.forEach(clearTimeout);
-      timers.current = [];
-      setDancing(false);
-      setPressed(null);
+    const host = root.current!;
+    jazzNotes.forEach((midi, index) =>
+      director.timeline.call(
+        () => {
+          if (!autoNotes.current) return;
+          callbacks.current.onPlay(midi);
+          setPressed(midi);
+          setBeat((value) => value + 1);
+        },
+        [],
+        index * 0.5 + 0.001,
+      ),
+    );
+    director.timeline.call(
+      () => {
+        setDancing(false);
+        setPressed(null);
+        callbacks.current.onComplete?.();
+      },
+      [],
+      JAZZ_DURATION,
+    );
+    const caption = host.querySelector<HTMLElement>(".night-caption");
+    if (caption && !reducedMotion())
+      director.timeline.fromTo(
+        caption,
+        { opacity: 0, y: 4 },
+        { opacity: 1, y: 0, duration: 1.1 },
+        0.2,
+      );
+    const detach = director.attach(host);
+    const review = (event: Event) => {
+      director.pause();
+      director.seek((event as CustomEvent<number>).detail);
     };
-    document.addEventListener("visibilitychange", pause);
+    if (import.meta.env.DEV || import.meta.env.MODE === "visual-review")
+      host.addEventListener("cinema-review-seek", review);
     return () => {
-      timers.current.forEach(clearTimeout);
-      document.removeEventListener("visibilitychange", pause);
+      host.removeEventListener("cinema-review-seek", review);
+      detach();
+      director.dispose();
     };
-  }, []);
+  }, [director]);
   const play = (note?: number) => {
-    clear();
+    autoNotes.current = note === undefined;
+    if (note !== undefined) {
+      callbacks.current.onPlay(note);
+      setPressed(note);
+      setBeat((value) => value + 1);
+    }
     setDancing(true);
-    if (note === undefined || !dancing) setPerformance((value) => value + 1);
-    const notes =
-      note === undefined
-        ? [
-            60, 64, 67, 71, 69, 67, 64, 62, 60, 64, 67, 72, 71, 67, 64, 60, 62,
-            65, 69, 72, 71, 67, 64, 60,
-          ]
-        : [note];
-    notes.forEach((midi, i) => {
-      const strike = () => {
-        onPlay(midi);
-        setPressed(midi);
-        setBeat((b) => b + 1);
-      };
-      if (i === 0) strike();
-      else timers.current.push(window.setTimeout(strike, i * 500));
-    });
-    timers.current.push(
-      window.setTimeout(() => setPressed(null), notes.length * 500),
-    );
-    timers.current.push(
-      window.setTimeout(finish, note === undefined ? 12300 : 12000),
-    );
+    director.play(note === undefined || !director.playing);
   };
   return (
     <aside
+      ref={root}
       className={"piano-nook cinema-piano " + (dancing ? "is-dancing" : "")}
       aria-label="暮色中的双人舞与钢琴"
     >
       <div className="piano-night">
         <div className="night-lamplight" key={beat} />
-        <JazzStage
-          dancing={dancing}
-          note={pressed}
-          beat={beat}
-          performance={performance}
-          onFinished={finish}
-        />
+        <Suspense fallback={<p role="status">舞台正在点亮…</p>}>
+          <JazzStage
+            dancing={dancing}
+            note={pressed}
+            beat={beat}
+            director={director}
+            onReady={() => setReady(true)}
+          />
+        </Suspense>
         <div className="night-petals" aria-hidden="true">
           {Array.from({ length: 10 }, (_, i) => (
             <i
@@ -138,6 +161,7 @@ export function PianoDance({
             <button
               key={note}
               className={pressed === note ? "pressed" : ""}
+              disabled={!ready}
               onClick={() => play(note)}
               aria-label={
                 "弹奏" + ["哆", "来", "咪", "发", "嗦", "拉", "西", "高音哆"][i]
@@ -155,7 +179,7 @@ export function PianoDance({
             />
           ))}
         </div>
-        <button className="piano-play" onClick={() => play()}>
+        <button className="piano-play" disabled={!ready} onClick={() => play()}>
           {dancing ? "♫ 从头再跳一支舞" : "♫ 开始我们的双人舞"}
         </button>
       </div>
@@ -194,14 +218,11 @@ export function SavannaLife({
   const [serial, setSerial] = useState(0);
   const [roarSerial, setRoarSerial] = useState(0);
   const section = useRef<HTMLElement>(null);
-  const timers = useRef<number[]>([]);
   const cancelMontage = useRef<() => void>(() => {});
   const onRoarRef = useRef(onRoar);
   onRoarRef.current = onRoar;
   const clear = useCallback(() => {
     cancelMontage.current();
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
   }, []);
   useEffect(() => {
     if (!ready) return;
@@ -210,52 +231,30 @@ export function SavannaLife({
     setAction(reducedMotion() ? "idle" : "walk");
     setPlaying(!reducedMotion());
     if (reducedMotion()) return clear;
-    const events: Array<{ at: number; run: () => void }> = [];
-    const after = (delay: number, run: () => void) => events.push({ at: delay, run });
-    after(3400, () => setAction("idle"));
-    after(6500, () => setPhase("stars"));
-    after(11000, () => {
+    const director = new CinematicDirector(17.7);
+    const after = (seconds: number, run: () => void) =>
+      director.timeline.call(run, [], seconds);
+    after(3.4, () => setAction("idle"));
+    after(6.5, () => setPhase("stars"));
+    after(11, () => {
       setPhase("return");
       setAction("walk");
     });
-    after(14400, () => {
+    after(14.4, () => {
       setAction("roar");
       setRoarSerial((value) => value + 1);
       onRoarRef.current();
     });
-    after(17700, () => {
+    after(17.7, () => {
       setAction("idle");
       setPlaying(false);
     });
-    let frame = 0, previous = 0, elapsed = 0, next = 0;
-    let visible = true, disposed = false;
-    const tick = (now: number) => {
-      frame = 0;
-      if (disposed || document.hidden || !visible) return;
-      if (previous) elapsed += Math.min(now - previous, 100);
-      previous = now;
-      while (next < events.length && elapsed >= events[next].at) events[next++].run();
-      if (next < events.length) frame = requestAnimationFrame(tick);
-    };
-    const resume = () => {
-      cancelAnimationFrame(frame);
-      previous = 0;
-      if (!disposed && !document.hidden && visible && next < events.length)
-        frame = requestAnimationFrame(tick);
-    };
-    const observer = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      resume();
-    });
-    if (section.current) observer.observe(section.current);
-    document.addEventListener("visibilitychange", resume);
+    const detach = director.attach(section.current!);
     cancelMontage.current = () => {
-      disposed = true;
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      document.removeEventListener("visibilitychange", resume);
+      detach();
+      director.dispose();
     };
-    resume();
+    director.play(true);
     return clear;
   }, [ready, serial, clear]);
   useEffect(() => clear, [clear]);
@@ -267,7 +266,14 @@ export function SavannaLife({
     setAction("roar");
     setRoarSerial((value) => value + 1);
     onRoar();
-    timers.current.push(window.setTimeout(() => setAction("idle"), 3300));
+    const director = new CinematicDirector(3.3);
+    director.timeline.call(() => setAction("idle"), [], 3.3);
+    const detach = director.attach(section.current!);
+    cancelMontage.current = () => {
+      detach();
+      director.dispose();
+    };
+    director.play();
   };
   return (
     <section
@@ -284,13 +290,15 @@ export function SavannaLife({
           ))}
         </span>
       </div>
-      <PrideRockScene
-        phase={phase}
-        action={action}
-        celebrating={celebrating}
-        onReady={() => setReady(true)}
-        roarSerial={roarSerial}
-      />
+      <Suspense fallback={<p role="status">晨光正在点亮…</p>}>
+        <PrideRockScene
+          phase={phase}
+          action={action}
+          celebrating={celebrating}
+          onReady={() => setReady(true)}
+          roarSerial={roarSerial}
+        />
+      </Suspense>
       <div className="pride-caption" aria-live="polite" aria-atomic="true">
         <h3>{caption.title}</h3>
         <p>{caption.body}</p>
@@ -299,14 +307,24 @@ export function SavannaLife({
         <button
           onClick={() => {
             if (reducedMotion()) {
-              setPhase(phase === "dawn" ? "stars" : phase === "stars" ? "return" : "dawn");
+              setPhase(
+                phase === "dawn"
+                  ? "stars"
+                  : phase === "stars"
+                    ? "return"
+                    : "dawn",
+              );
             } else {
               setSerial((value) => value + 1);
             }
           }}
           disabled={!ready}
         >
-          {reducedMotion() ? "看下一个画面 →" : playing ? "从清晨再看一次" : "重温这段时光 ↺"}
+          {reducedMotion()
+            ? "看下一个画面 →"
+            : playing
+              ? "从清晨再看一次"
+              : "重温这段时光 ↺"}
         </button>
         <button onClick={roar} disabled={!ready || action === "roar"}>
           {action === "roar" ? "这一声，献给勇敢的你" : "听辛巴的吼声"}

@@ -75,6 +75,41 @@ export function MemoryBook({
     return () => window.removeEventListener("keydown", keyboard);
   }, [go]);
   useEffect(() => {
+    const device = navigator as Navigator & {
+      connection?: { saveData?: boolean };
+    };
+    if (device.connection?.saveData) return;
+    const next = controller.chapters[index + 1]?.id;
+    const abort = new AbortController();
+    const preload = () => {
+      if (document.hidden) return;
+      const paths =
+        next === "letter"
+          ? ["models/grand-piano.glb", "models/jazz-duo.glb"]
+          : next === "finalWish"
+            ? ["models/lions/father-lion.glb", "models/lions/lion-cub.glb"]
+            : [];
+      if (next === "letter") void import("../scene/JazzStage").catch(() => {});
+      if (next === "finalWish")
+        void import("./chapters/FinalWish").catch(() => {});
+      paths.forEach((path) => {
+        void fetch(assetUrl(path), {
+          signal: abort.signal,
+          cache: "force-cache",
+        }).catch(() => {});
+      });
+    };
+    const idle =
+      "requestIdleCallback" in window
+        ? window.requestIdleCallback(preload, { timeout: 2500 })
+        : setTimeout(preload, 1800);
+    return () => {
+      abort.abort();
+      if ("cancelIdleCallback" in window) window.cancelIdleCallback(idle);
+      else clearTimeout(idle);
+    };
+  }, [controller, index]);
+  useEffect(() => {
     // 只预取紧邻下一页的前两张图片，不批量下载整本相册。
     const next = controller.chapters[index + 1]?.id;
     const data = controller.data;
