@@ -14,8 +14,10 @@
     "assets:sources": "node scripts/fetch-model-sources.mjs",
     "prebuild": "node scripts/copy-decoders.mjs",
     "predev": "node scripts/copy-decoders.mjs",
+    "test:visual": "playwright test",
     "assets:build": "node scripts/build-assets.mjs",
-    "assets:review:prepare": "node scripts/prepare-model-review.mjs"
+    "assets:review:prepare": "node scripts/prepare-model-review.mjs",
+    "build:review": "node scripts/copy-decoders.mjs && tsc -b && vite build --mode visual-review --outDir .asset-build/visual-site"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "0.10.32",

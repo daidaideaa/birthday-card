@@ -8,7 +8,7 @@
 
 主要观看设备为手机。舞台采用 430–570 px 竖屏画幅，优先保留两人的头、脚和牵手空间；钢琴退到后景，琴键与播放按钮放在舞台下方。黄裙、白衬衫、侧步和低踢参考《爱乐之城》的山顶舞段，12 秒动作是本项目编排，没有使用电影动作捕捉文件。裙摆为踢腿和转身分别提供形变。
 
-`JazzEnvironment.ts` 绘制暮色天空、三层远山、城市灯点、栏杆、石台和暖色路灯；所有对象与舞者共用镜头。镜头跟随动作时钟轻推，不在手机上响应手指摇晃。像素比上限 1.5，舞台约 30 fps 更新；后台、离屏和减少动态效果沿用暂停规则。
+`JazzEnvironment.ts` 绘制暮色天空、三层远山、城市灯点、栏杆、石台和暖色路灯；所有对象与舞者共用镜头。镜头跟随动作时钟轻推，不在手机上响应手指摇晃。当时像素比上限 1.5，舞台约 30 fps 更新（现行分级预算见 README）；后台、离屏和减少动态效果沿用暂停规则。
 
 双犬采用正常四足犬轮廓：收小眼睛、突出犬吻、缩小脚掌和头部装饰。表演通过不完全同步的眨眼、轻微寻视、歪头、摸摸反应和动画混合完成；保持风格化原创泰迪，不声称达到长篇动画电影的毛发与表演精度。
 
@@ -16,7 +16,7 @@
 
 实现参考：[Bruno Simon 的作品及公开源码](https://github.com/brunosimon/folio-2025)将视图、灯光、角色和渲染组织在明确的更新顺序中；本项目据此把舞台镜头与角色动作使用同一时钟。[Three.js 骨骼动画混合示例](https://threejs.org/examples/webgl_animation_skinning_blending.html)用于参考动作切换。未复制这两项作品的视觉素材。
 
-模型通过 Blender 检查侧步、踢腿和转身，`review_jazz_stage.py` 用实际导出的 GLB 检查竖屏构图。当前远程预览浏览器报告 WebGL 被禁用，整页实时三维和手机硬件流畅度尚未完成实机验收；离线渲染不代表这些项目已通过。
+模型通过 Blender 检查侧步、踢腿和转身，`review_jazz_stage.py` 用实际导出的 GLB 检查竖屏构图。当轮远程预览浏览器的 WebGL 被禁用；本轮已增加可运行 WebGL 的 Chromium 截图检查，手机硬件流畅度仍需实机验收。
 
 ## images/jazz-night.webp
 
@@ -54,3 +54,12 @@ Use case: stylized-concept. Asset type: landscape 1536 x 1024 cinematic website 
 ```text
 Use case: precise-object-edit. Edit target: the supplied cinematic Los Angeles twilight terrace photograph. Remove ONLY the entire black grand piano and piano bench in the lower right. Reconstruct matching empty stone terrace paving and the low balustrade behind them, with correct perspective and twilight illumination. Keep the camera angle, skyline, distant Griffith Observatory, blue purple twilight sky, coral horizon, glowing lamppost at left, jacaranda branches and all remaining architectural details unchanged. This is the clean environment plate for a website with realtime 3D piano and dancers placed into the empty foreground, so do not add any people, animals, furniture, piano, text, branding or watermark. Maintain high quality cinematic photography, 1536x1024 landscape.
 ```
+
+## 2026-09-23：演出收敛与模型精修
+
+- 保留四章。双人舞仍使用原 Quaternius 骨架、脚步落点和牵手约束；调整下颌轮廓、衬衫肩线、布料反射、头发轮廓、转身加减速、牵手高度和裙摆延迟回落。不新增逐关节网页动画。
+- 泰迪缩小头眼、调整胸腹与脚掌，在连续网格中加入大/中尺度卷毛起伏，保留 256 px 法线；没有 strand hair 或毛球实例阵列。第二只犬的反应延迟 240 ms，与可见场景更新一起暂停。
+- 成年狮子独立调整肩胸、躯干伸长、口鼻和鬃毛轮廓；幼狮保留原独立资产。荣耀石保留平坦落脚区，增加倒角、地层轮廓及轻微程序凹凸，不增加高成本材质。
+- 爵士不持续推近：0–3 秒轻推，6–8.5 秒轻微侧向调整，最后稳定。竖屏 FOV 43°，维持两位角色的完整动作范围；钢琴保持后景。暖色主光与冷色轮廓光，Bloom 阈值 1.6，强度 0.10–0.16。
+- `review_jazz_stage.py` 读取解码后的最终 GLB，与网页保持机位、FOV、角色位置和推进曲线对应。Blender AgX 与网页 ACES 的结果不完全一致，网页截图是最终依据。
+- 已实际检查 1440×900、390×844、430×932 网页以及 Blender 的踢腿/转身画面；Blender 蒙皮检查覆盖 244 个鞋底采样。造型仍是风格化低面数角色，并非高精度人物扫描或电影级毛发。手机硬件帧率需在目标设备复核，CI 软件渲染只验证加载、行为与构图。

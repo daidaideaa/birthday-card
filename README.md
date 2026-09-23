@@ -70,3 +70,37 @@ GitHub Pages 地址：<https://daidaideaa.github.io/birthday-card/>。Vite 基�
 ## AI 协作
 
 项目约定见 [AGENTS.md](AGENTS.md)。场景与角色的视觉改进可使用 [birthday-visual-review](.agents/skills/birthday-visual-review/SKILL.md)；下一轮需求可参考 [任务提示词](docs/TASK_PROMPTS.md)。资料按任务选择，无需每次全部读取。
+
+## 演出与质量策略（2026-09-23）
+
+- 新增 GSAP `CinematicDirector`：暂停的 timeline 由可见场景时钟推进，爵士的 12 秒镜头、琴音、字幕、灯光与 GLB 播放时间一致；后台和离屏暂停，seek 检查不触发音频或导航。邀请页过渡、草原蒙太奇与许愿收尾复用同一控制器。骨骼动作仍由 Blender/AnimationMixer 负责。
+- 延续 Three.js EffectComposer，不引入第二套后期库。爵士采用 HDR 阈值 bloom、轻微色调与暗角；bloom 使用半分辨率，信件不经过后期。减少动态效果关闭镜头运动及 bloom。
+- 自动 high/balanced/low，根据触屏/视口、CPU、可用内存提示、节省流量和 reduced-motion 选择。DPR 上限分别为 1.8/1.35/1，阴影上限 1024/512/关闭；人物网格不减配。仅首屏邀请页在进入前初始化，双犬在点击后加载；舞台、狮子、蛋糕按章加载，空闲只预取下一章。
+- 钢琴使用两个本地 Salamander 单音采样，解锁音频并进入书信章节后才下载；失败回落到合成。纸张、信封、烛火仍是原创合成音效。全局静音、阅读音量和后台暂停共用音频控制器。
+
+## 可重复资产流水线
+
+固定 Blender **4.3.2**；上游输入在 `scripts/models/sources.json` 固定 URL 和 SHA-256。狮子采用固定提交中的已授权幼狮衍生文件作为可复现制作基线，来源链保留在许可文件中。
+
+```sh
+npm run assets:sources
+# 将 Blender 加入 PATH，或设置 BLENDER_BIN 为绝对路径
+npm run assets:build
+npm run assets:validate
+npm run assets:review:prepare
+blender --background --python-exit-code 1 --python scripts/models/validate_motion.py
+blender --background --python-exit-code 1 --python scripts/models/review_jazz_stage.py
+```
+
+制作脚本 → `.asset-build/raw` → glTF Transform → Meshopt → `public/models`。不简化角色网格、不量化浮点顶点、不重采样动画。导出后逐项比较网格数值、关节、绑定矩阵、动画名称/采样值、morph 名称/数量和材质参数。节点 TRS 的默认值按 glTF Transform 的 1e-5 省略容差比较；三角索引允许保持绕序的循环置换。检查文件大小、三角形、纹理尺寸、模型边界及外部引用，Khronos Validator 在解码后检查。当前少量材质/未使用属性警告沿用原资产，不包含校验错误。
+
+KTX2 为可选制作路径：安装 KTX-Software **4.4.2** 并将 `toktx` 加入 PATH，运行 `ASSET_KTX2=1 npm run assets:optimize`。已验证 UASTC 编码、骨架/动画保留，以及 Chromium 中本地 Basis 转码加载。默认交付仍保留小尺寸 PNG/JPEG，256 px 法线的压缩收益较小，暂不改变已审查的纹理观感；运行时支持 Meshopt + KTX2，解码器在构建时从锁定的 Three.js 包复制到站点本地。不要将已经压缩的最终资产作为下次制作输入。
+
+`assets.yml` 仅在制作脚本/源清单变化时重建，缓存 Blender 和来源资产，上传 GLB 与检查图，不自动提交生成结果。普通 Pages 构建只检查已提交资产。
+
+```sh
+npx playwright install chromium
+npm run test:visual
+```
+
+截图覆盖 1440×900、390×844、430×932 的邀请、相册、舞台关键动作、信件、草原与结尾。测试使用独立 `visual-review` 构建，普通生产构建不含定位时间的测试入口；摄像头使用点击 fallback；软件渲染固定 balanced 预算，不代表真实设备帧率。图像用于人工审查，不判断角色是否美观。`visual.yml` 保存截图和失败 trace 14 天。

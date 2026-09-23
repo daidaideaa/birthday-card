@@ -30,3 +30,11 @@
 生成方式、素材路径和完整提示词见 [美术说明](ART_DIRECTION.md)。
 
 2026-09-22：双人舞舞台新增代码绘制的暮色天空、三层远山、城市灯点、栏杆、地面和路灯，均与角色共用 Three.js 相机。全页 `jazz-night.webp` 仍用于书信章节背景，舞台内部由实时三维场景提供空间层次。本次未新增第三方素材。
+
+## 2026-09-23 更新
+
+- `audio/piano-c4.mp3`、`audio/piano-a4.mp3`：Alexander Holm 的 Salamander Grand Piano V3，CC BY 3.0；取自 [Tone.js 音频分发](https://tonejs.github.io/audio/salamander/)，许可与修改说明见 [audio/LICENSE.md](audio/LICENSE.md)。单音文件未改动，播放时移调和包络处理；不是电影原声。
+- 纸张、信封、烛火：项目原创 Web Audio 噪声/滤波合成，不标称真实录音。本轮未引入有版权疑问的音乐或拟音素材。
+- 舞者、双犬和狮子由现有 Blender 源脚本精修；Meshopt 不改变来源许可。`scripts/models/sources.json` 记录可复现输入与哈希，幼狮制作基线固定为本仓库 e3ff45f 中的授权衍生模型。
+- 荣耀石轮廓与程序凹凸由代码生成。未新增电影截图、角色贴图、logo 或伪造个人照片。
+- Meshopt 解码器来自 Three.js 包中的 meshoptimizer（MIT）；KTX2 Basis Universal 转码器随 Three.js 构建复制（Apache-2.0）；网站构建保留解码器自带版权声明，完整许可随 `public/licenses/` 发布；该目录也保留新增 GSAP 的版权声明与标准许可链接。

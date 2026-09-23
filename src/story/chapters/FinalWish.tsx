@@ -22,6 +22,14 @@ export function FinalWish({
   const ending = useRef(onEnding);
   ending.current = onEnding;
   useEffect(() => {
+    if (state !== "complete") return;
+    // Removing the cake shortens the chapter; keep the actual wish in view.
+    window.scrollTo({ top: 0, behavior: "instant" });
+    stage.current
+      ?.querySelector<HTMLElement>(".wish-complete h2")
+      ?.focus({ preventScroll: true });
+  }, [state]);
+  useEffect(() => {
     if (state !== "extinguishing") return;
     const director = new CinematicDirector(1.6);
     director.timeline.call(
