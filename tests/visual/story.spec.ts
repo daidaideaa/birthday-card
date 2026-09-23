@@ -37,7 +37,8 @@ test("story frames, click fallback, dance and replay", async ({
   await shot("moments");
   await page.getByRole("button", { name: "下一章 →" }).click();
   await expect(page.locator(".jazz-stage--ready")).toBeVisible({
-    timeout: 60000,
+    // Cold SwiftShader compilation on CI can outlast the network/model decode.
+    timeout: 120000,
   });
   await page.locator(".jazz-stage").scrollIntoViewIfNeeded();
   await shot("jazz-arrival");
@@ -74,7 +75,8 @@ test("story frames, click fallback, dance and replay", async ({
   await shot("letter");
   await page.getByRole("button", { name: /最后，一起许个愿/ }).click();
   await expect(page.locator(".pride-rock-status")).toHaveCount(0, {
-    timeout: 60000,
+    // Cold SwiftShader compilation on CI can outlast the network/model decode.
+    timeout: 120000,
   });
   await page.locator(".pride-rock-stage").scrollIntoViewIfNeeded();
   await shot("savanna");
