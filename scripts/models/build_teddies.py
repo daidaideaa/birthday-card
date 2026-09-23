@@ -5,6 +5,10 @@ Run with Blender's Python (or bpy 4.3):
 The sculpt is voxel-fused and smoothed; coat detail is one subtle normal texture,
 not instanced spheres. Exported assets have a real armature and named actions.
 """
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parent))
+from common import output_dir, export_glb
 from pathlib import Path
 import argparse
 import math
@@ -17,12 +21,13 @@ from mathutils import noise
 ROOT = Path(__file__).resolve().parents[2]
 parser = argparse.ArgumentParser()
 parser.add_argument('--preview-dir', default='/tmp/teddy-review')
+parser.add_argument('--no-preview', action='store_true')
 parser.add_argument('--skip-individuals', action='store_true')
 parser.add_argument('--quick-review', action='store_true')
 args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:])
 PREVIEW = Path(args.preview_dir)
 PREVIEW.mkdir(parents=True, exist_ok=True)
-OUT = ROOT / 'public' / 'models'
+OUT = output_dir()
 OUT.mkdir(parents=True, exist_ok=True)
 
 def select(objects):
@@ -110,7 +115,11 @@ def sculpt(parts,name,mat,voxel=.024,texture_amount=.004):
         normals=[v.normal.copy() for v in ob.data.vertices]
         for v,n in zip(ob.data.vertices,normals):
             p=v.co.copy()
-            v.co += n * (noise.noise_vector(p*18.0)[0]*texture_amount)
+            # Broad coat masses + mid curls change the silhouette; micro detail remains normal-mapped.
+            broad=noise.noise_vector(p*8.5)[0]
+            curl=noise.noise_vector(p*24.0)[0]
+            face=1-.65*smoothstep(.45,.70,-p.y)
+            v.co += n * ((broad*.012+curl*.006)*face + noise.noise_vector(p*44.0)[0]*texture_amount*.35)
     ob.data.materials.clear();ob.data.materials.append(mat)
     for p in ob.data.polygons:p.use_smooth=True
     unwrap(ob)
@@ -164,7 +173,8 @@ def add_actions(rig):
         for f in range(0,frames+1,3):
             phase=f/frames*math.tau
             for p in rig.pose.bones:p.rotation_mode='XYZ';p.rotation_euler=(0,0,0);p.location=(0,0,0);p.scale=(1,1,1)
-            rig.pose.bones['Body'].location.z=math.sin(phase)*.006
+            rig.pose.bones['Body'].location.z=math.sin(phase)*.004
+            rig.pose.bones['Body'].rotation_euler[1]=math.sin(phase)*.009
             rig.pose.bones['Tail'].rotation_euler[1]=math.sin(phase*3)*(.38 if name=='Happy' else .12)
             rig.pose.bones['Head'].rotation_euler[1]=math.sin(phase)*.028
             for side,sign in [('L',-1),('R',1)]:
@@ -205,13 +215,13 @@ def make_dog(variant):
     ribbon=material('Sage ribbon' if variant else 'Berry collar',(.20,.36,.29) if variant else (.28,.055,.069),.78)
     gold=material('Brass tag',(.58,.37,.12),.36)
     # 保留四足犬的胸腹、口鼻与圆润修剪轮廓，避免玩偶式方头和粗脚掌。
-    parts=[sphere('body',(0,.16,.68),(.28,.52,.29)),sphere('chest',(0,-.18,.79),(.255,.27,.32)),sphere('neck',(0,-.23,1.00),(.22,.23,.28)),sphere('head',(0,-.29,1.25),(.36,.30,.31)),sphere('crown',(0,-.235,1.405),(.29,.26,.205))]
+    parts=[sphere('body',(0,.16,.69),(.273,.54,.277)),sphere('chest',(0,-.18,.79),(.258,.28,.325)),sphere('neck',(0,-.23,1.00),(.22,.23,.28)),sphere('head',(0,-.29,1.25),(.337,.285,.297)),sphere('crown',(0,-.235,1.397),(.277,.25,.192))]
     for x,z,r in [(-.18,1.46,.10),(0,1.51,.10),(.18,1.46,.10)]:
         parts.append(sphere('Integrated crown curl',(x,-.25,z),(r,.21,r)))
     for sign in [-1,1]:
-        parts += [sphere('cheek',(sign*.09,-.595,1.10),(.145,.165,.112))]
+        parts += [sphere('cheek',(sign*.09,-.595,1.10),(.135,.169,.107))]
         for y in [-.23,.38]:
-            parts += [sphere('upper leg',(sign*.225,y,.45),(.10,.113,.255)),sphere('paw',(sign*.225,y-.035,.125),(.112,.146,.098))]
+            parts += [sphere('upper leg',(sign*.225,y,.45),(.10,.113,.255)),sphere('paw',(sign*.225,y-.035,.125),(.105,.14,.093))]
     body=sculpt(parts,'Continuous coat',coat)
     meshes=[(body,'Body')]
     for side,sign in [('L',-1),('R',1)]:
@@ -224,7 +234,7 @@ def make_dog(variant):
             earparts.append(sphere('Integrated ear curl',(sign*.43,-.24,z-.02),(.075,.15,.09)))
         ear=sculpt(earparts,'Velvet ear '+side,ears,voxel=.019,texture_amount=.001)
         meshes.append((ear,'Ear'+side))
-        eye=sphere('Eye '+side,(sign*.146,-.570,1.29),(.054,.027,.058),black,rotation=(0,sign*.10,sign*-.09))
+        eye=sphere('Eye '+side,(sign*.146,-.570,1.29),(.049,.027,.054),black,rotation=(0,sign*.10,sign*-.09))
         glint=sphere('Glint '+side,(sign*.146-.012,-.599,1.313),(.008,.005,.010),white,segments=20)
         eye=join([eye,glint],'Eye '+side)
         eye.shape_key_add(name='Basis');blink=eye.shape_key_add(name='Blink')
@@ -279,9 +289,12 @@ for variant,name in enumerate(['apricot','cream']):
     select([rig]+meshes)
     for track in rig.animation_data.nla_tracks:track.mute=False
     bpy.context.scene.frame_set(0)
-    bpy.ops.export_scene.gltf(filepath=str(OUT/f'teddy-{name}.glb'),export_format='GLB',use_selection=True,export_animations=True,export_animation_mode='NLA_TRACKS',export_force_sampling=True,export_frame_range=False,export_skins=True,export_morph=True,export_morph_animation=False,export_materials='EXPORT',export_extras=True,export_tangents=True)
+    export_glb(filepath=str(OUT/f'teddy-{name}.glb'),use_selection=True,export_animations=True,export_animation_mode='NLA_TRACKS',export_force_sampling=True,export_frame_range=False,export_skins=True,export_morph=True,export_morph_animation=False,export_materials='EXPORT',export_extras=True,export_tangents=True)
     for track in rig.animation_data.nla_tracks:track.mute=True
     for p in rig.pose.bones:p.rotation_euler=(0,0,0);p.location=(0,0,0)
+    if args.no_preview:
+        bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+        continue
     camera=setup_render()
     angles=[] if args.skip_individuals else [('front',(0,-5,2.0)),('three-quarter',(3.2,-4.8,2.1))]
     if args.quick_review:angles=[('three-quarter',(3.2,-4.8,2.1))] if variant==0 else []
@@ -289,6 +302,7 @@ for variant,name in enumerate(['apricot','cream']):
         camera.location=location;point_at(camera,(0,-.05,.86));bpy.context.scene.render.filepath=str(PREVIEW/f'{name}-{angle}.png');bpy.ops.render.render(write_still=True)
     print('EXPORTED',name,(OUT/f'teddy-{name}.glb').stat().st_size,flush=True)
     bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+if args.no_preview: sys.exit(0)
 # Review the exported files together, so the review covers the delivered assets.
 REVIEW_ACTIONS={}
 for variant,name in enumerate(['apricot','cream']):

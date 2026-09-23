@@ -1,39 +1,41 @@
-# Rebuild the jazz duo
+# Rebuild and review the jazz duo
 
-Requires Blender 4.3 or newer. The build script imports four CC0 Quaternius
-models, retains their anatomy and compatible skeleton, bakes an original 12 s duet,
-and exports `public/models/jazz-duo.glb`.
+Use Blender 4.3.2 and Node.js 22.12+. The build imports four pinned CC0
+Quaternius models, retains their compatible skeleton, and bakes an original
+12-second duet with foot/hand IK, modern clothing and skirt morphs.
 
-Download the four pinned inputs listed in `public/models/JAZZ-LICENSE.md` into
-one folder, retaining their basenames. Then run:
-
-```bash
-QUATERNIUS_SOURCE=/absolute/path/to/input-folder \
-JAZZ_QA_DIR=/absolute/path/to/preview-folder \
-blender --background --threads 3 --python scripts/models/build_dancers.py
+```sh
+npm run assets:sources
+BLENDER_BIN=/absolute/path/to/blender npm run assets:build
+npm run assets:review:prepare
+blender --background --python-exit-code 1 --python scripts/models/validate_motion.py
+JAZZ_STAGE_QA_DIR=test-results/blender JAZZ_STAGE_FRAMES=129,255 \
+blender --background --threads 2 --python-exit-code 1 --python scripts/models/review_jazz_stage.py
 ```
 
-`JAZZ_QA_FRAMES=129,255` optionally limits native inspection renders. Otherwise
-frames 45, 129 and 255 cover a side step, a low kick and the turn. The `.blend`
-checkpoint is written before adding the neutral preview environment.
-Set `JAZZ_QA_FRAMES=''` to export without native preview renders when using
-the runtime composition check below.
+Inputs and SHA-256 hashes are in `sources.json`; attribution remains in
+`public/models/JAZZ-LICENSE.md`. Source scripts write `.asset-build/raw`, then
+glTF Transform and Meshopt produce the validated files in `public/models`.
+`MODEL_OUT` overrides the raw output location. Do not use compressed final
+files as authoring inputs. For an individual dancer build, run
+`blender --background --python-exit-code 1 --python scripts/models/build_dancers.py`.
+`ASSET_PREVIEW=1` requests its optional native previews; `JAZZ_QA_FRAMES=129,255`
+limits those frames. The batch build disables source previews.
 
-The 12-second `Scene` clip uses foot/hand IK, custom modern clothing, and skirt
-morphs. Three.js plays it once per performance; repeated piano notes keep the
-current dance moving, while the replay button starts from the beginning.
-After a completed clip, the next manually played note starts another dance.
+Blender cannot import the runtime Meshopt extension directly, so the review
+prepare step decodes the final delivered files into `.asset-build/review`.
+The composition script renders 390×540 portrait and 1000×480 wide frames with
+the runtime camera, placements and movement curve. AgX/native lighting only
+approximates the browser's ACES/PMREM environment; browser screenshots are
+the final visual reference. It does not measure phone performance.
 
-For a composition check, reload the exported GLBs with:
+`validate_motion.py` samples evaluated shoe meshes across the exported clip
+and rejects floor penetration deeper than 3.5 cm. Inspect the JSON and browser
+key frames for sliding, hand contact and silhouette; this guard is not an
+aesthetic score. The current sampled minimum sole height is about 2.9 mm.
 
-```bash
-JAZZ_STAGE_QA_DIR=/absolute/path/to/stage-previews \
-blender --background --threads 3 --python scripts/models/review_jazz_stage.py
-```
-
-This renders 390 × 540 portrait and 1000 × 480 wide frames using the runtime
-camera and model placements, with approximate native lights and environment.
-It checks silhouettes and clipping, not browser performance or touch behavior.
-`JAZZ_STAGE_FRAMES=129,255` selects frames. The runtime environment is authored
-in `src/scene/JazzEnvironment.ts`; phone framing prioritizes the two dancers,
-with the piano set further back.
+Three.js plays `Scene` once per performance using the cinematic clock.
+Repeated piano notes keep the current dance moving; replay starts at zero.
+The next manual note after completion starts another dance. The environment
+is authored in `src/scene/JazzEnvironment.ts`; portrait framing prioritizes
+both dancers, with the piano further back.

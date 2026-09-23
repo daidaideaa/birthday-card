@@ -28,7 +28,7 @@ def box(name,loc,scale,material):
  bpy.ops.mesh.primitive_cube_add(size=1,location=loc);o=bpy.context.object;o.name=name;o.scale=scale;o.data.materials.append(material);return o
 
 def glb(name,loc,scale=1,yaw=0):
- before=set(bpy.data.objects);bpy.ops.import_scene.gltf(filepath=str(ROOT/'public/models'/name));objects=set(bpy.data.objects)-before
+ before=set(bpy.data.objects);bpy.ops.import_scene.gltf(filepath=str(ROOT/'.asset-build/review'/name));objects=set(bpy.data.objects)-before
  root=bpy.data.objects.new(name+' stage transform',None);bpy.context.collection.objects.link(root)
  for o in objects:
   if o.parent not in objects:o.parent=root
@@ -73,7 +73,7 @@ for width,height,label in [(390,540,'phone'),(1000,480,'wide')]:
  scene.render.resolution_x=width;scene.render.resolution_y=height;scene.render.resolution_percentage=100
  portrait=width<height;fov=43 if portrait else 34;camera.data.lens=24/(2*math.tan(math.radians(fov)/2))
  for frame in [int(x) for x in os.environ.get('JAZZ_STAGE_FRAMES','129,255').split(',')]:
-  scene.frame_set(frame);t=(frame-1)/30;approach=smooth(t,0,3);turn=smooth(t,6,9.5)
+  scene.frame_set(frame);t=(frame-1)/30;approach=(1-math.cos(math.pi*min(1,t/3)))/2;turn=(1-math.cos(math.pi*max(0,min(1,(t-6)/2.5))))/2
   distance=max(5.9,4.1/(width/height)) if portrait else 7.7
   camera.location=((.85 if portrait else 1.6)-approach*.32+turn*.2,-distance+approach*.24,2.05-approach*.1)
   aim(camera,(.20 if portrait else -.05,-.05,1));scene.render.filepath=str(OUT/f'{label}-{frame:03}.png');bpy.ops.render.render(write_still=True)

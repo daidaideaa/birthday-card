@@ -1,0 +1,60 @@
+name: Blender asset validation
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/models/**', 'scripts/*assets*', 'scripts/assets/**', '.github/workflows/assets.yml']
+  pull_request:
+    paths: ['scripts/models/**', 'scripts/*assets*', 'scripts/assets/**', '.github/workflows/assets.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: assets-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: model-sources
+          key: model-inputs-${{ hashFiles('scripts/models/sources.json') }}
+      - uses: actions/cache@v4
+        id: blender
+        with:
+          path: .asset-build/blender
+          key: blender-linux-4.3.2
+      - name: Install pinned Blender
+        if: steps.blender.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl -fL https://download.blender.org/release/Blender4.3/blender-4.3.2-linux-x64.tar.xz -o /tmp/blender.tar.xz
+          curl -fL https://download.blender.org/release/Blender4.3/blender-4.3.2.sha256 -o /tmp/blender.sha256
+          EXPECTED=$(awk '/blender-4.3.2-linux-x64.tar.xz$/ {print $1}' /tmp/blender.sha256)
+          test -n "$EXPECTED"
+          echo "$EXPECTED  /tmp/blender.tar.xz" | sha256sum --check
+          mkdir -p .asset-build/blender
+          tar -xf /tmp/blender.tar.xz -C .asset-build/blender --strip-components=1
+      - run: npm run assets:build
+        env:
+          BLENDER_BIN: ${{ github.workspace }}/.asset-build/blender/blender
+      - run: npm run assets:review:prepare
+      - name: Validate floor contact and native framing
+        run: |
+          .asset-build/blender/blender --background --threads 2 --python-exit-code 1 --python scripts/models/validate_motion.py
+          JAZZ_STAGE_QA_DIR=test-results/blender JAZZ_STAGE_FRAMES=129,255 .asset-build/blender/blender --background --threads 2 --python-exit-code 1 --python scripts/models/review_jazz_stage.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rebuilt-models-and-review
+          path: |
+            public/models/
+            test-results/
+          retention-days: 14

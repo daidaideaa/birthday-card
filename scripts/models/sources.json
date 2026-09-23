@@ -1,0 +1,38 @@
+[
+  {
+    "path": "quaternius/ubc-male.glb",
+    "url": "https://raw.githubusercontent.com/ryanfitzpatrickio/threejs-playground/bec6cda747d14ae757946f21f5bb76bc719f9c0d/public/assets/simhuman/ubc-male.glb",
+    "sha256": "8a9ef7f982d6c02c1ef587e5a84c7974d9afa006e267d54ada0b1305dd94b0f0",
+    "license": "CC0-1.0"
+  },
+  {
+    "path": "quaternius/ubc-female.glb",
+    "url": "https://raw.githubusercontent.com/ryanfitzpatrickio/threejs-playground/bec6cda747d14ae757946f21f5bb76bc719f9c0d/public/assets/simhuman/ubc-female.glb",
+    "sha256": "862ee7392df378ca4e05ef5230b0b8a8ad9304584c6fcadaaa008009cf424565",
+    "license": "CC0-1.0"
+  },
+  {
+    "path": "quaternius/male-peasant.glb",
+    "url": "https://raw.githubusercontent.com/ryanfitzpatrickio/threejs-playground/bec6cda747d14ae757946f21f5bb76bc719f9c0d/public/assets/simoutfits/male-peasant.glb",
+    "sha256": "774d11d98cf55a0ca3c714ad76ce9e570bdb0236e6332cf5ca01b2c46b7a806a",
+    "license": "CC0-1.0"
+  },
+  {
+    "path": "quaternius/female-peasant.glb",
+    "url": "https://raw.githubusercontent.com/ryanfitzpatrickio/threejs-playground/bec6cda747d14ae757946f21f5bb76bc719f9c0d/public/assets/simoutfits/female-peasant.glb",
+    "sha256": "d9b320fdd56de68d2e0d873daf41ecf4911fc5a19b345abfdb91158c79027316",
+    "license": "CC0-1.0"
+  },
+  {
+    "path": "lion-cub.glb",
+    "url": "https://raw.githubusercontent.com/daidaideaa/birthday-card/e3ff45fbc46b6afe2c629d843b77ac4607339b30/public/models/lions/lion-cub.glb",
+    "sha256": "21a3447577eddcb129f8a80adafc2fa4791c7da564439b09f9833f59253ac2b4",
+    "license": "CC-BY-4.0; kenchoo, project derivative baseline"
+  },
+  {
+    "path": "grand-piano.glb",
+    "url": "https://raw.githubusercontent.com/daidaideaa/birthday-card/e3ff45fbc46b6afe2c629d843b77ac4607339b30/public/models/grand-piano.glb",
+    "sha256": "a559db2005279807977be66cfffdf6e89d93aee2d3c7fe6f16333166bebe16ef",
+    "license": "CC-BY-3.0; jeremy"
+  }
+]

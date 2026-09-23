@@ -9,8 +9,13 @@
     "lint": "eslint .",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --import tsx --test tests/*.test.ts",
+    "assets:validate": "node scripts/validate-assets.mjs",
+    "assets:optimize": "node scripts/optimize-assets.mjs",
+    "assets:sources": "node scripts/fetch-model-sources.mjs",
     "prebuild": "node scripts/copy-decoders.mjs",
-    "predev": "node scripts/copy-decoders.mjs"
+    "predev": "node scripts/copy-decoders.mjs",
+    "assets:build": "node scripts/build-assets.mjs",
+    "assets:review:prepare": "node scripts/prepare-model-review.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "0.10.32",

@@ -5,15 +5,19 @@ The source contains actual topology, UV textures, skin weights and a jaw/ear/tai
 Adult is a distinct derivative: longer limbs/torso, smaller head/ears, sculpted mane.
 No generated images, sphere characters, or animation atlases are used.
 """
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parent))
+from common import output_dir, export_glb
 import bpy, math, sys
 import numpy as np
 from pathlib import Path
 from mathutils import Vector, Quaternion, Matrix
 
 ROOT=Path(__file__).resolve().parents[2]
-OUT=ROOT/'public/models/lions'
+OUT=output_dir('lions')
 OUT.mkdir(parents=True,exist_ok=True)
-SOURCE=Path(sys.argv[sys.argv.index('--')+1]) if '--' in sys.argv else Path('/tmp/model-research/baby-lion/scene.gltf')
+SOURCE=Path(sys.argv[sys.argv.index('--')+1]) if '--' in sys.argv else ROOT/'model-sources/lion-cub.glb'
 NECK='Wolf_Neck_TopSHJnt_17'
 JAW='Wolf_Head_JawSHJnt_12'
 
@@ -65,14 +69,14 @@ def mane(rig):
  for row,(y,rx,rz) in enumerate(sections):
   for i in range(N):
    a=math.tau*i/N;sn=math.sin(a)
-   wave=.009*math.sin(a*9+.3)+.006*math.sin(a*13+.7)
+   wave=.013*math.sin(a*9+.3+row*.37)+.008*math.sin(a*13+.7-row*.31)
    x=center_x+(rx+wave)*math.cos(a)
    # Above the skull fur stays short; the bib length grows below the lower jaw.
    z=center_z+.04*row/(len(sections)-1)+(rz+wave)*sn*((.68-.26*row/(len(sections)-1)) if sn>0 else 1.32)
    # Continuous small crown over the forehead, tapering immediately behind the ears.
    z+=.095*max(0,sn)**3*math.exp(-row*1.7)
    yy=y+.012*math.sin(a*9+.4)
-   verts.append(inv@Vector((x*1.08,yy*1.12,z*1.22)))
+   verts.append(inv@Vector((x*1.11,yy*1.16,z*1.29)))
  for r in range(len(sections)-1):
   for i in range(N):faces.append((r*N+i,r*N+(i+1)%N,(r+1)*N+(i+1)%N,(r+1)*N+i))
  obj=mesh('Adult sculpted mane',verts,faces,fur)
@@ -99,7 +103,7 @@ def build(adult):
  for o in scene.objects:o.animation_data_clear()
  for a in list(bpy.data.actions):bpy.data.actions.remove(a)
  if adult:
-  transform=Matrix.Diagonal((1.08,1.12,1.22,1.0))
+  transform=Matrix.Diagonal((1.11,1.16,1.29,1.0))
   body.data.transform(body.matrix_world.inverted()@transform@body.matrix_world, shape_keys=True)
   rig.data.transform(rig.matrix_world.inverted()@transform@rig.matrix_world)
   bpy.context.view_layer.update()
@@ -111,7 +115,10 @@ def build(adult):
    for vertex in points_set:
     world=body.matrix_world@vertex.co
     amount=max(0,min(1,(-world.y-.64)/.15))*max(0,min(1,(world.z-.54)/.15))
-    world.x=.067+(world.x-.067)*(1+.18*amount)
+    # Shoulder and rib cage widen independently of the skull; abdomen remains tucked.
+    shoulder=math.exp(-((world.y+.23)/.34)**2)*max(0,min(1,(world.z-.27)/.28))
+    rib=math.exp(-((world.y-.08)/.38)**2)*max(0,min(1,(world.z-.30)/.25))
+    world.x=.069+(world.x-.069)*(1+.16*amount+.13*shoulder+.06*rib)
     vertex.co=inv_body@world
   # Smaller ears distinguish the adult without concealing its expressive face.
   loc,q,scale=base[NECK];base[NECK]=(loc,q,scale*1.02)
@@ -174,12 +181,13 @@ def build(adult):
    image.scale(min(1024,image.size[0]),min(1024,image.size[1]))
  bpy.ops.object.select_all(action='SELECT')
  path=OUT/('father-lion.glb' if adult else 'lion-cub.glb')
- bpy.ops.export_scene.gltf(filepath=str(path),export_format='GLB',export_image_format='JPEG',export_jpeg_quality=88,export_tangents=True,export_animations=True,export_animation_mode='ACTIONS',export_force_sampling=True,export_frame_range=False,export_all_influences=False,export_extras=True)
+ export_glb(filepath=str(path),export_image_format='JPEG',export_jpeg_quality=88,export_tangents=True,export_animations=True,export_animation_mode='ACTIONS',export_force_sampling=True,export_frame_range=False,export_all_influences=False,export_extras=True)
  print('EXPORTED',path,path.stat().st_size,flush=True)
  return path
 
 cub=build(False);adult=build(True)
 (OUT/'LICENSE.txt').write_text('Lion cub and adult lion derivative models\nBased on "Baby Lion" by kenchoo\nhttps://sketchfab.com/3d-models/baby-lion-c9599625dc474262aab754d7b63841f5\nLicense: Creative Commons Attribution 4.0\nhttps://creativecommons.org/licenses/by/4.0/\n\nChanges: adult body proportions, sculpted mane, new skeletal Idle / Walk / Roar / Bow animation clips, file conversion. Original artist is not associated with or endorsing this project.\n')
+if __import__('os').environ.get('ASSET_PREVIEW', '0') != '1': sys.exit(0)
 # Render the actual exported assets in the same composition used by the web scene.
 clear();scene=bpy.context.scene
 preview_rigs=[]

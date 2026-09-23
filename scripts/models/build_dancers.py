@@ -3,9 +3,13 @@ Source anatomy and the outfit rig are retained. Contemporary clothes, shoes,
 hairstyles and choreography are authored here. No AI image sheets or Mixamo
 animation data are used.
 """
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parent))
+from common import output_dir, export_glb
 import bpy,bmesh,math,pathlib,os,re
 from mathutils import Vector,Matrix,Quaternion
-ROOT=pathlib.Path(__file__).resolve().parents[2];OUT=ROOT/'public/models'
+ROOT=pathlib.Path(__file__).resolve().parents[2];OUT=output_dir()
 SRC=pathlib.Path(os.environ.get('QUATERNIUS_SOURCE',str(ROOT/'model-sources/quaternius')))
 QA=pathlib.Path(os.environ.get('JAZZ_QA_DIR','/tmp/birthday-jazz-review'));QA.mkdir(parents=True,exist_ok=True)
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
@@ -13,7 +17,7 @@ scene=bpy.context.scene;scene.render.fps=30;scene.frame_start=1;scene.frame_end=
 
 def material(name,color,rough=.55,metal=0):
  m=bpy.data.materials.new(name);m.use_nodes=True;p=m.node_tree.nodes.get('Principled BSDF');p.inputs['Base Color'].default_value=(*color,1);p.inputs['Roughness'].default_value=rough;p.inputs['Metallic'].default_value=metal;return m
-ivory=material('ivory cotton',(.92,.91,.84));navy=material('midnight trousers',(.026,.040,.054));ochre=material('ochre silk',(.98,.66,.08),.43);dark=material('espresso hair',(.026,.013,.01));boots=material('polished black shoes',(.016,.013,.012),.3); skin=material('warm skin',(.45,.235,.13),.68)
+ivory=material('ivory cotton',(.86,.85,.79));navy=material('midnight trousers',(.026,.040,.054));ochre=material('ochre silk',(.92,.59,.065),.52);dark=material('espresso hair',(.026,.013,.01));boots=material('polished black shoes',(.016,.013,.012),.3); skin=material('warm skin',(.45,.235,.13),.68)
 
 def import_asset(name):
  old=set(bpy.data.objects);bpy.ops.import_scene.gltf(filepath=str(SRC/name));new=set(bpy.data.objects)-old
@@ -58,7 +62,7 @@ def torso_weights(v):
 
 def modern_clothes(rig,female):
  objects=[]
- profile=[(1.03,.153,.10),(1.13,.15,.10),(1.27,.177,.112),(1.39,.178,.098),(1.45,.145,.071),(1.49,.065,.055)] if female else [(1.00,.172,.118),(1.12,.175,.118),(1.27,.193,.125),(1.39,.215,.112),(1.455,.161,.08),(1.495,.063,.055)]
+ profile=[(1.03,.153,.10),(1.13,.15,.10),(1.27,.177,.112),(1.39,.178,.098),(1.45,.145,.071),(1.49,.065,.055)] if female else [(1.00,.172,.118),(1.12,.175,.118),(1.27,.193,.125),(1.39,.225,.115),(1.455,.161,.08),(1.495,.063,.055)]
  objects.append(ring_mesh('gold dress bodice' if female else 'white cotton shirt',[((0,.025,z),rx,ry) for z,rx,ry in profile],rig,ochre if female else ivory,torso_weights))
  for side,sign in [('l',1),('r',-1)]:
   if not female:
@@ -92,7 +96,8 @@ def hair_cap(rig,female):
   for j in range(n):
    a=j/n*math.tau;front=max(0,-math.sin(a))**7
    theta=u*((2.22 if female else 1.48)*(1-front)+(1.08 if female else 1.16)*front)
-   x=.100*math.sin(theta)*math.cos(a);y=.003+.100*math.sin(theta)*math.sin(a);z=1.637+.118*math.cos(theta)
+   sweep=1+.035*math.sin(a*2+.4)*math.sin(theta)
+   x=.100*sweep*math.sin(theta)*math.cos(a);y=.003+.100*sweep*math.sin(theta)*math.sin(a);z=1.637+.118*math.cos(theta)
    if female and u>.75:z-=((u-.75)/.25)*.065*(1-front)
    verts.append((x,y,z))
  for k in range(rings):
@@ -153,6 +158,13 @@ def make_actor(female):
   o.data.update()
   for p in o.data.polygons:p.use_smooth=True
  # Preserve Quaternius arm skin/sleeve texture, simplified to a modest atlas size.
+ for ob in headmeshes:
+  for v in ob.data.vertices:
+   # Gently taper lower cheeks; preserve eye sockets, neck seam and skull height.
+   z=v.co.z
+   jaw=max(0,1-abs(z-1.575)/.065)
+   v.co.x*=1-(.065 if female else .022)*jaw
+  ob.data.update()
  for image in list(bpy.data.images):
   if image.size[0]>512 or image.size[1]>512:image.scale(512,512)
  meshes.append(hair_cap(rig,female))
@@ -200,7 +212,8 @@ def pose(t,fem):
  step=.12*math.sin((t-1)*math.pi) if 1<t<4 else 0
  approach=smooth((t-6)/.7)*(1-smooth((t-10)/1.4))
  x+=step+(-.13 if fem else .02)*approach
- yaw=math.tau*smooth((t-7)/2.2) if fem else -.12*approach
+ turn=smooth((t-7)/2.2);turn=turn*turn*(3-2*turn)
+ yaw=math.tau*turn if fem else -.12*approach
  return x,0,yaw
 
 def foot_at(t,fem,side,rest):
@@ -223,24 +236,26 @@ def foot_at(t,fem,side,rest):
 for rig,meshes,targets,skirt in actors:
  fem=rig.name=='Mia';rests={s:rig.data.bones[f'calf_{s}'].tail_local.copy() for s in ['l','r']}
  for frame in range(1,362):
-  t=(frame-1)/30;scene.frame_set(frame);x,y,a=pose(t,fem);rig.location=(x,y,-.02+.004*math.sin(t*math.tau)**2);rig.rotation_euler=(0,0,a);rig.keyframe_insert('location');rig.keyframe_insert('rotation_euler')
+  t=(frame-1)/30;scene.frame_set(frame);x,y,a=pose(t,fem);settle=1-smooth((t-10.3)/1.5);rig.location=(x,y,-.017+.005*math.sin(t*math.tau)**2*settle);rig.rotation_euler=(0,0,a);rig.keyframe_insert('location');rig.keyframe_insert('rotation_euler')
   lift=smooth((t-6)/.85)*(1-smooth((t-9.5)/.8))
   for side,sgn in [('l',1),('r',-1)]:
    p,ang=foot_at(t,fem,side,rests[side]);targets['foot'+side].location=p;targets['foot'+side].keyframe_insert('location')
    restq=rig.data.bones[f'foot_{side}'].matrix_local.to_quaternion();targets['foot'+side].rotation_quaternion=Quaternion((0,0,1),ang)@restq;targets['foot'+side].keyframe_insert('rotation_quaternion')
-   hx=sgn*.24;hy=-.045;hz=.925+.02*math.sin(t*math.tau)
+   hx=sgn*.24;hy=-.045;hz=.925+.015*math.sin(t*math.tau)*(1-smooth((t-10)/1.8))
    hand=Vector((x+math.cos(a)*hx-math.sin(a)*hy,y+math.sin(a)*hx+math.cos(a)*hy,hz))
    # Anatomical left is +X in the source rig; partners share exactly one hand target.
-   if (fem and side=='r') or (not fem and side=='l'):hand=hand.lerp(Vector((.13 if fem else .04,-.015,1.84)),lift)
+   if (fem and side=='r') or (not fem and side=='l'):hand=hand.lerp(Vector((.118 if fem else .052,-.015,1.80)),lift)
    else:
     hand.y-=.015
     if 1<t<6:hand.x+=sgn*.12*math.sin((t-1)*math.pi)**2;hand.z+=.10*math.sin((t-1)*math.pi)**2
    targets['hand'+side].location=hand;targets['hand'+side].keyframe_insert('location')
    con=rig.pose.bones[f'hand_{side}'].constraints.get('gentle clasp orientation');con.influence=lift if ((fem and side=='r') or (not fem and side=='l')) else 0;con.keyframe_insert('influence')
   for bn,amp in [('spine_02',.018),('spine_03',-.018),('Head',.018)]:
-   pb=rig.pose.bones[bn];pb.rotation_mode='XYZ';pb.rotation_euler.y=amp*math.sin(t*1.4);pb.keyframe_insert('rotation_euler')
+   pb=rig.pose.bones[bn];pb.rotation_mode='XYZ';pb.rotation_euler.y=amp*math.sin(t*1.4)*(1-smooth((t-10)/1.8));pb.keyframe_insert('rotation_euler')
   if skirt:
-   skirt.value=.05+.8*math.sin(math.pi*smooth((t-7)/2.2))**2;skirt.keyframe_insert('value')
+   # Delayed skirt response and a small damped settling swing.
+   follow=math.sin(math.pi*smooth((t-7.12)/2.25))**2
+   settle=max(0,t-9.35);skirt.value=.04+.70*follow+.075*math.exp(-settle*2)*math.sin(settle*6)**2;skirt.keyframe_insert('value')
    kick=skirt.id_data.key_blocks['skirt follows forward kick'];kick.value=max(0,math.sin((t-4)*math.tau)) if 4<=t<6 else 0;kick.keyframe_insert('value')
  for a2 in bpy.data.actions:
   for fc in a2.fcurves:
@@ -251,13 +266,15 @@ bpy.ops.object.select_all(action='DESELECT')
 for rig,meshes,targets,skirt in actors:
  rig.select_set(True)
  for o in meshes:o.select_set(True)
-bpy.ops.export_scene.gltf(filepath=str(OUT/'jazz-duo.glb'),export_format='GLB',use_selection=True,export_animations=True,export_frame_range=True,export_force_sampling=True,export_nla_strips=False,export_animation_mode='SCENE',export_anim_scene_split_object=False,export_skins=True,export_morph=True,export_image_format='JPEG',export_jpeg_quality=85,export_optimize_animation_size=True,export_optimize_animation_keep_anim_armature=False,export_optimize_animation_keep_anim_object=False)
+export_glb(filepath=str(OUT/'jazz-duo.glb'),use_selection=True,export_animations=True,export_frame_range=True,export_force_sampling=True,export_nla_strips=False,export_animation_mode='SCENE',export_anim_scene_split_object=False,export_skins=True,export_morph=True,export_image_format='JPEG',export_jpeg_quality=85,export_optimize_animation_size=True,export_optimize_animation_keep_anim_armature=False,export_optimize_animation_keep_anim_object=False)
 bpy.ops.wm.save_as_mainfile(filepath=str(QA/'jazz-duo.blend'));print('EXPORTED',OUT/'jazz-duo.glb',flush=True)
+if os.environ.get('ASSET_PREVIEW', '0') != '1':
+ sys = __import__('sys'); sys.exit(0)
 # Native preview of the same composition; keep dancers right of the piano/bench.
 for rig,meshes,targets,skirt in actors:
  rig.delta_location=(1.1,-.7,0)
  for target in targets.values():target.delta_location=(1.1,-.7,0)
-bpy.ops.import_scene.gltf(filepath=str(OUT/'grand-piano.glb'))
+bpy.ops.import_scene.gltf(filepath=str(ROOT/'public/models/grand-piano.glb'))
 for o in bpy.context.selected_objects:
  if o.type=='MESH':o.scale=(.165,)*3;o.location=(-1.45,.40,.025);o.rotation_euler.z=-.35
 floor=material('stage stone',(.038,.049,.066),.7)
