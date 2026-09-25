@@ -4,7 +4,7 @@ import { createModelLoader } from "../utils/modelLoader";
 import { qualityPolicy } from "../cinematic/quality";
 import { CinemaPost } from "../cinematic/CinemaPost";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
-import { assetUrl } from "../utils/assetUrl";
+import { runtimeAssetUrl as assetUrl } from "../utils/runtimeAssetUrl";
 import {
   injectFuzz,
   makeGlowTexture,

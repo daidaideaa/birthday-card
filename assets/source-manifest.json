@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "contentMode": "demo",
+  "assets": {
+    "invitation.background": {
+      "kind": "image",
+      "license": "CC0-1.0",
+      "source": "项目原创部署接口示意图，无私人内容",
+      "variants": { "standard": { "file": "invitation.svg", "mime": "image/svg+xml", "width": 640, "height": 360 } }
+    }
+  },
+  "bundles": { "invitation": { "critical": ["invitation.background"], "deferred": [] } }
+}

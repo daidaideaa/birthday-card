@@ -1,4 +1,4 @@
-import { assetUrl } from "../utils/assetUrl";
+import { runtimeAssetUrl as assetUrl } from "../utils/runtimeAssetUrl";
 import { setMediaAudioState } from "../cinematic/mediaAudio";
 import { getMediaActive, subscribeMediaActivity } from "../cinematic/mediaActivity";
 type Foley = "paper" | "envelope" | "candle";

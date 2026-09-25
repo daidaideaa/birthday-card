@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createModelLoader } from "../utils/modelLoader";
-import { assetUrl } from "../utils/assetUrl";
+import { runtimeAssetUrl as assetUrl } from "../utils/runtimeAssetUrl";
 import {
   Spring,
   injectFuzz,

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "demo-contract-v1",
+  "contentMode": "demo",
+  "assets": {
+    "invitation.background": {
+      "kind": "image",
+      "variants": {
+        "standard": {
+          "path": "releases/demo-contract-v1/invitation.svg",
+          "mime": "image/svg+xml",
+          "bytes": 416,
+          "sha256": "258a0c87ddd95ac9776ec3c64d9e6a1b8efb4720ffd9507013351045b7eb743f",
+          "width": 640,
+          "height": 360
+        }
+      }
+    }
+  },
+  "bundles": {
+    "invitation": {
+      "critical": [
+        "invitation.background"
+      ],
+      "deferred": []
+    }
+  }
+}

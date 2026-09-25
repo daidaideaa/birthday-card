@@ -2,6 +2,12 @@ node_modules/
 dist/
 .env
 .env.*
+!.env.example
+.wrangler/
+*.credentials.json
+*.credentials.json.bak
+public/asset-manifest.json
+public/media/
 *.log
 .DS_Store
 *.tsbuildinfo

@@ -1,4 +1,4 @@
-import { assetUrl } from "../utils/assetUrl";
+import { runtimeAssetUrl as assetUrl } from "../utils/runtimeAssetUrl";
 
 export type PetVariant = "apricot" | "cream";
 export type PetAction = "idle" | "look-left" | "look-right" | "pet" | "happy" | "rest";

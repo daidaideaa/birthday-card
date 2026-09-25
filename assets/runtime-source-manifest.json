@@ -1,0 +1,450 @@
+{
+  "schemaVersion": 1,
+  "contentMode": "demo",
+  "assets": {
+    "invitation.background": {
+      "kind": "image",
+      "license": "Project generated artwork",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: images/castle-night.webp",
+      "variants": {
+        "standard": {
+          "file": "images/castle-night.webp",
+          "mime": "image/webp"
+        }
+      }
+    },
+    "legacy.images.forest.jpg": {
+      "kind": "image",
+      "license": "Unsplash License",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: images/forest.jpg",
+      "variants": {
+        "standard": {
+          "file": "images/forest.jpg",
+          "mime": "image/jpeg"
+        }
+      }
+    },
+    "legacy.images.jazz_night.webp": {
+      "kind": "image",
+      "license": "Project generated artwork",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: images/jazz-night.webp",
+      "variants": {
+        "standard": {
+          "file": "images/jazz-night.webp",
+          "mime": "image/webp"
+        }
+      }
+    },
+    "legacy.images.lake.jpg": {
+      "kind": "image",
+      "license": "Unsplash License",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: images/lake.jpg",
+      "variants": {
+        "standard": {
+          "file": "images/lake.jpg",
+          "mime": "image/jpeg"
+        }
+      }
+    },
+    "legacy.images.mountains.jpg": {
+      "kind": "image",
+      "license": "Unsplash License",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: images/mountains.jpg",
+      "variants": {
+        "standard": {
+          "file": "images/mountains.jpg",
+          "mime": "image/jpeg"
+        }
+      }
+    },
+    "legacy.images.savanna_cinema.webp": {
+      "kind": "image",
+      "license": "Project generated artwork",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: images/savanna-cinema.webp",
+      "variants": {
+        "standard": {
+          "file": "images/savanna-cinema.webp",
+          "mime": "image/webp"
+        }
+      }
+    },
+    "legacy.models.grand_piano.glb": {
+      "kind": "model",
+      "license": "CC-BY-3.0",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: models/grand-piano.glb",
+      "variants": {
+        "standard": {
+          "file": "models/grand-piano.glb",
+          "mime": "model/gltf-binary"
+        }
+      }
+    },
+    "legacy.models.jazz_duo.glb": {
+      "kind": "model",
+      "license": "CC0-1.0 + project original",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: models/jazz-duo.glb",
+      "variants": {
+        "standard": {
+          "file": "models/jazz-duo.glb",
+          "mime": "model/gltf-binary"
+        }
+      }
+    },
+    "pride.father.model": {
+      "kind": "model",
+      "license": "CC-BY-4.0",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: models/lions/father-lion.glb",
+      "variants": {
+        "standard": {
+          "file": "models/lions/father-lion.glb",
+          "mime": "model/gltf-binary"
+        }
+      }
+    },
+    "pride.cub.model": {
+      "kind": "model",
+      "license": "CC-BY-4.0",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: models/lions/lion-cub.glb",
+      "variants": {
+        "standard": {
+          "file": "models/lions/lion-cub.glb",
+          "mime": "model/gltf-binary"
+        }
+      }
+    },
+    "pets.apricot": {
+      "kind": "model",
+      "license": "Project original",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: models/teddy-apricot.glb",
+      "variants": {
+        "standard": {
+          "file": "models/teddy-apricot.glb",
+          "mime": "model/gltf-binary"
+        }
+      }
+    },
+    "pets.cream": {
+      "kind": "model",
+      "license": "Project original",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: models/teddy-cream.glb",
+      "variants": {
+        "standard": {
+          "file": "models/teddy-cream.glb",
+          "mime": "model/gltf-binary"
+        }
+      }
+    },
+    "legacy.audio.piano_a4.mp3": {
+      "kind": "audio",
+      "license": "CC-BY-3.0",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: audio/piano-a4.mp3",
+      "variants": {
+        "standard": {
+          "file": "audio/piano-a4.mp3",
+          "mime": "audio/mpeg"
+        }
+      }
+    },
+    "legacy.audio.piano_c4.mp3": {
+      "kind": "audio",
+      "license": "CC-BY-3.0",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: audio/piano-c4.mp3",
+      "variants": {
+        "standard": {
+          "file": "audio/piano-c4.mp3",
+          "mime": "audio/mpeg"
+        }
+      }
+    },
+    "legacy.cinema.duet_landscape.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/duet-landscape.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/duet-landscape.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.duet_landscape.webp": {
+      "kind": "image",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/duet-landscape.webp",
+      "variants": {
+        "standard": {
+          "file": "cinema/duet-landscape.webp",
+          "mime": "image/webp"
+        }
+      }
+    },
+    "legacy.cinema.duet_portrait.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/duet-portrait.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/duet-portrait.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.duet_portrait.webp": {
+      "kind": "image",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/duet-portrait.webp",
+      "variants": {
+        "standard": {
+          "file": "cinema/duet-portrait.webp",
+          "mime": "image/webp"
+        }
+      }
+    },
+    "legacy.cinema.pets.apricot_happy.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/apricot-happy.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/apricot-happy.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.apricot_idle.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/apricot-idle.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/apricot-idle.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.apricot_look_left.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/apricot-look-left.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/apricot-look-left.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.apricot_look_right.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/apricot-look-right.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/apricot-look-right.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.apricot_pet.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/apricot-pet.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/apricot-pet.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.apricot_rest.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/apricot-rest.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/apricot-rest.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.apricot.webp": {
+      "kind": "image",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/apricot.webp",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/apricot.webp",
+          "mime": "image/webp"
+        }
+      }
+    },
+    "legacy.cinema.pets.cream_happy.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/cream-happy.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/cream-happy.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.cream_idle.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/cream-idle.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/cream-idle.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.cream_look_left.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/cream-look-left.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/cream-look-left.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.cream_look_right.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/cream-look-right.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/cream-look-right.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.cream_pet.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/cream-pet.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/cream-pet.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.cream_rest.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/cream-rest.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/cream-rest.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pets.cream.webp": {
+      "kind": "image",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pets/cream.webp",
+      "variants": {
+        "standard": {
+          "file": "cinema/pets/cream.webp",
+          "mime": "image/webp"
+        }
+      }
+    },
+    "legacy.cinema.pride_landscape.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pride-landscape.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pride-landscape.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pride_landscape.webp": {
+      "kind": "image",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pride-landscape.webp",
+      "variants": {
+        "standard": {
+          "file": "cinema/pride-landscape.webp",
+          "mime": "image/webp"
+        }
+      }
+    },
+    "legacy.cinema.pride_portrait.mp4": {
+      "kind": "data",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pride-portrait.mp4",
+      "variants": {
+        "standard": {
+          "file": "cinema/pride-portrait.mp4",
+          "mime": "video/mp4"
+        }
+      }
+    },
+    "legacy.cinema.pride_portrait.webp": {
+      "kind": "image",
+      "license": "CC-BY-4.0; CC-BY-3.0 audio; project original score (see attribution)",
+      "source": "public/ASSET_SOURCES.md; existing tracked demo: cinema/pride-portrait.webp",
+      "variants": {
+        "standard": {
+          "file": "cinema/pride-portrait.webp",
+          "mime": "image/webp"
+        }
+      }
+    }
+  },
+  "bundles": {
+    "invitation": {
+      "critical": [
+        "invitation.background"
+      ],
+      "deferred": []
+    },
+    "legacy": {
+      "critical": [],
+      "deferred": [
+        "legacy.images.forest.jpg",
+        "legacy.images.jazz_night.webp",
+        "legacy.images.lake.jpg",
+        "legacy.images.mountains.jpg",
+        "legacy.images.savanna_cinema.webp",
+        "legacy.models.grand_piano.glb",
+        "legacy.models.jazz_duo.glb",
+        "pride.father.model",
+        "pride.cub.model",
+        "pets.apricot",
+        "pets.cream",
+        "legacy.audio.piano_a4.mp3",
+        "legacy.audio.piano_c4.mp3",
+        "legacy.cinema.duet_landscape.mp4",
+        "legacy.cinema.duet_landscape.webp",
+        "legacy.cinema.duet_portrait.mp4",
+        "legacy.cinema.duet_portrait.webp",
+        "legacy.cinema.pets.apricot_happy.mp4",
+        "legacy.cinema.pets.apricot_idle.mp4",
+        "legacy.cinema.pets.apricot_look_left.mp4",
+        "legacy.cinema.pets.apricot_look_right.mp4",
+        "legacy.cinema.pets.apricot_pet.mp4",
+        "legacy.cinema.pets.apricot_rest.mp4",
+        "legacy.cinema.pets.apricot.webp",
+        "legacy.cinema.pets.cream_happy.mp4",
+        "legacy.cinema.pets.cream_idle.mp4",
+        "legacy.cinema.pets.cream_look_left.mp4",
+        "legacy.cinema.pets.cream_look_right.mp4",
+        "legacy.cinema.pets.cream_pet.mp4",
+        "legacy.cinema.pets.cream_rest.mp4",
+        "legacy.cinema.pets.cream.webp",
+        "legacy.cinema.pride_landscape.mp4",
+        "legacy.cinema.pride_landscape.webp",
+        "legacy.cinema.pride_portrait.mp4",
+        "legacy.cinema.pride_portrait.webp"
+      ]
+    }
+  }
+}
