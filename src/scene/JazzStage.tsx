@@ -266,8 +266,8 @@ export function JazzStage({
     const load = async () => {
       try {
         const results = await Promise.allSettled([
-          loader.loadAsync(`${import.meta.env.BASE_URL}models/grand-piano.glb`),
-          loader.loadAsync(`${import.meta.env.BASE_URL}models/jazz-duo.glb`),
+          loader.loadAsync(runtimeAssetUrl('models/grand-piano.glb')),
+          loader.loadAsync(runtimeAssetUrl('models/jazz-duo.glb')),
         ]);
         if (
           disposed ||
@@ -469,3 +469,4 @@ export function JazzStage({
     </div>
   );
 }
+import { runtimeAssetUrl } from '../utils/runtimeAssetUrl';

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import type { StoryController, StorySnapshot } from "./StoryController";
 import { PageTurn } from "./PageTurn";
 import { ChapterContent } from "./chapters/ChapterContent";
-import { assetUrl } from "../utils/assetUrl";
+import { runtimeAssetUrl as assetUrl } from "../utils/runtimeAssetUrl";
 import { FILM_PORTRAIT_QUERY } from "../cinematic/media";
 interface Props {
   controller: StoryController;

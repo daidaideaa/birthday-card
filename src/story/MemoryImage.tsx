@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { assetUrl } from "../utils/assetUrl";
+import { runtimeAssetUrl as assetUrl } from "../utils/runtimeAssetUrl";
 export function MemoryImage({
   path,
   alt,

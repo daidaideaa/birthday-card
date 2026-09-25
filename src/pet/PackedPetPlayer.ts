@@ -108,6 +108,7 @@ export class PackedPetPlayer {
     const ticket = ++this.generation;
     if (this.current?.action === action && !this.current.video.ended) return;
     const video = document.createElement("video");
+    video.crossOrigin = "anonymous";
     video.muted = true;
     video.playsInline = true;
     video.preload = "auto";

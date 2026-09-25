@@ -25,7 +25,7 @@ const PetCompanion = lazy(() =>
   import("./pet/PetCompanion").then((m) => ({ default: m.PetCompanion })),
 );
 import { CinematicAtmosphere } from "./scene/CinematicAtmosphere";
-import { assetUrl } from "./utils/assetUrl";
+import { runtimeAssetUrl as assetUrl } from "./utils/runtimeAssetUrl";
 import { reducedMotion } from "./utils/device";
 import "./story/story.css";
 

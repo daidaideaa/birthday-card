@@ -94,3 +94,6 @@ node scripts/cinema/encode_movie.mjs --ffmpeg <ffmpeg路径> --name duet-portrai
 ## AI 协作
 
 项目约定见 [AGENTS.md](AGENTS.md)；视觉工作使用 [birthday-visual-review](.agents/skills/birthday-visual-review/SKILL.md)。先检查实际画面，再处理造型、镜头或交互问题。完成情况以实际文件、测试报告与已观察的画面为准。
+# 部署更新（2026-09-25）
+
+按本轮最新决定，网站继续使用 GitHub Pages，Cloudflare R2 负责后续独立媒体发布。操作命令、资产契约 v1、授权与回滚步骤见 [部署说明](docs/DEPLOYMENT.md)。以下历史视觉说明不覆盖本轮部署与前端改造方案。

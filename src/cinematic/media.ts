@@ -1,4 +1,4 @@
-import { assetUrl } from "../utils/assetUrl";
+import { runtimeAssetUrl as assetUrl } from "../utils/runtimeAssetUrl";
 
 export type FilmId = "duet" | "pride";
 export type FilmFormat = "landscape" | "portrait";

@@ -1,0 +1,40 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [infra/cloudflare-delivery]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      VITE_ASSET_BASE_URL: ""
+      VITE_CONTENT_MODE: demo
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run assets:check -- --manifest assets/releases/demo-contract-v1.json --source assets/demo
+      - run: npm run assets:publish -- --release demo-contract-v1 --source assets/demo --dry-run
+      - run: npm run assets:validate
+      - run: command -v ffprobe >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+      - run: npm run cinema:validate
+      - name: Root path build
+        env:
+          VITE_APP_BASE: /
+        run: npm run build && npm run deploy:check -- --dir dist
+      - name: GitHub Pages path build
+        env:
+          VITE_APP_BASE: /birthday-card/
+        run: npm run build && npm run deploy:check -- --dir dist
