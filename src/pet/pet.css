@@ -1,60 +1,95 @@
 .experience .pet-companion.pet-duo {
   position: relative;
   inset: auto;
-  width: 330px;
-  height: 260px;
+  width: 304px;
+  height: 226px;
   max-width: 100%;
-  margin: 16px auto 0;
+  margin: 12px auto 0;
   flex: 0 0 auto;
   z-index: 4;
   isolation: isolate;
   pointer-events: none;
 }
-.experience .pet-duo .pet-canvas {
+.experience.book-experience .pet-companion.pet-duo {
+  position: relative;
+  inset: auto;
+  margin: 0 3% 20px auto;
+}
+.experience .pet-duo .pet-portraits {
   position: absolute;
-  inset: 0 0 39px;
-  width: auto;
-  height: auto;
-  filter: drop-shadow(0 12px 14px #0b080b24);
+  inset: 0 0 48px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
-.experience .pet-duo .pet-canvas canvas {
-  width: 100%;
-  height: 100%;
-}
-.experience .pet-duo .pet-touch-zones {
-  position: absolute;
-  inset: 13% 18% 25%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px;
-  pointer-events: none;
-}
-.experience .pet-duo .pet-touch-zones button {
-  display: block;
+.experience .pet-duo .pet-portrait {
+  position: relative;
+  flex: 0 0 58%;
+  aspect-ratio: 1;
   min-width: 0;
   min-height: 0;
-  width: 100%;
   padding: 0;
   border: 0;
-  border-radius: 44%;
-  background: transparent;
+  border-radius: 40%;
+  color: #f9cfb7;
+  background: none;
   box-shadow: none;
   cursor: pointer;
   pointer-events: auto;
   transform: none;
   -webkit-tap-highlight-color: transparent;
 }
-.experience .pet-duo .pet-touch-zones button:focus-visible {
-  outline: 1px solid #ebcfa5;
-  outline-offset: 3px;
-  background: #fff4db08;
+.experience .pet-duo .pet-portrait + .pet-portrait { margin-left: -16%; }
+.experience .pet-duo .pet-portrait::before {
+  content: "";
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  bottom: 8%;
+  height: 9%;
+  background: radial-gradient(ellipse, #100b1038, transparent 70%);
+  pointer-events: none;
 }
+.experience .pet-duo .pet-portrait:hover { background: none; transform: none; box-shadow: none; }
+.experience .pet-duo .pet-missing-poster { font: 28px/1 Georgia, serif; opacity: .35; }
+.experience .pet-duo .pet-portrait:focus-visible { outline: 1px solid #ebcfa5; outline-offset: -12px; }
+.experience .pet-duo .pet-poster,
+.experience .pet-duo .pet-film,
+.experience .pet-duo .pet-film canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.experience .pet-duo .pet-film { opacity: 0; }
+.experience .pet-duo .pet-film[data-ready="true"] { opacity: 1; }
+.experience .pet-duo .pet-portrait:has(.pet-film[data-ready="true"]) .pet-poster { visibility: hidden; }
+.experience .pet-duo .pet-portrait:has(.pet-film[data-ready="true"]) .pet-missing-poster { visibility: hidden; }
+.experience .pet-duo.is-calm .pet-film,
+.experience .pet-duo .is-fallback .pet-film { opacity: 0; }
+.experience .pet-duo.is-calm .pet-poster,
+.experience .pet-duo .is-fallback .pet-poster { visibility: visible !important; }
+.experience .pet-duo.is-calm .pet-missing-poster,
+.experience .pet-duo .is-fallback .pet-missing-poster { visibility: visible !important; }
+.experience .pet-duo .pet-touch-heart {
+  position: absolute;
+  top: 12%;
+  right: 20%;
+  font: 24px/1 Georgia, serif;
+  opacity: 0;
+  transform: translateY(4px) scale(0.85);
+  transition: opacity 180ms, transform 360ms;
+  filter: drop-shadow(0 2px 10px #26130c55);
+}
+.experience .pet-duo .is-loved .pet-touch-heart { opacity: 1; transform: translateY(-5px) scale(1); }
 .experience .pet-duo .pet-dialogue {
   position: absolute;
-  inset: auto 0 31px;
-  color: #ead3b4;
+  inset: auto 0 30px;
+  color: #e3cfb6;
   font-size: 11px;
-  line-height: 1.65;
+  line-height: 1.7;
   letter-spacing: 0.05em;
   text-align: center;
   text-shadow: 0 1px 10px #130d17;
@@ -66,68 +101,36 @@
   width: max-content;
   min-width: 76px;
   min-height: 28px;
-  padding: 4px 13px;
-  border: 1px solid #c5a87948;
+  padding: 4px 12px;
+  border: 1px solid #c5a87936;
   border-radius: 20px;
   color: #e8cba4;
-  background: #30231c99;
+  background: #30231c77;
   font: inherit;
   font-size: 10px;
   line-height: 1.5;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   transform: translateX(-50%);
   cursor: pointer;
   pointer-events: auto;
   backdrop-filter: blur(8px);
-  transition:
-    color 180ms,
-    border-color 180ms,
-    background 180ms;
+  transition: color 180ms, border-color 180ms, background 180ms;
 }
-.experience .pet-duo .pet-play:hover {
-  border-color: #e8cba490;
-  color: #fff0d7;
-  background: #5a4030b3;
-  transform: translateX(-50%);
-}
-.experience .pet-duo .pet-play:focus-visible {
-  outline: 2px solid #ebcfa5;
-  outline-offset: 3px;
-}
-.experience .pet-duo .pet-heart {
-  right: 46%;
-  top: 12%;
-  font-size: 25px;
-  color: #f3c5b5;
-}
-.experience .pet-unavailable {
-  position: relative;
-  inset: auto;
-  margin: 24px auto;
-  max-width: 280px;
-  color: #dbc7ab;
-  text-align: center;
-  line-height: 1.8;
+.experience .pet-duo .pet-play:hover { border-color: #e8cba490; color: #fff0d7; background: #5a4030b3; transform: translateX(-50%); }
+.experience .pet-duo .pet-play:focus-visible { outline: 2px solid #ebcfa5; outline-offset: 3px; }
+@media (min-width: 701px) {
+  .experience.chapter-birthday .pet-companion.pet-duo {
+    position: absolute;
+    inset: auto 2.5% 64px auto;
+    margin: 0;
+  }
 }
 @media (max-width: 700px) {
-  .experience .pet-companion.pet-duo {
-    position: relative;
-    inset: auto;
-    width: 280px;
-    height: 210px;
-    margin: 6px auto 0;
-  }
-  .experience .pet-duo .pet-canvas {
-    inset: -2px 0 34px;
-  }
-  .experience .pet-duo .pet-dialogue {
-    bottom: 30px;
-    font-size: 10px;
-  }
+  .experience .pet-companion.pet-duo { width: 264px; height: 208px; margin-top: 6px; }
+  .experience .pet-duo .pet-dialogue { font-size: 10px; }
+  .experience .pet-duo .pet-play { min-height: 32px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .experience .pet-duo .pet-heart.visible {
-    animation: none;
-    opacity: 1;
-  }
+  .experience .pet-duo .pet-film,
+  .experience .pet-duo .pet-touch-heart { transition: none; }
 }

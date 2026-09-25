@@ -1,4 +1,6 @@
 import { assetUrl } from "../utils/assetUrl";
+import { setMediaAudioState } from "../cinematic/mediaAudio";
+import { getMediaActive, subscribeMediaActivity } from "../cinematic/mediaActivity";
 type Foley = "paper" | "envelope" | "candle";
 type Voice = {
   source: AudioScheduledSourceNode;
@@ -15,6 +17,9 @@ export class AudioController {
   private abort = new AbortController();
   private disposed = false;
   private volume = 1;
+  private detachMedia = subscribeMediaActivity(() => {
+    if (getMediaActive()) this.fadeOut();
+  });
   muted = false;
   private visibility = () => {
     if (!this.context || this.disposed) return;
@@ -34,9 +39,12 @@ export class AudioController {
       document.addEventListener("visibilitychange", this.visibility);
     }
     await this.context.resume();
+    if (this.disposed) return;
+    setMediaAudioState({ unlocked: true, muted: this.muted, volume: this.volume });
   }
   setVolume(volume: number) {
     this.volume = Math.max(0, Math.min(1, volume));
+    setMediaAudioState({ volume: this.volume, muted: this.muted });
     if (this.context && this.master)
       this.master.gain.setTargetAtTime(
         this.muted ? 0 : this.volume * 0.18,
@@ -247,6 +255,8 @@ export class AudioController {
   }
   dispose() {
     this.disposed = true;
+    this.detachMedia();
+    setMediaAudioState({ unlocked: false });
     this.abort.abort();
     document.removeEventListener("visibilitychange", this.visibility);
     for (const voice of this.voices) {

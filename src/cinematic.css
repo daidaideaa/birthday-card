@@ -1435,3 +1435,208 @@
     transition: none;
   }
 }
+
+/* Chapter changes share one persistent, fully covered cut. The current scene
+   remains visible while the next poster and chapter bundle are prepared. */
+.chapter-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  background: #eadfc9;
+  contain: strict;
+}
+.chapter-curtain > span {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(ellipse at 65% 55%, #fff8e9 0, #eadfc9 42%, #b99769 100%);
+}
+.chapter-curtain.curtain-bluehour { background: #242846; }
+.chapter-curtain.curtain-bluehour > span {
+  background: radial-gradient(ellipse at 72% 65%, #bd8c6b, #4f4156 35%, #242846 72%);
+}
+.chapter-curtain.curtain-sunrise { background: #c29661; }
+.chapter-curtain.curtain-sunrise > span {
+  background: radial-gradient(ellipse at 50% 68%, #fff1c3, #ca9b66 40%, #6c5260 100%);
+}
+.chapter-curtain.phase-covering {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  animation: curtain-cover 460ms cubic-bezier(.4,0,.15,1) both;
+}
+.chapter-curtain.phase-covered {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+.chapter-curtain.phase-covering > span,
+.chapter-curtain.phase-covered > span { animation: curtain-light 580ms ease-out both; }
+.chapter-curtain.phase-revealing {
+  visibility: visible;
+  pointer-events: auto;
+  animation: curtain-reveal 600ms cubic-bezier(.3,0,.2,1) both;
+}
+@keyframes curtain-cover { from { opacity: 0; } to { opacity: 1; } }
+@keyframes curtain-reveal { from { opacity: 1; } to { opacity: 0; } }
+@keyframes curtain-light { from { transform: scale(.78) translateY(5%); } to { transform: scale(1.08); } }
+
+/* The photographed scene is the stage, with quiet space around it. */
+.experience .paper-page,
+.experience .page-content > * { animation: none; transform: none; filter: none; }
+.experience .page-perspective { perspective: none; }
+.experience.book-experience {
+  padding: 0 clamp(20px, 4.3vw, 76px) 100px;
+  background: #11131b;
+}
+.experience.book-experience .memory-book {
+  max-width: 1440px;
+  margin-top: 26px;
+}
+.experience.book-experience .world-background { background: #11131b; }
+.experience.book-experience .world-background img,
+.experience.book-experience .world-glow,
+.experience.book-experience .floating-candles { display: none; }
+.experience.book-experience .world-shade {
+  background: radial-gradient(ellipse at 50% 15%, #48455c16, transparent 70%);
+}
+.experience.chapter-moments .world-background { background: #1b1918; }
+.experience.chapter-letter .world-background { background: #11131e; }
+.experience.chapter-finalWish .world-background { background: #17151a; }
+.experience.book-experience > .cinema-atmosphere,
+.experience.book-experience > .scene-response { display: none; }
+.experience.book-experience .book-meta {
+  max-width: 1440px;
+  margin-bottom: 20px;
+  color: #bba58b;
+  font-size: 10px;
+}
+.experience.book-experience .book-navigation {
+  width: 100%;
+  max-width: none;
+  margin: 28px auto 0;
+  padding-top: 10px;
+  border-top: 1px solid #ead5b41a;
+}
+.experience .letter-chapter.letter-sequence { gap: 22px; }
+.experience .dance-introduction { padding: 8px 20px 4px; }
+.experience .dance-introduction h2 {
+  font-size: clamp(30px, 3.1vw, 48px);
+  line-height: 1.4;
+  margin: 9px 0 11px;
+}
+.experience .dance-introduction p { margin: 0; color: #bbb3c4; }
+.experience .letter-sequence .cinema-piano.film-piano {
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+}
+.experience .letter-sequence .film-piano .piano-night {
+  height: auto;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  background: #11131e;
+}
+.experience .film-piano .cinematic-film,
+.experience .film-pride .cinematic-film {
+  width: 100%;
+  border-radius: 0;
+  aspect-ratio: 16 / 9;
+  max-height: none;
+}
+.experience .letter-sequence .film-piano .night-caption {
+  display: block;
+  position: static;
+  text-align: center;
+  margin: 20px 16px 0;
+  padding: 0;
+  font-size: 14px;
+  color: #d1c3b4;
+}
+.experience .letter-sequence .film-piano .piano-console {
+  margin: 22px auto 0;
+  border-radius: 0;
+  background: #191923;
+  box-shadow: none;
+}
+.experience .letter-sequence .letter-copy {
+  width: min(700px, 100%);
+  max-width: 700px;
+  margin: 30px auto;
+  border: 0;
+  border-radius: 0;
+  background: #f4ead8;
+  box-shadow: 0 24px 60px #0004;
+}
+.experience.chapter-finalWish { height: auto; min-height: 100svh; }
+.experience.chapter-finalWish .memory-book { max-width: 1440px; }
+.experience.chapter-finalWish .page-content { padding: 0; }
+.experience.chapter-finalWish .birthday-finale-stage {
+  display: block;
+  max-width: none;
+  width: 100%;
+  margin: 0;
+}
+.experience .film-pride { width: 100%; }
+.experience .film-pride::before { display: none; }
+.experience .film-pride .pride-story-heading { padding: 8px 0 18px; }
+.experience .film-pride .pride-caption {
+  margin: 24px auto 0;
+  padding: 0;
+  min-height: 88px;
+  text-align: center;
+}
+.experience .film-pride .pride-caption p { margin: 0 auto; }
+.experience .film-pride .pride-controls { justify-content: center; }
+.experience .birthday-candle-stage { max-width: 780px; margin: 20px auto; }
+.experience .wish-film-skip { display: block; margin: 24px auto 0; color: #e7cfab; }
+.experience .wish-candle-reveal .birthday-candle-stage {
+  animation: candle-reveal 900ms cubic-bezier(.2,.6,.2,1) both;
+}
+@keyframes candle-reveal {
+  from { opacity: 0; transform: translateY(10px); filter: brightness(1.2); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.experience .book-navigation button,
+.experience .footer-controls button { min-height: 44px; }
+@media (min-width: 1600px) {
+  .experience .film-piano .cinematic-film,
+  .experience .film-pride .cinematic-film { max-height: 76svh; }
+}
+@media (max-width: 700px) {
+  .experience.book-experience { padding: 0 20px 100px; }
+  .experience.book-experience .memory-book { margin-top: 20px; }
+  .experience.book-experience .book-meta { margin-bottom: 16px; }
+  .experience .letter-chapter.letter-sequence { gap: 18px; }
+  .experience .dance-introduction { padding: 3px 0 4px; }
+  .experience .dance-introduction h2 { font-size: 29px; }
+  .experience .dance-introduction p { font-size: 11px; }
+  .experience .letter-sequence .cinema-piano.film-piano,
+  .experience .film-pride > .cinematic-film {
+    width: calc(100% + 40px);
+    margin-inline: -20px;
+  }
+  .experience .film-piano .cinematic-film,
+  .experience .film-pride .cinematic-film {
+    max-height: none;
+  }
+  .experience .letter-sequence .film-piano .piano-night { height: auto; min-height: 0; }
+  .experience .letter-sequence .letter-copy { padding: 28px 24px; margin: 10px 0 20px; }
+  .experience .letter-sequence .letter-copy h2 { font-size: 27px; }
+  .experience .letter-sequence .letter-paragraph { font-size: 16px; line-height: 2; }
+  .experience .film-pride .pride-caption { margin-top: 22px; }
+  .experience .book-navigation { gap: 8px; }
+  .experience .book-navigation > span { font-size: 10px; letter-spacing: 0; }
+  .experience .book-navigation button { min-width: 85px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapter-curtain { display: none; }
+}
+.experience .film-piano .cinematic-film--portrait,
+.experience .film-pride .cinematic-film--portrait { aspect-ratio: 9 / 16; }

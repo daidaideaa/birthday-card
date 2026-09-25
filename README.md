@@ -1,25 +1,21 @@
 # 师宝宝 · 生日奇遇
 
-一个中文、无后端的互动生日礼物。基于 React、TypeScript、Three.js 和 MediaPipe，沿用现有 GitHub Pages 发布流程。
+中文、无后端的互动生日礼物，使用 React、TypeScript、Vite、Three.js 和 MediaPipe，运行于 GitHub Pages。当前版本将角色表演改为 **Blender 离线影像 + 网页互动**；浏览器继续实时绘制贺卡、蛋糕、琴键与宠物透明合成。
+
+本轮四段主影片、四张影片海报、十二段宠物动作与两张宠物海报已生成并完成本地整合。最终素材检查为 22/22，public 共 47.4 MiB，0 错误、0 警告；三个视口的 30 项浏览器测试全部通过，无跳过。31 项单元测试、lint 和生产构建通过。尚未推送或部署到线上。
 
 ## 四个场景
 
-1. **生日邀请**：月光图书馆与烛光书桌，勃艮第红天鹅绒贺卡、烫金边饰和纸张层次。开卡时镜头、照明、魔法粒子与双犬共同响应；保留点击、手势、拖动旋转。
-2. **小小美好**：烛光桌面上的纸质相册，保留书脊、纸边与接触阴影；手机横滑浏览主照片。原来的时间线、小事、趣梗、地点和数字仍合在一章，不增加环节。
-3. **一封心意**：先在蓝紫暮色中点播双人舞，播放结束后出现信封，也可以直接读信。开信时停止舞台和后续琴音，余音降低，留出完整的中文阅读空间。
-4. **生日愿望**：荣耀石上的父子清晨、星空中的父亲记忆、成年辛巴归来，以约 18 秒的连续短场景致敬《狮子王》。大小狮子拥有独立网格和骨骼，场景与双层草莓奶油蛋糕并列，点击烛火后展现烟雾、星光、音乐和双犬庆祝。
+1. **生日邀请**：月光图书馆、立体贺卡和烛光；支持点击、拖动和主动开启的手势。
+2. **小小美好**：纸质相册，保留照片、时间线、小事、趣梗、地点和数字；手机横滑只切换相册内容。
+3. **一封心意**：24 秒暮色双人舞，横竖镜头分别构图。播放结束后信封滚入视口并获得焦点，等待手动拆信；也可以直接读完整书信。琴键仍能即时弹奏，影片配乐跟随原生视频时钟。
+4. **生日愿望**：18 秒父子清晨、星空记忆、成年归来的草原短片；结束或跳过后展示生日蛋糕，点击烛火许愿。影片与蛋糕按顺序出现。
 
-两只泰迪分别为杏色和奶油色，改为 Blender 制作的连续雕塑网格、蒙皮骨架与 GLB 动画。`Idle / Curious / Happy / Rest` 动作由 Three.js AnimationMixer 混合，另有眨眼、视线跟随和摸摸反馈。旧版颗粒毛球已移除；这是一套风格化原创模型，并非扫描动物或迪士尼原模型。
-
-钢琴使用 jeremy 的公开授权三角钢琴模型，舞者使用 Quaternius 的 CC0 人物与兼容骨架，穿着项目制作的白衬衫、长裤和黄裙。12 秒双人舞以《爱乐之城》山顶舞段为视觉参考，包含侧步、轻踢和牵手转身；舞步为原创编排。手机竖屏优先展示全身动作，镜头与动作共用时间线，缓慢推进后停留。远山、城市灯点、地面与路灯都处于同一三维舞台。
-
-狮子基于 kenchoo 的 CC BY 4.0 幼狮模型制作成年衍生体型与动作。旧版狮子、双人舞的透明图集已移除；角色、琴、蛋糕和贺卡都是实时三维物体，章节环境底图仍为生成绘画。所有角色素材随站点提供，不依赖外部模型服务。
-
-剧情采用《狮子王》的父子传承与辛巴归来线索，省略伤亡和冲突，以适合生日礼物；没有将木法沙与成年辛巴并存的画面误作原片时序。剧情依据：[Disney D23 官方剧情简介](https://d23.com/a-to-z/lion-king-the-film/)。
+双人舞采用 Blender Studio **Snow v4 / Rain v3** 专业人物基础，双犬采用 **Autumn v1** 基础制作杏色与奶油色角色。人物服装、编舞、场景和灯光由本项目修改或制作；狮子沿用 kenchoo 的授权幼狮与项目成年衍生。不是电影原模型、原片或原声。具体作者、许可与输入校验见 [素材来源](public/ASSET_SOURCES.md) 和 [cinema 源清单](scripts/cinema/sources.json)。
 
 ## 运行与验证
 
-建议 Node.js 22.12+。
+需要 Node.js 22.12+。网站运行不需要 Python、Blender 或 FFmpeg。
 
 ```sh
 npm ci
@@ -30,77 +26,71 @@ npm run build
 npm run preview
 ```
 
-GitHub Pages 地址：<https://daidaideaa.github.io/birthday-card/>。Vite 基础路径仍为 `/birthday-card/`，推送 `main` 后由原有 Actions 执行测试、构建与部署，不提交 `dist`。
+Windows 上若预览服务仍占用 `dist` 中的视频，重新构建可能出现 `ENOTEMPTY` 或 `EPERM`。先停止对应的 `npm run preview` 进程，再运行构建即可。
 
-## 替换个人内容
-
-编辑 `src/content/story.ts`：
-
-- `person.name`：页面与贺卡上的称呼。
-- `preview: true`：显示“风景与文字为效果示意”的说明，换成真实照片与文案后设为 `false`。
-- `moments`：建议精选 3–5 个片段，每项填写标题、图片路径和简短描述。
-- `firstMet`、`timeline`、`littleThings`、`insideJokes`、`places`、`stats`：仍兼容这些资料，但统一展示在相册中，不再增加独立章节。空内容不显示。
-- `letter`：称呼、完整段落、结尾与落款。只填写称呼不会生成空白信件章节。
-- `finalWish`：许愿前的一句祝福。
-
-图片放入 `public/memories/`，使用 `memories/photo.jpg` 这样的相对路径。当前网图保存在本地 `public/images/`，不会运行时依赖图片外链。预览内容没有虚构相识日期或共同经历。中文标题采用随项目提供的思源宋体子集，新增未收录汉字由系统中文字体补充。
-
-## 交互与性能
-
-- 摄像头只有在主动点击“用手势打开”后才请求；拒绝或加载失败不影响点击体验。
-- 摄像头帧仅在本地处理；进入书页后暂停手势推理和贺卡渲染，双犬继续响应当前场景。
-- 手势库 WASM 来自 jsDelivr，模型来自 Google Cloud Storage，加载超时会回落到手动方式。
-- 键盘左右箭头、导航按钮与横向滑动均可换章；照片弹窗支持 Escape 和焦点恢复，信件保留正常纵向阅读。
-- 手机首页按称呼、贺卡、按钮依次自适应排列；相册内部横滑只切照片，不触发章节翻页，也可使用上一张/下一张按钮。
-- 烛火只出现在邀请与相册章节；书信使用远处城市灯点，草原使用尘埃与星光。书页转场统一为 650ms，减少动态效果时关闭。
-- 音效由用户交互解锁，“声音关”统一控制生日曲、钢琴和狮子回应。
-- 手机端限制像素比和阴影成本；后台标签页暂停渲染。减少动态效果偏好会静止骨骼角色，狮子剧情可手动切换画面；狮子、舞台与蛋糕离屏后暂停渲染。剧情时钟在隐藏或离屏后暂停。
-- WebGL 不可用时可直接阅读完整生日故事，宠物单独降级，不阻断主要内容。
-
-## 资源与来源
-
-详见 [素材来源](public/ASSET_SOURCES.md)。素材生成提示词见 [美术说明](public/ART_DIRECTION.md)。项目未使用付费模型、电影原片或电影原声。
-
-## 模型制作
-
-`scripts/models/` 保留 Blender 制作脚本；运行需要 Blender 4.3+。各模型的来源、再分发许可与修改说明随 `public/models/` 提供。网站运行不需要 Blender。动作通过 GLTFLoader / AnimationMixer 播放，参考 [Three.js 官方骨骼动画示例](https://threejs.org/examples/webgl_animation_skinning_blending.html)。
-
-模型使用原生离线渲染检查造型与动作，并用 Khronos glTF Validator 校验文件。离线模型渲染不能替代整页浏览器和手机布局验收。
-
-## AI 协作
-
-项目约定见 [AGENTS.md](AGENTS.md)。场景与角色的视觉改进可使用 [birthday-visual-review](.agents/skills/birthday-visual-review/SKILL.md)；下一轮需求可参考 [任务提示词](docs/TASK_PROMPTS.md)。资料按任务选择，无需每次全部读取。
-
-## 演出与质量策略（2026-09-23）
-
-- 新增 GSAP `CinematicDirector`：暂停的 timeline 由可见场景时钟推进，爵士的 12 秒镜头、琴音、字幕、灯光与 GLB 播放时间一致；后台和离屏暂停，seek 检查不触发音频或导航。邀请页过渡、草原蒙太奇与许愿收尾复用同一控制器。骨骼动作仍由 Blender/AnimationMixer 负责。
-- 延续 Three.js EffectComposer，不引入第二套后期库。爵士采用 HDR 阈值 bloom、轻微色调与暗角；bloom 使用半分辨率，信件不经过后期。减少动态效果关闭镜头运动及 bloom。
-- 自动 high/balanced/low，根据触屏/视口、CPU、可用内存提示、节省流量和 reduced-motion 选择。DPR 上限分别为 1.8/1.35/1，阴影上限 1024/512/关闭；人物网格不减配。仅首屏邀请页在进入前初始化，双犬在点击后加载；舞台、狮子、蛋糕按章加载，空闲只预取下一章。
-- 钢琴使用两个本地 Salamander 单音采样，解锁音频并进入书信章节后才下载；失败回落到合成。纸张、信封、烛火仍是原创合成音效。全局静音、阅读音量和后台暂停共用音频控制器。
-
-## 可重复资产流水线
-
-固定 Blender **4.3.2**；上游输入在 `scripts/models/sources.json` 固定 URL 和 SHA-256。狮子采用固定提交中的已授权幼狮衍生文件作为可复现制作基线，来源链保留在许可文件中。
+[GitHub Pages](https://daidaideaa.github.io/birthday-card/) 的基础路径保持 `/birthday-card/`。Pages 工作流在推送 `main` 后执行测试、旧模型校验和完整 cinema 校验，再构建部署；仅在 ffprobe 不可用时安装 FFmpeg。缺少主片、海报或宠物动作都会阻止发布。不要提交 `dist`；本地修改不会自动更新已发布网站。
 
 ```sh
-npm run assets:sources
-# 将 Blender 加入 PATH，或设置 BLENDER_BIN 为绝对路径
-npm run assets:build
+# ffprobe 须在 PATH 中，或设置 FFPROBE_BIN
+npm run cinema:validate
+# 旧 GLB 资产继续独立验证
 npm run assets:validate
-npm run assets:review:prepare
-blender --background --python-exit-code 1 --python scripts/models/validate_motion.py
-blender --background --python-exit-code 1 --python scripts/models/review_jazz_stage.py
-```
-
-制作脚本 → `.asset-build/raw` → glTF Transform → Meshopt → `public/models`。不简化角色网格、不量化浮点顶点、不重采样动画。导出后逐项比较网格数值、关节、绑定矩阵、动画名称/采样值、morph 名称/数量和材质参数。节点 TRS 的默认值按 glTF Transform 的 1e-5 省略容差比较；三角索引允许保持绕序的循环置换。检查文件大小、三角形、纹理尺寸、模型边界及外部引用，Khronos Validator 在解码后检查。当前少量材质/未使用属性警告沿用原资产，不包含校验错误。
-
-KTX2 为可选制作路径：安装 KTX-Software **4.4.2** 并将 `toktx` 加入 PATH，运行 `ASSET_KTX2=1 npm run assets:optimize`。已验证 UASTC 编码、骨架/动画保留，以及 Chromium 中本地 Basis 转码加载。默认交付仍保留小尺寸 PNG/JPEG，256 px 法线的压缩收益较小，暂不改变已审查的纹理观感；运行时支持 Meshopt + KTX2，解码器在构建时从锁定的 Three.js 包复制到站点本地。不要将已经压缩的最终资产作为下次制作输入。
-
-`assets.yml` 仅在制作脚本/源清单变化时重建，缓存 Blender 和来源资产，上传 GLB 与检查图，不自动提交生成结果。普通 Pages 构建只检查已提交资产。
-
-```sh
 npx playwright install chromium
 npm run test:visual
 ```
 
-截图覆盖 1440×900、390×844、430×932 的邀请、相册、舞台关键动作、信件、草原与结尾。测试使用独立 `visual-review` 构建，普通生产构建不含定位时间的测试入口；摄像头使用点击 fallback；软件渲染固定 balanced 预算，不代表真实设备帧率。图像用于人工审查，不判断角色是否美观。`visual.yml` 保存截图和失败 trace 14 天。
+`cinema:validate` 检查 4 段横竖影片、4 张影片海报、12 段双犬动作和 2 张透明海报：H.264/yuv420p、主片 24 fps 与时长、AAC 配乐、faststart、宠物左右颜色/遮罩尺寸、本地路径、来源 SHA-256，以及单文件 25 MiB/全部 public 250 MiB 的预算。缺少文件会失败；四段主片都必须含嵌入的 AAC 音轨。结果在 `test-results/cinema-assets.json`。制作过程中的试帧不计为通过验收。
+
+浏览器测试覆盖 1440×900、390×844、430×932：海报、原生视频时间、关键动作定位、静音、书信、草原到烛火、影片失败、减少动态效果、WebGL 降级、完全遮盖时换章及重播取消。还验证了离屏/后台暂停、手动暂停不被误恢复、阻断网络时连续旋转不复用旧解码状态，以及双犬的暂停与恢复。后台可见性用受控 visibility 事件检查监听行为，不代表真实手机系统的后台调度。`visual-review` 构建才开放定位时间的测试入口，普通生产构建不开放。已另行检查生产构建的双人舞横竖完整播放与自然结束信封衔接；截图和软件渲染测试仍不能代替真实手机的流畅度检查。
+
+## 替换个人内容
+
+编辑 `src/content/story.ts`，现有数据结构保持兼容：
+
+- `person.name` 是页面和贺卡称呼。
+- `preview: true` 标记目前的风景与文案为效果示意；放入真实内容后设为 `false`。
+- `moments` 建议精选 3–5 个片段；`firstMet`、`timeline`、`littleThings`、`insideJokes`、`places`、`stats` 继续合并到相册章，空内容不显示。
+- `letter` 保留称呼、完整段落、结尾与落款；仅有称呼不创建空信件章节。
+- `finalWish` 是许愿前的祝福。
+
+个人照片放在 `public/memories/`，填写 `memories/photo.jpg` 这样的相对路径。网站资源通过现有 `assetUrl` 处理基础路径；不依赖外部模型服务。当前示意内容没有虚构真实的相识日期与共同回忆。
+
+## 媒体与交互架构
+
+- `cinematic/media.ts` 提供媒体路径、时长、草原阶段和横竖选择。只有当前影片进入播放组件；空闲仅预取下一章海报与组件代码，不批量下载影片或旧舞者/狮子 GLB。
+- `CinematicFilm` 用视频的 `currentTime` 作为字幕与剧情时钟；横竖切换保留位置。解码前保留海报，失败可重试或继续阅读。影片、采样、生日曲和狮子回应受同一全局静音控制。
+- `ChapterTransition` 先准备目标海报和组件，保留当前章节；460 ms 遮盖后以显式全不透明状态提交章节，停留 120 ms 再用 600 ms 展开，避免计时器与动画首帧的偏差露出换章。邀请用纸色、暮色用暖色到蓝紫、草原用晨光。新请求和重播取消过期计时与提交；减少动态效果时立即切换。
+- 双犬使用 H.264 左侧颜色/右侧灰度遮罩的动作片，由轻量 WebGL 合成透明轮廓。每只犬保留独立触摸区域，待机、向左/右看、摸摸、庆祝、休息共六种状态。摸摸优先，操作不累积成长队列；影片播放时使用安静静帧。
+- 后台和离屏暂停视频与渲染；减少动态效果保留静帧与手动播放入口。WebGL 不可用仍可阅读完整故事与使用宠物海报。
+- 摄像头仅在用户点击开启后申请，画面只在本地处理。拒绝权限、手势库或模型加载失败均回落到点击。进入故事后暂停手势推理。
+- 键盘左右箭头、导航按钮、横向手势都可换章；相册、视频控件与钢琴区域防止误触章节导航；照片弹窗支持 Escape 与焦点恢复。
+
+## 离线制作
+
+新影像脚本在 `scripts/cinema/`，使用 Blender **4.5.9 LTS**；旧 `scripts/models/` GLB 流水线仍按 **4.3.2** 保留。源 ZIP 放入 `model-sources/studio/`，根据 `scripts/cinema/sources.json` 校验后解压；它们与 `.blend`、逐帧 PNG、试片都不提交到 Git。
+
+本机工具在 `D:\environment\cinema-tools`，辅助 Python 环境为 `D:\environment\radar-py39`。Blender 脚本使用 Blender 自带 Python；代码对网站访问者没有这些依赖。可设置 `FFPROBE_BIN` 指向 FFmpeg 的 `bin/ffprobe.exe` 后验证。
+
+制作顺序：角色与灯光定妆图 → 短动作试片 → 横竖完整帧 → H.264/AAC 编码与 WebP 海报 → 浏览器交互和画面检查。源镜头输出 24 fps；横版以 1920×1080、竖版以 720×1280 为网页目标。桌面与手机各自构图，不能直接裁掉舞者手脚。本机渲染配置使用 OptiX；其他硬件需调整对应设备设置，耗时受设备和角色毛发复杂度影响。
+
+双人舞制作入口依次为 `build_duet.py` → `finish_duet.py` → `stage_duet.py` → `polish_duet.py`。`stage_duet.py` 将项目使用 imagegen 创作的洛杉矶暮色远景 `scripts/cinema/assets/dusk-city.png` 放入三维场景，输出 `.asset-build/cinema/duet-production.blend`、六个代表动作试帧和竖屏试帧。`polish_duet.py` 保留前 300 帧，修正后半段马尾弯曲与裙下身体遮罩，输出用于最终渲染的 `duet-polished.blend`。该图只提供远山、城市与天空；舞者、钢琴、地面、路灯及其动画仍在 Blender 中真实渲染，不用背景图替代完整影片。
+
+`score.py --ffmpeg <路径>` 使用已有许可的 Salamander 采样制作原创 24 秒爵士配乐。`render_movie.py` 支持选镜头、尺寸、采样数、帧区间以及 Cycles/EEVEE，跳过已存在的帧以便恢复；更换镜头或灯光后应使用新的输出目录，避免复用旧帧。编码示例：
+
+```sh
+blender -b .asset-build/cinema/duet-polished.blend -P scripts/cinema/render_movie.py -- --paired --name duet --samples 16
+node scripts/cinema/encode_movie.mjs --ffmpeg <ffmpeg路径> --name duet-landscape --score .asset-build/cinema/duet-score.wav
+node scripts/cinema/encode_movie.mjs --ffmpeg <ffmpeg路径> --name duet-portrait --score .asset-build/cinema/duet-score.wav
+```
+
+宠物是 Autumn 梗犬基础的杏色/奶油色派生，修改垂耳、眉眼、短卷毛和暗色犬眼，制作六种原创动作；不标称完全重雕贵宾犬或迪士尼原角色。
+
+草原制作由 `build_pride.py` 输出 `pride.blend`，使用 `render_movie.py` 输出两个镜头。`pride_score.py` 制作原创伴奏，含原有授权钢琴采样与公共领域狮吼片段；`encode_pride.mjs` 将其嵌入 AAC 音轨，并在 6.5 秒、11 秒场景边界加入保持时钟的短叠化。日出、星空远景来自本项目 imagegen。详细处理与来源见 `scripts/cinema/pride-sources.json`，源文件哈希同时收录于总 `sources.json`。
+
+镜头原始帧与中间文件在 `.asset-build/cinema/`；网页成品统一放在 `public/cinema/`。美术原则与此前版本记录见 [ART_DIRECTION](public/ART_DIRECTION.md)。不要把“成功编码”写成造型或动态效果已达标；最终需要检查落脚、牵手、布料穿插、毛发轮廓、完整构图、黑帧与接续音量。
+
+旧 GLB 工具仍可使用 `assets:sources`、`assets:build`、`assets:optimize`、`assets:validate` 和 `assets:review:prepare`；它们不会生成新的 cinema 影片。旧模型许可随 `public/models/` 保留。
+
+## AI 协作
+
+项目约定见 [AGENTS.md](AGENTS.md)；视觉工作使用 [birthday-visual-review](.agents/skills/birthday-visual-review/SKILL.md)。先检查实际画面，再处理造型、镜头或交互问题。完成情况以实际文件、测试报告与已观察的画面为准。

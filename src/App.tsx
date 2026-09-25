@@ -2,6 +2,7 @@ import { CinematicDirector } from "./cinematic/CinematicDirector";
 import {
   lazy,
   Suspense,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -14,6 +15,8 @@ import type { CardState } from "./scene/CardMotion";
 import { useGesture } from "./hooks/useGesture";
 import { story } from "./content/story";
 import { StoryController } from "./story/StoryController";
+import { ChapterTransition, type TransitionFrame } from "./story/ChapterTransition";
+import { FILM_PORTRAIT_QUERY } from "./cinematic/media";
 const MemoryBook = lazy(() =>
   import("./story/MemoryBook").then((m) => ({ default: m.MemoryBook })),
 );
@@ -36,7 +39,8 @@ export default function App() {
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<BirthdayScene | null>(null);
   const audio = useRef<AudioController | null>(null);
-  const transition = useRef<(() => void) | undefined>(undefined);
+  const [transitionFrame, setTransitionFrame] = useState<TransitionFrame>({ phase: "idle", treatment: "paper" });
+  const [transition] = useState(() => new ChapterTransition(setTransitionFrame));
   const [ready, setReady] = useState(false);
   const [started, setStarted] = useState(false);
   const [state, setState] = useState<CardState>("CLOSED");
@@ -45,7 +49,8 @@ export default function App() {
   const [sceneError, setSceneError] = useState(false);
   const [audioError, setAudioError] = useState(false);
   const [storyReady, setStoryReady] = useState(false);
-  const [entering, setEntering] = useState(false);
+  const entering = transitionFrame.phase === "covering" && !inBook;
+  const transitioning = transitionFrame.phase !== "idle";
   const [credits, setCredits] = useState(false);
   const [cue, setCue] = useState<SceneCue>({ kind: "magic", serial: 0 });
   const emit = (kind: SceneCue["kind"]) =>
@@ -123,13 +128,13 @@ export default function App() {
     void init();
     return () => {
       disposed = true;
-      transition.current?.();
+      transition.cancel();
       scene.current?.dispose();
       audio.current?.dispose();
       scene.current = null;
       audio.current = null;
     };
-  }, []);
+  }, [transition]);
   useEffect(() => {
     if (credits) {
       const previous = document.activeElement as HTMLElement | null;
@@ -156,36 +161,43 @@ export default function App() {
       scene.current?.setOpen(true);
     }
   };
-  const enterBook = () => {
-    if (entering) return;
-    setEntering(true);
-    if (reducedMotion() || !host.current || sceneError) {
-      book.go(1);
-      setEntering(false);
-      return;
-    }
-    const director = new CinematicDirector(0.9);
-    director.timeline.call(
-      () => {
-        book.go(1);
-        setEntering(false);
+  const navigate = useCallback((delta: 1 | -1) => {
+    const current = book.getSnapshot().index;
+    const target = book.chapters[current + delta];
+    if (!target) return;
+    const treatment = target.id === "letter" ? "bluehour" : target.id === "finalWish" ? "sunrise" : "paper";
+    void transition.run({
+      treatment,
+      immediate: reducedMotion(),
+      prepare: async (signal) => {
+        const portrait = matchMedia(FILM_PORTRAIT_QUERY).matches;
+        const poster = target.id === "letter" ? `cinema/duet-${portrait ? "portrait" : "landscape"}.webp`
+          : target.id === "finalWish" ? `cinema/pride-${portrait ? "portrait" : "landscape"}.webp`
+            : target.id === "moments" ? book.data.firstMet.image || book.data.moments[0]?.image : undefined;
+        const component = target.id === "letter" ? import("./story/chapters/Letter")
+          : target.id === "finalWish" ? import("./story/chapters/FinalWish")
+            : import("./story/MemoryBook");
+        const picture = !poster ? Promise.resolve() : new Promise<void>((resolve) => {
+          const image = new Image();
+          const finish = () => {
+            image.onload = image.onerror = null;
+            signal.removeEventListener("abort", finish);
+            resolve();
+          };
+          signal.addEventListener("abort", finish, { once: true });
+          image.onload = () => { void image.decode().catch(() => {}).then(finish); };
+          image.onerror = finish;
+          image.src = assetUrl(poster) ?? "";
+        });
+        await Promise.allSettled([component, picture]);
       },
-      [],
-      0.9,
-    );
-    const detach = director.attach(
-      (host.current.closest("main") as HTMLElement) ?? host.current,
-    );
-    transition.current = () => {
-      detach();
-      director.dispose();
-    };
-    director.play();
-  };
+      commit: () => book.go(delta),
+    });
+  }, [book, transition]);
+  const enterBook = () => navigate(1);
   const replay = () =>
     book.replay(() => {
-      transition.current?.();
-      setEntering(false);
+      transition.cancel();
       setStarted(false);
       setStoryReady(false);
       scene.current?.reset();
@@ -195,6 +207,7 @@ export default function App() {
   return (
     <main
       data-cinema-cue={cue.kind}
+      data-transition-phase={transitionFrame.phase}
       onPointerMove={(event) => {
         if (reducedMotion() || event.pointerType === "touch") return;
         event.currentTarget.style.setProperty(
@@ -217,24 +230,6 @@ export default function App() {
         <img
           className="castle-background"
           src={assetUrl("images/castle-night.webp")}
-          alt=""
-        />
-        <img
-          className="savanna-background"
-          src={
-            chapter === "finalWish"
-              ? assetUrl("images/savanna-cinema.webp")
-              : undefined
-          }
-          alt=""
-        />
-        <img
-          className="jazz-background"
-          src={
-            chapter === "letter"
-              ? assetUrl("images/jazz-night.webp")
-              : undefined
-          }
           alt=""
         />
         <div className="world-shade" />
@@ -350,7 +345,7 @@ export default function App() {
                   {storyReady ? (
                     <button
                       className="primary"
-                      disabled={entering}
+                      disabled={transitioning}
                       onClick={enterBook}
                     >
                       翻开{book.chapters[1].label} <span>→</span>
@@ -358,7 +353,7 @@ export default function App() {
                   ) : (
                     <button
                       className="primary"
-                      disabled={entering}
+                      disabled={transitioning}
                       onClick={() => {
                         unlock();
                         scene.current?.setOpen(
@@ -373,7 +368,7 @@ export default function App() {
                   {storyReady && (
                     <button
                       className="text-button"
-                      disabled={entering}
+                      disabled={transitioning}
                       onClick={() => scene.current?.setOpen(false)}
                     >
                       再看看封面
@@ -426,6 +421,8 @@ export default function App() {
             key={snapshot.session}
             controller={book}
             snapshot={snapshot}
+            onNavigate={navigate}
+            transitioning={transitioning}
             onReplay={replay}
             onPiano={(note) => {
               emit("piano");
@@ -452,6 +449,10 @@ export default function App() {
           />
         </Suspense>
       )}
+      <div
+        className={`chapter-curtain curtain-${transitionFrame.treatment} phase-${transitionFrame.phase}`}
+        aria-hidden="true"
+      ><span /></div>
       {!inBook && !sceneError && (
         <MagicWand
           active={entering}
@@ -562,8 +563,7 @@ export default function App() {
             </p>
           )}
           <p>
-            风景照片来自
-            Unsplash，场景背景为生成绘画。幼狮与钢琴使用公开授权模型，作者与许可见项目素材说明。
+            风景照片来自 Unsplash，邀请背景为生成绘画。人物、双犬与狮子通过 Blender 离线制作影像，贺卡与蛋糕保留实时互动。
           </p>
           <p>
             幼狮：
@@ -599,8 +599,10 @@ export default function App() {
               CC BY 3.0
             </a>
             ）。
-            本项目调整了材质，制作成年狮衍生与新动作。舞者基础网格与服装来自
-            Quaternius（CC0）。
+            本项目调整了材质，制作成年狮衍生与新动作。
+          </p>
+          <p>
+            双人舞：<a href="https://studio.blender.org/characters/snow/v4/" target="_blank" rel="noreferrer">Snow Rig</a> 与 <a href="https://studio.blender.org/characters/rain/v3/" target="_blank" rel="noreferrer">Rain Rig</a>；双犬：<a href="https://studio.blender.org/characters/autumn/v1/" target="_blank" rel="noreferrer">Autumn character</a>。© Blender Foundation · studio.blender.org（<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>）。本项目修改服装、颜色、表演、镜头与灯光。
           </p>
           <p>
             钢琴采样：Alexander Holm · Salamander Grand Piano V3（
@@ -614,7 +616,7 @@ export default function App() {
             ）。使用单音采样与原创短句，没有使用电影原声。
           </p>
           <p>
-            两只泰迪为本项目制作的三维角色，点击可以摸摸。摄像头只用于本地手势识别，不会上传画面。
+            两只小狗可以分别摸摸；摄像头只用于本地手势识别，不会上传画面。
           </p>
           <button className="primary" onClick={() => setCredits(false)}>
             继续这场奇遇

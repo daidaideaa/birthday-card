@@ -1,19 +1,12 @@
 import type { ReactNode } from "react";
 export function PageTurn({
   children,
-  direction,
-  turn,
 }: {
   children: ReactNode;
-  direction: 1 | -1;
-  turn: number;
 }) {
   return (
     <div className="page-perspective">
-      <div
-        key={turn}
-        className={"paper-page turn-" + (direction === 1 ? "next" : "previous")}
-      >
+      <div className="paper-page">
         <div className="page-content">{children}</div>
       </div>
     </div>

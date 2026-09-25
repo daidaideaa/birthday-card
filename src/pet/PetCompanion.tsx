@@ -1,303 +1,159 @@
-import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { TeddyDog, type PuppyMood, type PuppyCue } from "./TeddyDog";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { PuppyCue, PuppyMood } from "./TeddyDog";
 import type { ChapterId } from "../content/storyTypes";
-import { qualityPolicy } from "../cinematic/quality";
-import { isMobile, reducedMotion } from "../utils/device";
-import { makeGlowTexture } from "../utils/characterPolish";
+import { getMediaActive, subscribeMediaActivity } from "../cinematic/mediaActivity";
+import { PackedPetPlayer } from "./PackedPetPlayer";
+import { gazeDirection, PetIntent, petMedia, type PetAction, type PetBase, type PetVariant } from "./petMedia";
 import "./pet.css";
-export type SceneCue = { kind: PuppyCue; serial: number };
 
-export function PetCompanion({
-  chapter,
-  celebrating,
-  cardOpen,
-  session,
-  cue,
-}: {
+export type SceneCue = { kind: PuppyCue; serial: number };
+const variants: PetVariant[] = ["apricot", "cream"];
+const quietServer = () => false;
+
+export function PetCompanion({ chapter, celebrating, cardOpen, session, cue }: {
   chapter: ChapterId;
   celebrating: boolean;
   cardOpen: boolean;
   session: number;
   cue: SceneCue;
 }) {
-  const host = useRef<HTMLDivElement>(null),
-    dogs = useRef<TeddyDog[]>([]);
-  const [failed, setFailed] = useState(false),
-    [petted, setPetted] = useState<number | null>(null);
-  const timer = useRef<number | undefined>(undefined);
-  const mood: PuppyMood = celebrating
-    ? "happy"
-    : chapter === "letter"
-      ? "sleepy"
-      : chapter !== "birthday" || cardOpen
-        ? "curious"
-        : "welcome";
-  const moodRef = useRef(mood);
-  moodRef.current = mood;
+  const host = useRef<HTMLElement>(null);
+  const slots = useRef<(HTMLDivElement | null)[]>([]);
+  const players = useRef<(PackedPetPlayer | undefined)[]>([]);
+  const intents = useRef([new PetIntent(), new PetIntent()]);
+  const request = useRef<(index: number, action: PetAction) => void>(() => {});
+  const resync = useRef<() => void>(() => {});
+  const feedbackTimer = useRef<number | undefined>(undefined);
+  const seenCue = useRef(cue.serial);
+  const [petted, setPetted] = useState<number | null>(null);
+  const [calm, setCalm] = useState(false);
+  const [failed, setFailed] = useState<boolean[]>([false, false]);
+  const [missingPoster, setMissingPoster] = useState<boolean[]>([false, false]);
+  const filmActive = useSyncExternalStore(subscribeMediaActivity, getMediaActive, quietServer);
+  const mood: PuppyMood = celebrating ? "happy" : chapter === "letter" ? "sleepy" : cardOpen || chapter !== "birthday" ? "curious" : "welcome";
+  const base: PetBase = mood === "sleepy" ? "rest" : "idle";
+  const config = useRef({ filmActive, cardOpen, base });
+  config.current = { filmActive, cardOpen: cardOpen || chapter !== "birthday", base };
+
   useEffect(() => {
-    dogs.current.forEach((d) => d.setMood(mood));
-  }, [mood]);
-  useEffect(() => {
-    dogs.current.forEach((d) => d.react(cue.kind));
-  }, [cue.kind, cue.serial]);
-  useEffect(() => {
-    dogs.current.forEach((d) => {
-      d.reset();
-      d.setMood(moodRef.current);
-    });
-    setPetted(null);
-    clearTimeout(timer.current);
-  }, [session]);
-  useEffect(() => {
-    if (!host.current) return;
-    const el = host.current,
-      mobile = isMobile();
-    const quality = qualityPolicy();
+    const el = host.current;
+    if (!el) return;
     let visible = false;
-    let renderer: THREE.WebGLRenderer | undefined,
-      frame = 0,
-      last = 0,
-      stopped = false;
-    let observer: ResizeObserver | undefined;
-    const world = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(29, 1, 0.1, 30);
-    camera.position.set(0.4, 1.8, 4.7);
-    camera.lookAt(0, 0.86, 0);
-    const render = (now: number) => {
-      if (stopped || document.hidden || !visible || !renderer) return;
-      frame = requestAnimationFrame(render);
-      if (last && now - last < (quality.tier === "high" ? 20 : 32)) return;
-      const dt = last ? Math.min((now - last) / 1000, 0.06) : 0;
-      last = now;
-      dogs.current.forEach((d) => d.update(dt, reducedMotion()));
-      renderer.render(world, camera);
+    let active = false;
+    let dead = false;
+    let gaze: -1 | 0 | 1 = 0;
+    const broken = new Set<number>();
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+    const markFailed = (index: number) => {
+      broken.add(index);
+      players.current[index]?.setActive(false);
+      if (!dead) setFailed((old) => old.map((value, i) => i === index ? true : value));
     };
-    const visibility = () => {
-      last = 0;
-      cancelAnimationFrame(frame);
-      if (!document.hidden && !stopped && visible)
-        frame = requestAnimationFrame(render);
+    const play = (index: number, action: PetAction) => {
+      if (active && !broken.has(index) && intents.current[index].request(action, performance.now())) players.current[index]?.play(action);
     };
-    const lost = (e: Event) => {
-      e.preventDefault();
-      stopped = true;
-      cancelAnimationFrame(frame);
-      setFailed(true);
+    request.current = play;
+    const sync = () => {
+      const settings = config.current;
+      active = visible && !document.hidden && !reduced.matches && !settings.filmActive && settings.cardOpen;
+      setCalm(reduced.matches || settings.filmActive);
+      variants.forEach((variant, index) => {
+        const intent = intents.current[index];
+        intent.reset(settings.base);
+        // Before opening the card, no video element or WebGL context is created.
+        if (active && !broken.has(index) && !players.current[index] && slots.current[index]) {
+          try {
+            players.current[index] = new PackedPetPlayer(
+              slots.current[index]!, variant,
+              (action) => {
+                if (!active || dead) return;
+                const next = intents.current[index].complete(action);
+                if (next) players.current[index]?.play(next);
+              },
+              () => markFailed(index),
+            );
+          } catch { markFailed(index); }
+        }
+        players.current[index]?.setActive(active && !broken.has(index));
+        if (active && !broken.has(index)) players.current[index]?.play(settings.base);
+      });
     };
+    resync.current = sync;
     const intersection = new IntersectionObserver(([entry]) => {
+      if (visible === entry.isIntersecting) return;
       visible = entry.isIntersecting;
-      visibility();
+      sync();
     });
     intersection.observe(el);
-    const pointer = (e: PointerEvent) => {
-      dogs.current.forEach((d) =>
-        d.lookAt(
-          (e.clientX / innerWidth - 0.5) * 2,
-          (0.5 - e.clientY / innerHeight) * 2,
-        ),
-      );
+    const pointer = (event: PointerEvent) => {
+      if (!active || event.pointerType === "touch") return;
+      const next = gazeDirection((event.clientX / innerWidth - 0.5) * 2, gaze);
+      if (next === gaze) return;
+      gaze = next;
+      if (next) variants.forEach((_, index) => play(index, next < 0 ? "look-left" : "look-right"));
     };
-    try {
-      renderer = new THREE.WebGLRenderer({
-        alpha: true,
-        antialias: quality.tier === "high",
-        powerPreference: "low-power",
-      });
-      renderer.setPixelRatio(Math.min(quality.pixelRatio, 1.5));
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.12;
-      renderer.shadowMap.enabled = !mobile && quality.shadows;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.domElement.setAttribute("aria-hidden", "true");
-      renderer.domElement.addEventListener("webglcontextlost", lost);
-      el.appendChild(renderer.domElement);
-      // Soft studio reflections give the plush coat its gentle sheen.
-      const room = new RoomEnvironment();
-      const pmrem = new THREE.PMREMGenerator(renderer);
-      const envMap = pmrem.fromScene(room, 0.04);
-      room.dispose();
-      pmrem.dispose();
-      world.environment = envMap.texture;
-      world.environmentIntensity = 0.5;
-      world.add(new THREE.HemisphereLight("#fff2dc", "#5c4a5e", 1.15));
-      const key = new THREE.DirectionalLight("#ffdcae", 2.9);
-      key.position.set(-2.6, 4.6, 4.4);
-      key.castShadow = !mobile && quality.shadows;
-      key.shadow.mapSize.set(512, 512);
-      key.shadow.camera.left = -3;
-      key.shadow.camera.right = 3;
-      key.shadow.camera.top = 3;
-      key.shadow.camera.bottom = -2;
-      key.shadow.bias = -0.001;
-      key.shadow.radius = 4;
-      world.add(key);
-      const rim = new THREE.DirectionalLight("#ffc98f", 2.6);
-      rim.position.set(1.8, 3.4, -3.6);
-      world.add(rim);
-      const fill = new THREE.DirectionalLight("#b9ccf5", 0.65);
-      fill.position.set(3.2, 1.6, 2.6);
-      world.add(fill);
-      dogs.current = [
-        new TeddyDog(mobile, 0, renderer),
-        new TeddyDog(mobile, 1, renderer),
-      ];
-      void Promise.all(dogs.current.map((dog) => dog.ready))
-        .then(() => {
-          if (!stopped) el.dataset.ready = "true";
-        })
-        .catch(() => {
-          if (!stopped) {
-            stopped = true;
-            cancelAnimationFrame(frame);
-            setFailed(true);
-          }
-        });
-      dogs.current.forEach((dog, i) => {
-        const place = new THREE.Group();
-        place.position.set(i ? 0.53 : -0.52, 0, i ? -0.09 : 0.06);
-        place.scale.setScalar(i ? 0.89 : 1);
-        dog.setMood(moodRef.current);
-        place.add(dog.root);
-        world.add(place);
-      });
-      const ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(6, 6),
-        new THREE.ShadowMaterial({ opacity: 0.22 }),
-      );
-      ground.rotation.x = -Math.PI / 2;
-      ground.receiveShadow = true;
-      world.add(ground);
-      // Soft blob shadows keep the dogs grounded where real shadows are off.
-      const blobTexture = makeGlowTexture(
-        128,
-        "rgba(24,12,8,0.85)",
-        "rgba(24,12,8,0.4)",
-        "rgba(24,12,8,0)",
-      );
-      for (const [x, z, s] of [
-        [-0.52, 0.06, 1.15],
-        [0.53, -0.09, 1.02],
-      ] as const) {
-        const blob = new THREE.Mesh(
-          new THREE.PlaneGeometry(1.05 * s, 0.62 * s),
-          new THREE.MeshBasicMaterial({
-            map: blobTexture,
-            transparent: true,
-            opacity: 0.34,
-            depthWrite: false,
-          }),
-        );
-        blob.rotation.x = -Math.PI / 2;
-        blob.position.set(x, 0.004, z + 0.08);
-        world.add(blob);
-      }
-      const resize = () => {
-        const w = el.clientWidth,
-          h = el.clientHeight;
-        if (!w || !h || !renderer) return;
-        renderer.setSize(w, h);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-      };
-      resize();
-      observer = new ResizeObserver(resize);
-      observer.observe(el);
-      document.addEventListener("visibilitychange", visibility);
-      window.addEventListener("pointermove", pointer, { passive: true });
-      frame = requestAnimationFrame(render);
-    } catch {
-      setFailed(true);
-    }
+    document.addEventListener("visibilitychange", sync);
+    reduced.addEventListener("change", sync);
+    window.addEventListener("pointermove", pointer, { passive: true });
+    sync();
     return () => {
-      stopped = true;
-      cancelAnimationFrame(frame);
-      clearTimeout(timer.current);
-      observer?.disconnect();
+      dead = true;
+      active = false;
       intersection.disconnect();
-      document.removeEventListener("visibilitychange", visibility);
+      document.removeEventListener("visibilitychange", sync);
+      reduced.removeEventListener("change", sync);
       window.removeEventListener("pointermove", pointer);
-      dogs.current.forEach((d) => d.dispose());
-      dogs.current = [];
-      world.children.forEach((o) => {
-        if (o instanceof THREE.Mesh) {
-          o.geometry.dispose();
-          (o.material as THREE.Material).dispose();
-        }
-      });
-      renderer?.domElement.removeEventListener("webglcontextlost", lost);
-      world.traverse((o) => {
-        if (o instanceof THREE.DirectionalLight) o.shadow.dispose();
-      });
-      world.environment?.dispose();
-      renderer?.dispose();
-      renderer?.forceContextLoss();
-      renderer?.domElement.remove();
+      clearTimeout(feedbackTimer.current);
+      players.current.forEach((player) => player?.dispose());
+      players.current = [];
+      request.current = () => {};
+      resync.current = () => {};
     };
   }, []);
-  if (failed)
-    return <aside className="pet-unavailable">两位小伙伴在这里陪着你 ♡</aside>;
-  const pet = (i: number) => {
-    dogs.current[i]?.pet();
-    dogs.current[1 - i]?.react("magic");
-    setPetted(i);
-    clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setPetted(null), 2800);
+
+  useEffect(() => { resync.current(); }, [filmActive, cardOpen, chapter, session]);
+  useEffect(() => {
+    intents.current.forEach((intent, index) => {
+      if (intent.setBase(base, performance.now())) players.current[index]?.play(base);
+    });
+  }, [base]);
+  useEffect(() => {
+    if (seenCue.current === cue.serial) return;
+    seenCue.current = cue.serial;
+    if (filmActive) return;
+    const action: PetAction = cue.kind === "piano" ? "look-left" : "happy";
+    variants.forEach((_, index) => request.current(index, action));
+  }, [cue.kind, cue.serial, filmActive]);
+  useEffect(() => {
+    if (celebrating) variants.forEach((_, index) => request.current(index, "happy"));
+  }, [celebrating]);
+  useEffect(() => { setPetted(null); clearTimeout(feedbackTimer.current); }, [session]);
+
+  const pet = (index: number) => {
+    if (index === 2) variants.forEach((_, i) => request.current(i, "happy"));
+    else request.current(index, "pet");
+    setPetted(index);
+    clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = window.setTimeout(() => setPetted(null), 2600);
   };
+
   return (
-    <aside
-      className={
-        "pet-companion pet-duo pet-" +
-        mood +
-        (petted !== null ? " is-petted" : "")
-      }
-      aria-label="杏色与奶油色的两只泰迪"
-    >
-      <div ref={host} className="pet-canvas" />
-      <div className="pet-touch-zones">
-        <button
-          type="button"
-          aria-label="摸摸杏色泰迪"
-          onClick={() => pet(0)}
-        />
-        <button
-          type="button"
-          aria-label="摸摸奶油色泰迪"
-          onClick={() => pet(1)}
-        />
+    <aside ref={host} className={`pet-companion pet-duo pet-${mood}${calm ? " is-calm" : ""}${petted !== null ? " is-petted" : ""}`} aria-label="杏色与奶油色的两只泰迪">
+      <div className="pet-portraits">
+        {variants.map((variant, index) => (
+          <button key={variant} type="button" className={`pet-portrait${failed[index] ? " is-fallback" : ""}${petted === index ? " is-loved" : ""}`} aria-label={index ? "摸摸奶油色泰迪" : "摸摸杏色泰迪"} onClick={() => pet(index)}>
+            {missingPoster[index]
+              ? <span className="pet-missing-poster" aria-hidden="true">♡</span>
+              : <img className="pet-poster" src={petMedia.poster(variant)} alt="" width="384" height="384" draggable={false} onError={() => setMissingPoster((old) => old.map((value, i) => i === index ? true : value))} />}
+            <div className="pet-film" ref={(node) => { slots.current[index] = node; }} />
+            <span className="pet-touch-heart" aria-hidden="true">♡</span>
+          </button>
+        ))}
       </div>
-      <div className="pet-dialogue" aria-live="polite">
-        {petted !== null
-          ? petted === 2
-            ? "你一跳，我也跟着跳 ♡"
-            : petted === 0
-              ? "摸摸收到啦！旁边那位也想要 ♡"
-              : "喜欢你！蝴蝶结也跟着开心 ♡"
-          : celebrating
-            ? "两份喜欢，都给你！"
-            : mood === "sleepy"
-              ? "嘘，我们陪你听。"
-              : "摸摸我们，陪你一起过生日"}
+      <div className="pet-dialogue" aria-live="polite" aria-atomic="true">
+        {petted === 2 ? "两份喜欢，都给你！" : petted === 0 ? "摸摸收到啦，最喜欢你了 ♡" : petted === 1 ? "再靠近一点，陪着你 ♡" : filmActive || mood === "sleepy" ? "嘘，我们陪你听。" : celebrating ? "两份喜欢，都给你！" : "摸摸我们，陪你一起过生日"}
       </div>
-      <button
-        type="button"
-        className="pet-play"
-        onClick={() => {
-          dogs.current.forEach((d) => d.react("play"));
-          setPetted(2);
-          clearTimeout(timer.current);
-          timer.current = window.setTimeout(() => setPetted(null), 2800);
-        }}
-      >
-        一起玩 <span aria-hidden="true">↗</span>
-      </button>
-      <span
-        className={"pet-heart " + (petted !== null ? "visible" : "")}
-        aria-hidden="true"
-      >
-        ♡
-      </span>
+      <button type="button" className="pet-play" onClick={() => pet(2)}>一起玩 <span aria-hidden="true">↗</span></button>
     </aside>
   );
 }

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PianoDance } from "../../scene/CinemaVignettes";
 import type { StoryLetter } from "../../content/storyTypes";
 export function Letter({
@@ -18,6 +18,18 @@ export function Letter({
 }) {
   const [danceFinished, setDanceFinished] = useState(false);
   const reading = useRef<HTMLDivElement>(null);
+  const envelope = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!danceFinished || open) return;
+    const frame = requestAnimationFrame(() => {
+      envelope.current?.focus({ preventScroll: true });
+      reading.current?.scrollIntoView({
+        block: "start",
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [danceFinished, open]);
   const openLetter = () => {
     onOpen();
     requestAnimationFrame(() => {
@@ -60,6 +72,7 @@ export function Letter({
           {!open ? (
             <div className="envelope-scene">
               <button
+                ref={envelope}
                 className="letter-envelope"
                 onClick={openLetter}
                 aria-label={"打开给" + name + "的信"}

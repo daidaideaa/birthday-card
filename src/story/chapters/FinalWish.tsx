@@ -1,5 +1,5 @@
 import { CinematicDirector } from "../../cinematic/CinematicDirector";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { StoryController, StorySnapshot } from "../StoryController";
 import { CakeViewport } from "../../scene/CakeViewport";
@@ -19,6 +19,18 @@ export function FinalWish({
 }) {
   const stage = useRef<HTMLElement>(null);
   const state = snapshot.finalState;
+  const [filmFinished, setFilmFinished] = useState(false);
+  const filmEnding = useRef<number | undefined>(undefined);
+  const showFilm = !filmFinished && state === "lit";
+  const continueToWish = () => {
+    clearTimeout(filmEnding.current);
+    setFilmFinished(true);
+    requestAnimationFrame(() => {
+      stage.current?.scrollIntoView({ block: "start", behavior: "instant" });
+      stage.current?.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
+    });
+  };
+  useEffect(() => () => clearTimeout(filmEnding.current), []);
   const ending = useRef(onEnding);
   ending.current = onEnding;
   useEffect(() => {
@@ -50,14 +62,14 @@ export function FinalWish({
   return (
     <article
       ref={stage}
-      className={`final-wish wish-${state}`}
+      className={`final-wish wish-${state} ${showFilm ? "wish-film-arrival" : "wish-candle-reveal"}`}
       data-candle-state={state}
     >
       {state !== "complete" ? (
         <>
-          <span className="chapter-kicker">把愿望，交给今晚的星光</span>
-          <h2 tabIndex={-1}>许个愿吧，{controller.data.person.name}。</h2>
-          {controller.data.finalWish && (
+          <span className="chapter-kicker">{showFilm ? "从晨光，到星河" : "把愿望，交给今晚的星光"}</span>
+          <h2 tabIndex={-1}>{showFilm ? "愿你勇敢，也一直被爱。" : `许个愿吧，${controller.data.person.name}。`}</h2>
+          {!showFilm && controller.data.finalWish && (
             <p className="personal-wish">{controller.data.finalWish}</p>
           )}
         </>
@@ -89,8 +101,16 @@ export function FinalWish({
         </div>
       )}
       <div className="birthday-finale-stage">
-        <SavannaLife onRoar={onRoar} celebrating={state === "complete"} />
-        {state !== "complete" && (
+        {showFilm && (
+          <>
+            <SavannaLife onRoar={onRoar} onPlaybackStart={() => clearTimeout(filmEnding.current)} onComplete={() => {
+              clearTimeout(filmEnding.current);
+              filmEnding.current = window.setTimeout(continueToWish, 900);
+            }} />
+            <button className="text-button wish-film-skip" onClick={continueToWish}>把这份勇气，带进生日愿望 →</button>
+          </>
+        )}
+        {!showFilm && state !== "complete" && (
           <div className="birthday-candle-stage">
             <CakeViewport
               state={state}

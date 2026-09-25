@@ -21,6 +21,10 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run assets:validate
+      - name: Ensure media inspection tools
+        run: command -v ffprobe >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+      - name: Validate complete cinema delivery
+        run: npm run cinema:validate
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

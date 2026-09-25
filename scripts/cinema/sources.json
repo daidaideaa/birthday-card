@@ -1,0 +1,87 @@
+{
+  "retrievedAt": "2026-09-23",
+  "sources": [
+    {
+      "name": "Snow v4 (snow_v42.zip)",
+      "page": "https://studio.blender.org/characters/snow/v4/",
+      "download": "https://studio.blender.org/download-source/files/ba/0f/ba0fe6d810333b1d73c1c359e4dc03cb-6.zip",
+      "localArchive": "model-sources/studio/snow.zip",
+      "sha256": "98d58ef3a07083ede14140bc462cccb55d317062846aa0eb652d2e4a7ac422a6",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "Snow Rig (CC) Blender Foundation | studio.blender.org",
+      "use": "Duet male: new clothing materials, poses, animation, staging and lighting."
+    },
+    {
+      "name": "Rain v3 (rain-v33.zip)",
+      "page": "https://studio.blender.org/characters/rain/v3/",
+      "download": "https://studio.blender.org/download-source/files/ee/a7/eea73e55dba1cea31c09848df6a794b2-4.zip",
+      "localArchive": "model-sources/studio/rain.zip",
+      "sha256": "80217f163f6392dc829233d63c2cfb5e1376775bc34101ad14f39631fea70d24",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "Rain Rig (CC) Blender Foundation | studio.blender.org",
+      "use": "Duet female: new dress, costume materials, poses, animation, staging and lighting."
+    },
+    {
+      "name": "Autumn v1",
+      "page": "https://studio.blender.org/characters/autumn/v1/",
+      "download": "https://studio.blender.org/download-source/files/97/97108c7a70aef830ef9b3f185442307e/97108c7a70aef830ef9b3f185442307e.zip",
+      "localArchive": "model-sources/studio/autumn.zip",
+      "sha256": "e1bff7792d12f008d7bddcb20fe9fa30d88cc8c62d1786940f67c56d9fc8c80b",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "Autumn character © Blender Foundation | studio.blender.org",
+      "use": "Apricot and cream derivatives of the original terrier: recoloring, softer dropped ears and eyebrows, shorter curly groom, darker canine eyes, six original action clips. Retains the original character topology and proportions rather than claiming a fully resculpted poodle."
+    },
+    {
+      "name": "Lion raring-sound1TamilNadu178.ogg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lion_raring-sound1TamilNadu178.ogg",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Lion_raring-sound1TamilNadu178.ogg",
+      "localArchive": "scripts/cinema/assets/lion-roar-public-domain.ogg",
+      "required": true,
+      "sha256": "ab237d0f960e83412251d0c11f69959f3c2e8d3b14595f7181c3056f7fa18bf7",
+      "license": "Public domain (PD-self, author dedication worldwide)",
+      "licenseUrl": "https://commons.wikimedia.org/wiki/File:Lion_raring-sound1TamilNadu178.ogg#Licensing",
+      "credit": "த*உழவன், Wikimedia Commons",
+      "use": "2.75-second excerpt, filtering, normalization, fades and short reflections; embedded in pride score at 14.42 seconds."
+    },
+    {
+      "name": "Baby Lion / project derivative baseline",
+      "page": "https://sketchfab.com/3d-models/baby-lion-c9599625dc474262aab754d7b63841f5",
+      "download": "https://raw.githubusercontent.com/daidaideaa/birthday-card/e3ff45fbc46b6afe2c629d843b77ac4607339b30/public/models/lions/lion-cub.glb",
+      "localArchive": "model-sources/lion-cub.glb",
+      "sha256": "21a3447577eddcb129f8a80adafc2fa4791c7da564439b09f9833f59253ac2b4",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "Baby Lion by kenchoo, modified by this project",
+      "use": "Pride film: inherited cub and adult derivative, restaging and offline lighting."
+    }
+  ],
+  "generatedAssets": [
+    {
+      "name": "Los Angeles dusk distant matte",
+      "localArchive": "scripts/cinema/assets/dusk-city.png",
+      "required": true,
+      "sha256": "8c5805d2006beedd236ecf901dfa2098cce40e6fc24ca1e8d16cd17649081a07",
+      "origin": "Created for this project using OpenAI imagegen, 2026-09-23",
+      "use": "Distant city, hills and sky behind physically rendered animated dancers and stage; applied by stage_duet.py. Not a film frame or replacement for the complete film."
+    },
+    {
+      "name": "Savanna dawn distant matte",
+      "localArchive": "scripts/cinema/assets/savanna-dawn.png",
+      "required": true,
+      "sha256": "6f6c2c9ee6cdcda1b1adb6845f32df04ab3a2a14feb9f85ed2988c2e827c2c98",
+      "origin": "Created for this project using OpenAI imagegen, 2026-09-23",
+      "use": "Distant sunrise savanna behind Blender-rendered lions, groom and foreground; applied by build_pride.py."
+    },
+    {
+      "name": "Savanna stars distant matte",
+      "localArchive": "scripts/cinema/assets/savanna-stars.png",
+      "required": true,
+      "sha256": "591a831a89863ea6429b4cf2a58a9d4ba047024910537a3bcc88f5cccab584e5",
+      "origin": "Created for this project using OpenAI imagegen, 2026-09-23",
+      "use": "Distant night sky and savanna behind Blender-rendered lions and foreground; applied by build_pride.py."
+    }
+  ]
+}

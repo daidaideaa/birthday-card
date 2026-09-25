@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { StoryController, StorySnapshot } from "./StoryController";
 import { PageTurn } from "./PageTurn";
-import { reducedMotion } from "../utils/device";
 import { ChapterContent } from "./chapters/ChapterContent";
 import { assetUrl } from "../utils/assetUrl";
+import { FILM_PORTRAIT_QUERY } from "../cinematic/media";
 interface Props {
   controller: StoryController;
   snapshot: StorySnapshot;
@@ -11,6 +11,8 @@ interface Props {
   onEnding: () => void;
   onPiano: (note?: number) => void;
   onRoar: () => void;
+  onNavigate: (delta: 1 | -1) => void;
+  transitioning: boolean;
 }
 export function MemoryBook({
   controller,
@@ -19,34 +21,25 @@ export function MemoryBook({
   onEnding,
   onPiano,
   onRoar,
+  onNavigate,
+  transitioning,
 }: Props) {
-  const { index, direction, turn } = snapshot;
+  const { index } = snapshot;
   const chapter = controller.chapters[index];
   const root = useRef<HTMLElement>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
-  const lockUntil = useRef(0);
-  const [turning, setTurning] = useState(false);
   const nextDisabled = index === controller.chapters.length - 1;
   const go = useCallback(
     (delta: 1 | -1) => {
-      if (performance.now() < lockUntil.current) return;
-      if (controller.go(delta)) {
-        lockUntil.current = performance.now() + (reducedMotion() ? 180 : 950);
-        setTurning(true);
-      }
+      onNavigate(delta);
     },
-    [controller],
+    [onNavigate],
   );
   useEffect(() => {
-    const timer = window.setTimeout(
-      () => setTurning(false),
-      reducedMotion() ? 180 : 950,
-    );
     window.scrollTo({ top: 0, behavior: "instant" });
     root.current
       ?.querySelector<HTMLElement>("h2")
       ?.focus({ preventScroll: true });
-    return () => clearTimeout(timer);
   }, [index]);
   useEffect(() => {
     const keyboard = (e: KeyboardEvent) => {
@@ -83,13 +76,10 @@ export function MemoryBook({
     const abort = new AbortController();
     const preload = () => {
       if (document.hidden) return;
-      const paths =
-        next === "letter"
-          ? ["models/grand-piano.glb", "models/jazz-duo.glb"]
-          : next === "finalWish"
-            ? ["models/lions/father-lion.glb", "models/lions/lion-cub.glb"]
-            : [];
-      if (next === "letter") void import("../scene/JazzStage").catch(() => {});
+      const aspect = matchMedia(FILM_PORTRAIT_QUERY).matches ? "portrait" : "landscape";
+      const paths = next === "letter" ? [`cinema/duet-${aspect}.webp`]
+        : next === "finalWish" ? [`cinema/pride-${aspect}.webp`] : [];
+      if (next === "letter") void import("./chapters/Letter").catch(() => {});
       if (next === "finalWish")
         void import("./chapters/FinalWish").catch(() => {});
       paths.forEach((path) => {
@@ -176,7 +166,7 @@ export function MemoryBook({
           {String(controller.chapters.length).padStart(2, "0")}
         </span>
       </div>
-      <PageTurn direction={direction} turn={turn}>
+      <PageTurn>
         <ChapterContent
           controller={controller}
           snapshot={snapshot}
@@ -187,17 +177,10 @@ export function MemoryBook({
           onNext={() => go(1)}
         />
       </PageTurn>
-      {!reducedMotion() && turning && (
-        <div key={`veil-${turn}`} className="cinema-veil" aria-hidden="true">
-          <i className="veil-bar veil-bar--top" />
-          <i className="veil-bar veil-bar--bottom" />
-          <i className="veil-flash" />
-        </div>
-      )}
       <button
         className="page-edge edge-left"
         aria-label="上一章"
-        disabled={turning}
+        disabled={transitioning}
         onClick={() => go(-1)}
       >
         ‹
@@ -206,18 +189,18 @@ export function MemoryBook({
         <button
           className="page-edge edge-right"
           aria-label="下一章"
-          disabled={turning}
+          disabled={transitioning}
           onClick={() => go(1)}
         >
           ›
         </button>
       )}
       <nav className="book-navigation" aria-label="章节导航">
-        <button onClick={() => go(-1)} disabled={turning}>
+        <button onClick={() => go(-1)} disabled={transitioning}>
           ← 上一章
         </button>
         <span>慢慢看，不着急</span>
-        <button onClick={() => go(1)} disabled={nextDisabled || turning}>
+        <button onClick={() => go(1)} disabled={nextDisabled || transitioning}>
           下一章 →
         </button>
       </nav>

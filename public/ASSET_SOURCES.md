@@ -1,5 +1,25 @@
 # 素材来源
 
+## 当前 cinema 影像来源（2026-09-23）
+
+| 新素材 | 原始作者、版本与许可 | 本项目修改 |
+| --- | --- | --- |
+| `cinema/duet-landscape.*`、`duet-portrait.*` 男舞者 | [Snow v4](https://studio.blender.org/characters/snow/v4/)，Snow Rig (CC) Blender Foundation · studio.blender.org，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 服装材质、编舞、场景、镜头与灯光 |
+| 同一双人舞女舞者 | [Rain v3](https://studio.blender.org/characters/rain/v3/)，Rain Rig (CC) Blender Foundation · studio.blender.org，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 黄色裙装、材质、编舞、场景、镜头与灯光 |
+| `cinema/pets/apricot-*`、`cream-*` 和两张海报 | [Autumn v1](https://studio.blender.org/characters/autumn/v1/)，Autumn character © Blender Foundation · studio.blender.org，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 杏色/奶油色、垂耳、眉眼、短卷毛、暗色犬眼、六种原创动作、透明渲染与遮罩编码；保留原梗犬基础，并非完全重雕的贵宾犬 |
+| `cinema/pride-landscape.*`、`pride-portrait.*` | [Baby Lion / kenchoo](https://sketchfab.com/3d-models/baby-lion-c9599625dc474262aab754d7b63841f5)，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 沿用项目成年衍生与幼狮资产，重新布景、镜头、材质、灯光和离线演出 |
+| 双人舞远景，源文件 `scripts/cinema/assets/dusk-city.png` | 本项目使用内置 OpenAI imagegen 生成，2026-09-23 | 洛杉矶暮色城市、远山与天空的 matte；由 `stage_duet.py` 放入 Blender，前景角色和舞台保持真实三维渲染；不是电影原片或完整影片替代 |
+| 草原远景，源文件 `scripts/cinema/assets/savanna-dawn.png`、`savanna-stars.png` | 本项目使用内置 OpenAI imagegen 生成，2026-09-23 | 草原日出与星空远景；前景狮子、毛发、岩石及表演在 Blender 中渲染 |
+| 草原影片 14.42 秒处狮吼；源文件 `scripts/cinema/assets/lion-roar-public-domain.ogg` | [Lion raring-sound1TamilNadu178.ogg / த*உழவன்](https://commons.wikimedia.org/wiki/File:Lion_raring-sound1TamilNadu178.ogg)，作者声明全球公共领域（PD-self） | 截取 2.75 秒、60 Hz 高通、2600 Hz 低通、响度调整、淡入淡出与短反射，混入原创伴奏 |
+
+主片没有使用电影原片、电影动作捕捉数据或原声。双人舞和草原配乐分别由 `scripts/cinema/score.py`、`pride_score.py` 制作原创短句，使用项目已有 Salamander 钢琴采样，沿用下方及 [音频许可](audio/LICENSE.md) 的 CC BY 3.0 署名。草原声轨另含上表公共领域狮吼录音；页面按钮的低声回应仍是合成音效。Blender Foundation、原作者与本项目或生日祝福没有背书关系。
+
+源页面、稳定下载入口、许可及本地 ZIP 的 SHA-256 已记录在仓库 `scripts/cinema/sources.json`。源 ZIP 在忽略目录 `model-sources/studio/`，不会重复放进网页；网站不加载原始专业 `.blend`。这些条目记录输入和用途，影片是否完整以 `npm run cinema:validate` 的实际检查报告为准。
+
+## 保留素材与旧版历史
+
+以下实时角色与场景说明为旧版来源链。当前双人舞、狮子和宠物走 cinema 播放路径；旧 GLB 和其许可仍保留，贺卡、蛋糕继续实时三维渲染。
+
 获取日期：2026-09-20。网图用于本次生日主题预览，不代表师宝宝的个人照片或真实共同经历。
 
 | 本地文件 | 来源 | 用途 |
