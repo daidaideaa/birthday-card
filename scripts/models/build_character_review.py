@@ -256,10 +256,6 @@ def prepare(name):
             seated.data[v.index].co.y-=.27*around*min(1,u*1.6)
             front_z=.977-.12*u-.17*max(0,(u-.55)/.45)**2
             seated.data[v.index].co.z=z+(front_z-z)*around
-        visible.append(tube('Dress waist piping',[(.949,.127,.098,-.012,0),(.955,.127,.098,-.012,0),(.977,.124,.095,-.012,0),(.982,.123,.094,-.012,0)],mats['dress'],rig,'DEF-Spine1'))
-        visible.append(tube('Continuous waist facing',[(1.035,.120,.094,-.012,0),
-            (1.005,.121,.094,-.012,0),(.975,.122,.095,-.012,0),
-            (.941,.128,.102,-.012,0),(.900,.142,.111,-.012,0)],mats['dress'],rig,'DEF-Spine1'))
         top=bpy.data.objects['GEO-rain-top']
         # Tuck the source tank hem into the dress waist instead of leaving a
         # separate ruffled shirt floating over the skirt.
@@ -373,6 +369,16 @@ def set_pose(rig, female, pose):
 def export_pose(rig, objects, name, pose):
     deps=bpy.context.evaluated_depsgraph_get()
     collider=None
+    waist=None
+    if name=='rain':
+        bodice=bpy.data.objects['GEO-rain-top']
+        bodice_data=bpy.data.meshes.new_from_object(bodice.evaluated_get(deps),depsgraph=deps)
+        bottom=min(v.co.z for v in bodice_data.vertices)
+        hem=[v.co.copy() for v in bodice_data.vertices if v.co.z<bottom+.018]
+        cy=(min(p.y for p in hem)+max(p.y for p in hem))/2
+        waist=(bottom+.012,max(abs(p.x) for p in hem)+.002,
+               (max(p.y for p in hem)-min(p.y for p in hem))/2+.002,cy)
+        bpy.data.meshes.remove(bodice_data)
     if name=='rain' and pose=='sitting':
         body=bpy.data.objects['GEO-rain-body']
         bodydata=bpy.data.meshes.new_from_object(body.evaluated_get(deps),depsgraph=deps)
@@ -383,6 +389,20 @@ def export_pose(rig, objects, name, pose):
     for obj in objects:
         evaluated=obj.evaluated_get(deps)
         data=bpy.data.meshes.new_from_object(evaluated, preserve_all_data_layers=True,depsgraph=deps)
+        if waist and obj.name=='Yellow dance dress — panel skirt':
+            # Match the evaluated bodice hem, including the Studio rig's spine
+            # scale. Rest-space radii alone leave a floating waistband.
+            top=max(v.co.z for v in data.vertices)
+            ring=[v.co.copy() for v in data.vertices if v.co.z>top-.008]
+            rx=max(abs(p.x) for p in ring)
+            cy=(min(p.y for p in ring)+max(p.y for p in ring))/2
+            ry=(max(p.y for p in ring)-min(p.y for p in ring))/2
+            for vertex in data.vertices:
+                t=max(0,min(1,(vertex.co.z-(top-.13))/.13));t=t*t*(3-2*t)
+                vertex.co.x*=1+(waist[1]/rx-1)*t
+                target_y=waist[3]+(vertex.co.y-cy)*waist[2]/ry
+                vertex.co.y+=(target_y-vertex.co.y)*t
+                vertex.co.z+=(waist[0]-top)*t
         if collider and obj.name=='Yellow dance dress — panel skirt':
             inverse=obj.matrix_world.inverted()
             # Bake a collision correction for the inspection pose. Full dance
