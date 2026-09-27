@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { PianoDance } from "../../scene/CinemaVignettes";
+import { DuetSequence } from "./DuetSequence";
 import type { StoryLetter } from "../../content/storyTypes";
+import { enforceMediaMute, registerMediaAudio } from "../../cinematic/mediaAudio";
+import { assetUrl } from "../../utils/assetUrl";
 export function Letter({
   data,
   name,
   open,
   onOpen,
   onNext,
-  onPiano,
+  onNoteOn,
+  onNoteOff,
 }: {
-  onPiano: (note?: number) => void;
+  /** 按下 / 松开独立；琴音立即发声，不等动画。 */
+  onNoteOn: (note: number, velocity: number) => void;
+  onNoteOff: (note: number) => void;
   data: StoryLetter;
   name: string;
   open: boolean;
@@ -19,6 +24,15 @@ export function Letter({
   const [danceFinished, setDanceFinished] = useState(false);
   const reading = useRef<HTMLDivElement>(null);
   const envelope = useRef<HTMLButtonElement>(null);
+  const recording = useRef<HTMLAudioElement>(null);
+  useEffect(() => {
+    const element = recording.current;
+    if (!element) return;
+    const unregister = registerMediaAudio(element, true);
+    const pause = () => { if (document.hidden) element.pause(); };
+    document.addEventListener("visibilitychange", pause);
+    return () => { element.pause(); unregister(); document.removeEventListener("visibilitychange", pause); };
+  }, [open, data.recording]);
   useEffect(() => {
     if (!danceFinished || open) return;
     const frame = requestAnimationFrame(() => {
@@ -46,21 +60,18 @@ export function Letter({
       {!open && (
         <>
           <div className="dance-introduction">
-            <span className="chapter-kicker">暮色、灯光，还有你</span>
+            <span className="kicker">暮色、灯光，还有你</span>
             <h2 tabIndex={-1}>
               先和你<em>跳一支舞</em>
             </h2>
-            <p>把这一刻留给音乐，心意藏在下一封信里。</p>
+            <p>按住琴键就能弹；弹上几个音，他会起身邀她。</p>
           </div>
-          <PianoDance
-            onPlay={onPiano}
-            onComplete={() => setDanceFinished(true)}
+          <DuetSequence
+            onNoteOn={onNoteOn}
+            onNoteOff={onNoteOff}
+            onSettled={() => setDanceFinished(true)}
+            onSkip={openLetter}
           />
-          {!danceFinished && (
-            <button className="text-button letter-skip" onClick={openLetter}>
-              想先看看写给你的话 →
-            </button>
-          )}
         </>
       )}
       {(open || danceFinished) && (
@@ -90,6 +101,10 @@ export function Letter({
             </div>
           ) : (
             <div className="letter-paper">
+              {data.recording?.trim() && <div className="letter-recording" data-navigation-lock>
+                <p>听听这封信</p>
+                <audio ref={recording} controls preload="none" src={assetUrl(data.recording)} onVolumeChange={event => enforceMediaMute(event.currentTarget)} aria-label="信件真人录音" />
+              </div>}
               {data.greeting && (
                 <p className="letter-greeting">{data.greeting}</p>
               )}

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FilmPlaybackSession, filmSource, lionPhaseAt } from "../src/cinematic/media.ts";
-import { registerMediaAudio, setMediaAudioState, setMediaSilenced } from "../src/cinematic/mediaAudio.ts";
+import { enforceMediaMute, registerMediaAudio, setMediaAudioState, setMediaSilenced } from "../src/cinematic/mediaAudio.ts";
 import { getMediaActive, setMediaActive, subscribeMediaActivity } from "../src/cinematic/mediaActivity.ts";
 import { AudioController } from "../src/scene/AudioController.ts";
 
@@ -29,6 +29,20 @@ test("native media inherits global mute and volume, including late mounts and re
   assert.equal(video.muted, true, "unmounted media no longer receives global changes");
   detachLate();
   setMediaAudioState({ muted: false, volume: 1, unlocked: false });
+});
+
+test("letter narration remains audible above ducked music but obeys shared mute", () => {
+  setMediaAudioState({ muted: false, unlocked: true, volume: 0.08 });
+  const voice = { volume: 0, muted: false };
+  const detach = registerMediaAudio(voice, true);
+  assert.equal(voice.volume, 1);
+  setMediaAudioState({ muted: true });
+  voice.muted = false;
+  enforceMediaMute(voice);
+  assert.equal(voice.muted, true);
+  setMediaAudioState({ muted: false });
+  assert.equal(voice.muted, false);
+  detach();setMediaAudioState({ muted: false, volume: 1, unlocked: false });
 });
 
 test("overlapping films keep pets idle until the final decoder pauses", () => {

@@ -3,17 +3,24 @@ type MediaAudioState = { muted: boolean; volume: number; unlocked: boolean };
 
 const state: MediaAudioState = { muted: false, volume: 1, unlocked: false };
 const elements = new Map<MediaAudioTarget, boolean>();
+const narration = new Set<MediaAudioTarget>();
 
 function apply(element: MediaAudioTarget, silent: boolean) {
   element.muted = state.muted || !state.unlocked || silent;
-  element.volume = state.volume;
+  element.volume = narration.has(element) ? 1 : state.volume;
 }
 
 /** A native video's soundtrack shares the existing global sound controls. */
-export function registerMediaAudio(element: MediaAudioTarget) {
+export function registerMediaAudio(element: MediaAudioTarget, foreground = false) {
+  if (foreground) narration.add(element);
   elements.set(element, false);
   apply(element, false);
-  return () => { elements.delete(element); };
+  return () => { elements.delete(element); narration.delete(element); };
+}
+
+/** Native controls cannot bypass the shared mute/unlock state. */
+export function enforceMediaMute(element: MediaAudioTarget) {
+  if (!element.muted && elements.has(element) && (state.muted || !state.unlocked || elements.get(element))) element.muted = true;
 }
 
 export function setMediaSilenced(element: MediaAudioTarget, silent: boolean) {

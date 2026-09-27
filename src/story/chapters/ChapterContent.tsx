@@ -13,12 +13,14 @@ export function ChapterContent({
   onReplay,
   onEnding,
   onNext,
-  onPiano,
+  onNoteOn,
+  onNoteOff,
   onRoar,
 }: {
   controller: StoryController;
   snapshot: StorySnapshot;
-  onPiano: (note?: number) => void;
+  onNoteOn: (note: number, velocity: number) => void;
+  onNoteOff: (note: number) => void;
   onRoar: () => void;
   onReplay: () => void;
   onEnding: () => void;
@@ -32,7 +34,8 @@ export function ChapterContent({
       return (
         <Suspense fallback={<p role="status">暮色正在点亮…</p>}>
           <Letter
-            onPiano={onPiano}
+            onNoteOn={onNoteOn}
+            onNoteOff={onNoteOff}
             data={data.letter}
             name={data.person.name}
             open={snapshot.letterOpen}
@@ -50,6 +53,7 @@ export function ChapterContent({
             onReplay={onReplay}
             onEnding={onEnding}
             onRoar={onRoar}
+            onReadLetter={controller.chapters.some(chapter => chapter.id === "letter") ? () => { controller.openLetter(); controller.go(-1); } : undefined}
           />
         </Suspense>
       );

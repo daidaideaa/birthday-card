@@ -4,7 +4,7 @@ import { qualityPolicy } from "../cinematic/quality";
 import { CelebrationCake } from "./CelebrationCake";
 import "./cake.css";
 
-type CakeState = "lit" | "extinguishing" | "complete";
+type CakeState = "lit" | "extinguishing" | "celebrating" | "complete";
 
 /** 轻量实时蛋糕场景，许愿状态统一由故事控制器管理。 */
 export function CakeViewport({
@@ -219,7 +219,7 @@ export function CakeViewport({
     >
       <div className="cinema-cake__stage" ref={mount}>
         <span className="cinema-cake__description">
-          双层草莓奶油蛋糕，陶瓷金边高脚盘，一支金色生日蜡烛。
+          单层草莓奶油蛋糕，陶瓷金边高脚盘，一支金色生日蜡烛。
         </span>
         {unavailable && (
           <div className="cinema-cake__fallback" aria-hidden="true">

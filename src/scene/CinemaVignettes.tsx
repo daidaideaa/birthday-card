@@ -7,6 +7,7 @@ import { reducedMotion } from "../utils/device";
 
 export function MagicWand({ onCast, active }: { onCast: () => void; active: boolean }) {
   const [casting, setCasting] = useState(false);
+  const pointer = useRef<{x:number;y:number} | null>(null);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
   return (
@@ -15,7 +16,19 @@ export function MagicWand({ onCast, active }: { onCast: () => void; active: bool
         <path d="M60 260 C120 80 350 290 410 115 S310 20 245 105" />
         <circle cx="245" cy="105" r="4" />
       </svg>
-      <button className="magic-wand" aria-label="挥动魔杖，点亮贺卡" onClick={() => {
+      <button className="magic-wand" aria-label="挥动魔杖，点亮贺卡"
+        style={{touchAction:"none"}}
+        onPointerDown={event => { pointer.current={x:event.clientX,y:event.clientY};event.currentTarget.setPointerCapture(event.pointerId); }}
+        onPointerMove={event => {
+          if(!pointer.current)return;
+          const x=Math.max(-26,Math.min(26,event.clientX-pointer.current.x));
+          const y=Math.max(-18,Math.min(18,event.clientY-pointer.current.y));
+          event.currentTarget.style.transform=`translate(${x}px,${y}px) rotate(${x*.4}deg)`;
+        }}
+        onPointerUp={event => {pointer.current=null;event.currentTarget.style.transform="";}}
+        onPointerCancel={event => {pointer.current=null;event.currentTarget.style.transform="";}}
+        onLostPointerCapture={event => {pointer.current=null;event.currentTarget.style.transform="";}}
+        onClick={() => {
         setCasting(true);
         onCast();
         clearTimeout(timer.current);

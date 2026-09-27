@@ -63,7 +63,7 @@ export interface StorySnapshot {
   letterOpen: boolean;
   revealedCount: number;
   timelineIndex: number | null;
-  finalState: "lit" | "extinguishing" | "complete";
+  finalState: "lit" | "extinguishing" | "celebrating" | "complete";
 }
 const initial = (): StorySnapshot => ({
   index: 0,
@@ -125,8 +125,11 @@ export class StoryController {
     return true;
   }
   finishWish() {
-    if (this.snapshot.finalState === "extinguishing")
+    if (this.snapshot.finalState === "extinguishing" || this.snapshot.finalState === "celebrating")
       this.change({ finalState: "complete" });
+  }
+  celebrateWish() {
+    if (this.snapshot.finalState === "extinguishing") this.change({ finalState: "celebrating" });
   }
   replay(resetCard: () => void) {
     resetCard();

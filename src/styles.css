@@ -154,33 +154,22 @@ button:hover {
   letter-spacing: 0.19em;
   color: #b8aa97;
 }
-.chapter-progress {
-  display: flex;
-  gap: 34px;
-  align-items: center;
+/* 当前章节名低调呈现，取代旧的后台式 01/02/03/04 导航栏。 */
+.chapter-whereabouts {
+  margin: 0;
+  font: 500 var(--kicker-size) / 1.6 var(--sans);
+  letter-spacing: 0.2em;
+  color: var(--on-dark-soft);
 }
-.chapter-progress > span {
-  display: flex;
-  gap: 9px;
-  align-items: center;
-  font-size: 11px;
-  color: #918b83;
-  letter-spacing: 0.05em;
-}
-.chapter-progress b {
-  font-weight: 400;
-  font-family: Georgia, serif;
-  font-size: 13px;
-  color: #b5a084;
-}
-.chapter-progress .current {
-  color: #f5dfb5;
-}
-.chapter-progress .current b {
-  color: #edc17c;
-}
-.chapter-progress .visited {
-  color: #bca68a;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .hero-copy {
   position: relative;
@@ -941,3 +930,5 @@ button:hover {
     gap: 26px;
   }
 }
+.letter-recording { margin:1.5rem 0; }
+.letter-recording audio { width:100%; }

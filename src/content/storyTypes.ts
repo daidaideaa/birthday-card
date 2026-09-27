@@ -39,6 +39,8 @@ export interface StoryStat {
   text?: string;
 }
 export interface StoryLetter {
+  /** public 下的可选真人录音相对路径；不提供时隐藏播放入口。 */
+  recording?: string;
   greeting: string;
   paragraphs: string[];
   ending: string;

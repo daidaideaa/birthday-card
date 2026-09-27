@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
-/** 可实时旋转的双层奶油蛋糕，装饰、烛光与熄灭后的烟雾均为三维几何。 */
+/** 单层奶油蛋糕，装饰、烛光与熄灭后的烟雾均为三维几何。 */
 export class CelebrationCake {
   readonly root = new THREE.Group();
   private flame = new THREE.Group();
@@ -71,16 +71,9 @@ export class CelebrationCake {
       cream,
       [0, 1.135, 0],
     );
-    add(new THREE.CylinderGeometry(0.66, 0.68, 0.48, 72), cream, [0, 1.39, 0]);
-    add(
-      new THREE.CylinderGeometry(0.66, 0.66, 0.026, 72),
-      cream,
-      [0, 1.639, 0],
-    );
     // 连续裱花垂幔与底边珍珠。
     for (const [radius, y, n] of [
       [1.018, 1.02, 12],
-      [0.686, 1.55, 9],
     ]) {
       for (let i = 0; i < n; i++) {
         const points = [];
@@ -110,7 +103,6 @@ export class CelebrationCake {
     const pearl = new THREE.SphereGeometry(0.036, 9, 7);
     for (const [radius, y, n] of [
       [1.015, 0.565, 55],
-      [0.69, 1.178, 38],
     ])
       for (let i = 0; i < n; i++) {
         const a = (i / n) * Math.PI * 2;
@@ -142,7 +134,7 @@ export class CelebrationCake {
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2,
         group = new THREE.Group();
-      group.position.set(Math.cos(a) * 0.49, 1.77, Math.sin(a) * 0.49);
+      group.position.set(Math.cos(a) * 0.55, 1.29, Math.sin(a) * 0.55);
       group.rotation.z = Math.sin(a) * 0.2;
       this.root.add(group);
       add(berry, red, [0, 0, 0], group);
@@ -210,13 +202,13 @@ export class CelebrationCake {
       color: "#ddbb79",
       roughness: 0.6,
     });
-    add(new THREE.CylinderGeometry(0.035, 0.037, 0.48, 18), wax, [0, 1.89, 0]);
+    add(new THREE.CylinderGeometry(0.035, 0.037, 0.48, 18), wax, [0, 1.39, 0]);
     add(
       new THREE.CylinderGeometry(0.006, 0.006, 0.045, 8),
       new THREE.MeshBasicMaterial({ color: "#483326" }),
-      [0, 2.148, 0],
+      [0, 1.648, 0],
     );
-    this.flame.position.set(0, 2.225, 0);
+    this.flame.position.set(0, 1.725, 0);
     this.root.add(this.flame);
     const glowMat = new THREE.MeshBasicMaterial({
       color: "#ffc04f",
@@ -238,7 +230,7 @@ export class CelebrationCake {
       this.flame,
     );
     inner.scale.set(0.028, 0.065, 0.03);
-    this.candleLight.position.set(0, 2.23, 0);
+    this.candleLight.position.set(0, 1.73, 0);
     this.root.add(this.candleLight);
     const smokeGeo = new THREE.BufferGeometry();
     smokeGeo.setAttribute(
@@ -312,7 +304,7 @@ export class CelebrationCake {
         p.setXYZ(
           i,
           Math.sin(a * 3 + i * 0.8) * a * 0.08,
-          2.17 + a * 0.35,
+          1.67 + a * 0.35,
           Math.cos(a * 2 + i) * a * 0.055,
         );
       }

@@ -3,13 +3,13 @@ import type { StoryController, StorySnapshot } from "./StoryController";
 import { PageTurn } from "./PageTurn";
 import { ChapterContent } from "./chapters/ChapterContent";
 import { runtimeAssetUrl as assetUrl } from "../utils/runtimeAssetUrl";
-import { FILM_PORTRAIT_QUERY } from "../cinematic/media";
 interface Props {
   controller: StoryController;
   snapshot: StorySnapshot;
   onReplay: () => void;
   onEnding: () => void;
-  onPiano: (note?: number) => void;
+  onNoteOn: (note: number, velocity: number) => void;
+  onNoteOff: (note: number) => void;
   onRoar: () => void;
   onNavigate: (delta: 1 | -1) => void;
   transitioning: boolean;
@@ -19,7 +19,8 @@ export function MemoryBook({
   snapshot,
   onReplay,
   onEnding,
-  onPiano,
+  onNoteOn,
+  onNoteOff,
   onRoar,
   onNavigate,
   transitioning,
@@ -73,28 +74,17 @@ export function MemoryBook({
     };
     if (device.connection?.saveData) return;
     const next = controller.chapters[index + 1]?.id;
-    const abort = new AbortController();
     const preload = () => {
       if (document.hidden) return;
-      const aspect = matchMedia(FILM_PORTRAIT_QUERY).matches ? "portrait" : "landscape";
-      const paths = next === "letter" ? [`cinema/duet-${aspect}.webp`]
-        : next === "finalWish" ? [`cinema/pride-${aspect}.webp`] : [];
       if (next === "letter") void import("./chapters/Letter").catch(() => {});
       if (next === "finalWish")
         void import("./chapters/FinalWish").catch(() => {});
-      paths.forEach((path) => {
-        void fetch(assetUrl(path), {
-          signal: abort.signal,
-          cache: "force-cache",
-        }).catch(() => {});
-      });
     };
     const idle =
       "requestIdleCallback" in window
         ? window.requestIdleCallback(preload, { timeout: 2500 })
         : setTimeout(preload, 1800);
     return () => {
-      abort.abort();
       if ("cancelIdleCallback" in window) window.cancelIdleCallback(idle);
       else clearTimeout(idle);
     };
@@ -172,7 +162,8 @@ export function MemoryBook({
           snapshot={snapshot}
           onReplay={onReplay}
           onEnding={onEnding}
-          onPiano={onPiano}
+          onNoteOn={onNoteOn}
+          onNoteOff={onNoteOff}
           onRoar={onRoar}
           onNext={() => go(1)}
         />

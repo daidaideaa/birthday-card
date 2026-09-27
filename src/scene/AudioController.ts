@@ -1,6 +1,7 @@
 import { runtimeAssetUrl as assetUrl } from "../utils/runtimeAssetUrl";
 import { setMediaAudioState } from "../cinematic/mediaAudio";
 import { getMediaActive, subscribeMediaActivity } from "../cinematic/mediaActivity";
+import { PianoVoices } from "../audio/PianoVoices";
 type Foley = "paper" | "envelope" | "candle";
 type Voice = {
   source: AudioScheduledSourceNode;
@@ -25,6 +26,7 @@ export class AudioController {
     if (!this.context || this.disposed) return;
     // 剧情时钟也暂停；隐藏时停止余音，不在回到页面时补播旧 cue。
     if (document.hidden) {
+      this.keyboard?.releaseAll();
       this.fadeOut();
       void this.context.suspend();
     } else void this.context.resume().catch(() => {});
@@ -141,6 +143,34 @@ export class AudioController {
       this.voice(source, 0.85, ctx.currentTime, 2.1);
     } else this.synth(note, ctx.currentTime);
   }
+
+  /**
+   * 按下 / 按住 / 松开独立的钢琴声部。伴奏键盘直接调用这一组，
+   * 不走 playPiano 的“一次性完整音符”路径。
+   */
+  private keyboard?: PianoVoices;
+  private piano() {
+    if (!this.context || !this.master) return undefined;
+    // 采样在 preloadPiano 之后才到，共享同一个 Map 以便后续按键自动升级音色。
+    this.keyboard ??= new PianoVoices(this.context, this.master, this.samples);
+    return this.keyboard;
+  }
+  /** 琴音优先：立即发声，不等待动画或背景配乐。 */
+  noteOn(note: number, velocity = 0.8) {
+    if (!this.available()) return false;
+    this.piano()?.noteOn(note, velocity);
+    return true;
+  }
+  noteOff(note: number) {
+    this.keyboard?.noteOff(note);
+  }
+  heldNotes(): number[] {
+    return this.keyboard?.heldNotes() ?? [];
+  }
+  /** 离章 / 失焦 / 后台统一释放，防黏音。 */
+  releaseKeys() {
+    this.keyboard?.releaseAll();
+  }
   playEnding() {
     this.play(true);
   }
@@ -255,6 +285,8 @@ export class AudioController {
   }
   dispose() {
     this.disposed = true;
+    this.keyboard?.dispose();
+    this.keyboard = undefined;
     this.detachMedia();
     setMediaAudioState({ unlocked: false });
     this.abort.abort();

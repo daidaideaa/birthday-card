@@ -1,0 +1,55 @@
+import { chromium, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+const browser = await chromium.launch({ args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+try {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('http://127.0.0.1:5173/birthday-card/');
+  await page.getByRole('button', { name: '打开这份惊喜' }).click();
+  await page.getByRole('button', { name: /翻开小小美好/ }).click();
+  await page.getByRole('button', { name: '下一章 →' }).click();
+  const sequence = page.locator('.duet-sequence');
+  const key = page.getByRole('button', { name: '弹奏来', exact: true });
+  await key.scrollIntoViewIfNeeded();
+  await expect(sequence).toHaveAttribute('data-active', 'true');
+  const progress = async () => Number(await sequence.getAttribute('data-progress'));
+  await expect.poll(progress).toBe(0);
+  await key.focus();
+  await page.keyboard.down('Space');
+  await expect.poll(progress).toBeGreaterThan(0.005);
+  // A blur event exercises the application handler; this is not a real OS lock-screen test.
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  await expect(sequence).toHaveAttribute('data-active', 'false');
+  await expect(page.locator('.key.is-held')).toHaveCount(0);
+  const paused = await progress();
+  await page.waitForTimeout(600);
+  expect(await progress()).toBe(paused);
+  await page.keyboard.up('Space');
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(sequence).toHaveAttribute('data-active', 'true');
+  await page.waitForTimeout(400);
+  expect(await progress()).toBe(paused);
+  await key.focus();
+  await page.keyboard.down('Space');
+  await expect.poll(progress).toBeGreaterThan(paused);
+  await page.keyboard.up('Space');
+  // Real scrolling and IntersectionObserver, with extra space to fully leave the stage.
+  await page.evaluate(() => { const spacer = document.createElement('div'); spacer.id = 'review-spacer'; spacer.style.height = '1500px'; document.body.append(spacer); window.scrollTo(0, document.body.scrollHeight); });
+  await expect(sequence).toHaveAttribute('data-active', 'false');
+  const offscreen = await progress();
+  await page.waitForTimeout(500);
+  expect(await progress()).toBe(offscreen);
+  await page.evaluate(() => document.getElementById('review-spacer').remove());
+  await key.scrollIntoViewIfNeeded();
+  await expect(sequence).toHaveAttribute('data-active', 'true');
+  await page.waitForTimeout(300);
+  expect(await progress()).toBe(offscreen);
+  await mkdir('.asset-build/review/lifecycle', { recursive: true });
+  await page.screenshot({ path: '.asset-build/review/lifecycle/mobile.png' });
+  await page.getByRole('button', { name: /想先看看写给你的话/ }).click();
+  await expect(page.locator('.letter-paper')).toBeVisible();
+  await expect(page.locator('.key.is-held')).toHaveCount(0);
+  expect(errors).toEqual([]);
+  console.log('PASS: zero input, blur releases, frozen progress, fresh input resumes, actual offscreen pause, no catch-up, chapter exit. Real OS background/lock not verified.');
+} finally { await browser.close(); }

@@ -16,17 +16,17 @@ import { useGesture } from "./hooks/useGesture";
 import { story } from "./content/story";
 import { StoryController } from "./story/StoryController";
 import { ChapterTransition, type TransitionFrame } from "./story/ChapterTransition";
-import { FILM_PORTRAIT_QUERY } from "./cinematic/media";
 const MemoryBook = lazy(() =>
   import("./story/MemoryBook").then((m) => ({ default: m.MemoryBook })),
 );
 import type { SceneCue } from "./pet/PetCompanion";
 const PetCompanion = lazy(() =>
-  import("./pet/PetCompanion").then((m) => ({ default: m.PetCompanion })),
+  import("./pet/LivePetCompanion").then((m) => ({ default: m.LivePetCompanion })),
 );
 import { CinematicAtmosphere } from "./scene/CinematicAtmosphere";
 import { runtimeAssetUrl as assetUrl } from "./utils/runtimeAssetUrl";
 import { reducedMotion } from "./utils/device";
+import "./design/tokens.css";
 import "./story/story.css";
 
 export default function App() {
@@ -39,6 +39,7 @@ export default function App() {
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<BirthdayScene | null>(null);
   const audio = useRef<AudioController | null>(null);
+  const pressedPiano = useRef(new Map<number, { count:number; started:number }>());
   const [transitionFrame, setTransitionFrame] = useState<TransitionFrame>({ phase: "idle", treatment: "paper" });
   const [transition] = useState(() => new ChapterTransition(setTransitionFrame));
   const [ready, setReady] = useState(false);
@@ -80,6 +81,11 @@ export default function App() {
 
   useEffect(() => {
     scene.current?.setActive(!inBook);
+    // 离开演奏段落时清空按住的音，防黏音（方案 §10.3）。
+    if (chapter !== "letter" || snapshot.letterOpen) {
+      pressedPiano.current.clear();
+      audio.current?.releaseKeys();
+    }
     if (chapter === "letter" && !snapshot.letterOpen)
       audio.current?.preloadPiano();
     audio.current?.setVolume(
@@ -170,10 +176,7 @@ export default function App() {
       treatment,
       immediate: reducedMotion(),
       prepare: async (signal) => {
-        const portrait = matchMedia(FILM_PORTRAIT_QUERY).matches;
-        const poster = target.id === "letter" ? `cinema/duet-${portrait ? "portrait" : "landscape"}.webp`
-          : target.id === "finalWish" ? `cinema/pride-${portrait ? "portrait" : "landscape"}.webp`
-            : target.id === "moments" ? book.data.firstMet.image || book.data.moments[0]?.image : undefined;
+        const poster = target.id === "moments" ? book.data.firstMet.image || book.data.moments[0]?.image : undefined;
         const component = target.id === "letter" ? import("./story/chapters/Letter")
           : target.id === "finalWish" ? import("./story/chapters/FinalWish")
             : import("./story/MemoryBook");
@@ -268,25 +271,13 @@ export default function App() {
             <small>的生日奇遇</small>
           </span>
         </button>
-        <div className="chapter-progress" aria-label="生日故事进度">
-          {book.chapters.map((c, i) => (
-            <span
-              key={c.id}
-              className={
-                i === snapshot.index
-                  ? "current"
-                  : i < snapshot.index
-                    ? "visited"
-                    : ""
-              }
-              aria-current={i === snapshot.index ? "step" : undefined}
-            >
-              <b>{String(i + 1).padStart(2, "0")}</b>
-              <span>{c.label}</span>
-            </span>
-          ))}
-        </div>
-        <span className="header-dedication">一份只属于你的惊喜</span>
+        {/* 常态控件只留声音、返回与当前必要操作；进度以 DOM 语义保留给辅助技术。 */}
+        <p className="chapter-whereabouts">
+          <span className="visually-hidden">
+            第 {snapshot.index + 1} 章，共 {book.chapters.length} 章：
+          </span>
+          {book.chapters[snapshot.index].label}
+        </p>
       </header>
       <div className="invitation-stage" hidden={inBook}>
         {!inBook && (
@@ -424,14 +415,32 @@ export default function App() {
             onNavigate={navigate}
             transitioning={transitioning}
             onReplay={replay}
-            onPiano={(note) => {
+            onNoteOn={(note, velocity) => {
+              if (!pianoAllowed.current) return;
+              const press = pressedPiano.current.get(note) ?? {count:0,started:0};
+              press.count += 1;
+              pressedPiano.current.set(note,press);
+              if (audio.current?.noteOn(note,velocity)) press.started += 1;
               emit("piano");
               void audio.current
                 ?.unlock()
                 .then(() => {
-                  if (pianoAllowed.current) audio.current?.playPiano(note);
+                  // 解锁完成时只补仍然持有的按键；已松手/离章的旧 Promise 不再发声。
+                  if (!pianoAllowed.current || pressedPiano.current.get(note) !== press) return;
+                  while (press.started < press.count) {
+                    if (!audio.current?.noteOn(note,velocity)) break;
+                    press.started += 1;
+                  }
                 })
                 .catch(() => setAudioError(true));
+            }}
+            onNoteOff={(note) => {
+              const press = pressedPiano.current.get(note);
+              if (press) {
+                press.count -= 1;
+                if (press.started > 0) { audio.current?.noteOff(note); press.started -= 1; }
+                if (press.count <= 0) pressedPiano.current.delete(note);
+              }
             }}
             onRoar={() => {
               emit("roar");
