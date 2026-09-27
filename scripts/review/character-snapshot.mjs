@@ -1,0 +1,16 @@
+import { chromium } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+const out='.asset-build/character-review/web';await mkdir(out,{recursive:true});
+const browser=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const page=await browser.newPage({viewport:{width:1440,height:1100},deviceScaleFactor:1});
+page.on('pageerror',e=>console.log(e.message));
+await page.goto('http://127.0.0.1:5181/birthday-card/character-review.html');
+await page.locator('[data-ready=true]').waitFor({timeout:60000});
+await page.screenshot({path:out+'/pair.png'});
+await page.getByRole('button',{name:'男角色',exact:true}).click();await page.locator('[data-ready=true]').waitFor();await page.waitForTimeout(700);
+await page.screenshot({path:out+'/man-face.png'});
+await page.getByRole('button',{name:'全身',exact:true}).click();await page.waitForTimeout(500);await page.screenshot({path:out+'/man-full.png'});
+await page.getByRole('button',{name:'女角色',exact:true}).click();await page.locator('[data-ready=true]').waitFor();await page.waitForTimeout(500);
+await page.screenshot({path:out+'/woman-full.png'});
+await page.getByRole('button',{name:'脸与肩颈',exact:true}).click();await page.waitForTimeout(500);await page.screenshot({path:out+'/woman-face.png'});
+await browser.close();
