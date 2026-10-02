@@ -4,6 +4,8 @@
 
 ## 当前阶段
 
+2026-10-02 追加：收窄衬衫接袖处并在各检查姿态烘焙身体碰撞修正；网页改用 `characters-v2` Meshopt 文件，总下载量从约 44.8 MiB 降到 9.6 MiB。原始导出保留供修改。两份人物主文件打包纹理；完整源工程、现有媒体和制作资料通过独立 GitHub 交接 Release 提供，见 [换电脑步骤](MOVE_TO_ANOTHER_COMPUTER.md)。这不是生产部署或造型验收通过。
+
 这是第一轮**造型候选**，不是整章完成交付。按用户计划，先验收人物近景，再扩展编舞；预览确认后才能发布。格式检查、类型检查和构建通过不等于 VIS 验收通过。
 
 已实现：
@@ -29,6 +31,7 @@
 
 ```powershell
 & D:\environment\cinema-tools\blender-4.5.9-windows-x64\blender.exe --background --python scripts/models/build_character_review.py
+node scripts/review/optimize-characters.mjs
 node scripts/review/validate-characters.mjs
 npm run dev:characters
 ```
@@ -56,8 +59,8 @@ npm run dev:characters
 
 ## 检查记录
 
-- glTF 校验与文件摘要：`.asset-build/character-review/validation/gltf.json`。
-- 预览交接清单：`assets/review/characters-v1.json`，包含文件大小与 SHA-256，`reviewOnly: true`、`visualApproval: pending`。
+- glTF 校验与文件摘要：`.asset-build/character-review/validation/characters-v2-gltf.json`。
+- 预览交接清单：`assets/review/characters-v2.json`，包含文件大小与 SHA-256，`reviewOnly: true`、`visualApproval: pending`。压缩文件实际解码后再进行 Khronos 校验。
 - 桌面浏览器画面：`.asset-build/character-review/web`。
 - 窄屏、静态构建与重新进入检查：`scripts/review/check-characters.mjs`，输出 `.asset-build/character-review/check`。
 - 真实 iPhone 尚未实测；浏览器窄屏不能代替设备验证。

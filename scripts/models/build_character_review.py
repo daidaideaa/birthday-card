@@ -108,7 +108,9 @@ def tailored_shirt(body, rig, mat):
             # the source rig's deform weights to every added fabric vertex.
             for u in [.08,.18,.31,.44,.55,.67,.78,.90,.97,1]:
                 ring=[]
-                radius=1.24-.38*u
+                # Start at the original sleeve radius; an immediate 24% flare
+                # made the upper arm look like a second tube slipped over it.
+                radius=1+.08*math.sin(math.pi*u)-.14*u
                 for v in vs:
                     p=Vector((sign*(abs(center.x)+(.655-abs(center.x))*u),
                               center.y+(v.co.y-center.y)*radius,
@@ -379,8 +381,8 @@ def export_pose(rig, objects, name, pose):
         waist=(bottom+.012,max(abs(p.x) for p in hem)+.002,
                (max(p.y for p in hem)-min(p.y for p in hem))/2+.002,cy)
         bpy.data.meshes.remove(bodice_data)
-    if name=='rain' and pose=='sitting':
-        body=bpy.data.objects['GEO-rain-body']
+    if name=='snow' or (name=='rain' and pose=='sitting'):
+        body=bpy.data.objects['GEO-'+name+'-body']
         bodydata=bpy.data.meshes.new_from_object(body.evaluated_get(deps),depsgraph=deps)
         collider=BVHTree.FromPolygons([body.matrix_world@v.co for v in bodydata.vertices],
                                      [list(p.vertices) for p in bodydata.polygons])
@@ -403,16 +405,17 @@ def export_pose(rig, objects, name, pose):
                 target_y=waist[3]+(vertex.co.y-cy)*waist[2]/ry
                 vertex.co.y+=(target_y-vertex.co.y)*t
                 vertex.co.z+=(waist[0]-top)*t
-        if collider and obj.name=='Yellow dance dress — panel skirt':
+        if collider and obj.name in ['Yellow dance dress — panel skirt','Tailored long-sleeve shirt']:
             inverse=obj.matrix_world.inverted()
             # Bake a collision correction for the inspection pose. Full dance
             # cloth still requires authored secondary motion after approval.
             for vertex in data.vertices:
                 world=obj.matrix_world@vertex.co
                 point,normal,_,distance=collider.find_nearest(world)
-                if point is not None and distance<.10:
+                margin=.013 if name=='rain' else .006
+                if point is not None and distance<(.10 if name=='rain' else .05):
                     signed=(world-point).dot(normal)
-                    if signed<.013:vertex.co=inverse@(world+normal*(.013-signed))
+                    if signed<margin:vertex.co=inverse@(world+normal*(margin-signed))
         clean=bpy.data.objects.new(obj.name,data);bpy.context.collection.objects.link(clean)
         clean.matrix_world=obj.matrix_world
         for i,slot in enumerate(obj.material_slots):
@@ -435,7 +438,9 @@ names=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else ['snow','rain']
 for name in names:
     rig,objects=prepare(name)
     set_pose(rig,name=='rain','neutral')
-    bpy.ops.wm.save_as_mainfile(filepath=str(BUILD/f'{name}-character-master.blend'))
+    # Pack textures for editing after moving the project to another computer.
+    bpy.ops.file.pack_all()
+    bpy.ops.wm.save_as_mainfile(filepath=str(BUILD/f'{name}-character-master.blend'),compress=True)
     results=[]
     for pose in ['neutral','smile','turn','hands','sitting']:
         set_pose(rig,name=='rain',pose)

@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { LionReference } from './LionReference';
 
 type Actor = 'pair' | 'snow' | 'rain';
@@ -65,7 +66,7 @@ function createStudio(host: HTMLDivElement, onState: (message: string, ready: bo
   const rim = new THREE.DirectionalLight('#fff4db', 2); rim.position.set(0, 3, -3); scene.add(rim);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: '#d7d5cf', roughness: .96 }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -.009; floor.receiveShadow = true; scene.add(floor);
-  const loader = new GLTFLoader();
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   const actors = new THREE.Group(); scene.add(actors);
   const benches = new THREE.Group(); scene.add(benches);
   for (const [name,height] of [['snow',.325],['rain',.365]] as const) {
@@ -125,7 +126,7 @@ function createStudio(host: HTMLDivElement, onState: (message: string, ready: bo
     onState('正在打开人物…', false);
     const names = options.actor === 'pair' ? ['snow','rain'] : [options.actor];
     Promise.allSettled(names.map(async (name) => {
-      const gltf = await loader.loadAsync(`${import.meta.env.BASE_URL}review-assets/characters-v1/${name}-${options.pose}.glb`);
+      const gltf = await loader.loadAsync(`${import.meta.env.BASE_URL}review-assets/characters-v2/${name}-${options.pose}.glb`);
       const model = gltf.scene;
       model.name = name;
       model.position.x = options.actor === 'pair' ? (name === 'snow' ? -.40 : .40) : 0;
