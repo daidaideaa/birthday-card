@@ -4,6 +4,8 @@
 
 <https://github.com/daidaideaa/birthday-card/releases/tag/character-handoff-20261002>
 
+2026-10-03 另存第三章连续动作的**未完成草稿备份** `performance-checkpoint-20261003`。登录仓库所属 GitHub 账号后，在 [Releases](https://github.com/daidaideaa/birthday-card/releases) 查看草稿。它保留关机前的新工程和检查记录，不是完成版，不替换上面的公开交接包或线上站点。
+
 ## 下载哪些文件
 
 - **birthday-card-complete.zip**：主要下载包。包含完整源码、两份 01/02 方案、Snow/Rain/Autumn 原始模型与纹理、两个人物修改后的 Blender 主文件、10 个浏览器姿态、预览网页、现有网站媒体、历史影院制作工程、截图、许可证、校验清单、Git 历史和所有分支。解压后目录名为 `birthday-card-portable`。
@@ -27,6 +29,22 @@ node scripts/migration/serve-preview.mjs
 ```
 
 此入口使用已导出的网页，不需要 npm 安装、Blender、Claude 额度或 Cloudflare 账户。人物模型、字体和网页都在下载包内；第四章官方参考图片仍由 Disney 网站提供，需要联网。这些图片不是完成的动作图集。
+
+## 连续动作恢复点
+
+2026-10-03 草稿中的主要包还包含：
+
+- `.asset-build/duet-runtime`：两个 26 秒动画的原始 GLB、Blender 制作主文件及时间轴、目标接触轨迹。
+- `.asset-build/performance-preview`：可直接本地运行的静态预览。
+- `.asset-build/performance-review`：压缩模型、校验结果、近景截图、正常速度和半速录屏。
+
+解压后双击 `START-PERFORMANCE-PREVIEW.cmd`，访问 `http://127.0.0.1:5184/birthday-card/performance-review.html`。完整故事预览访问同端口的 `/birthday-card/index.html`。也可以执行：
+
+```sh
+node scripts/migration/serve-preview.mjs .asset-build/performance-preview 5184 performance-review.html
+```
+
+所有本轮修改均在 `experience/character-rework` 分支。手指穿插、服装和舞鞋尚待修正；第四章没有新图集。正常速度录屏是 `normal.webm`，慢放是 `half-speed.webm`，位于 `.asset-build/performance-review/check`。两份录像不含音轨。
 
 ## 修改网页与重新制作人物
 
@@ -57,6 +75,8 @@ blender --background .asset-build/cinema/duet-polished.blend --python scripts/mi
 ```
 
 ## 恢复私有配置
+
+后续交接版本保持本次单独交付的密码不变。密码不会写进仓库。维护者重新生成加密包时可使用 `encrypt-with-password` 模式，交互隐藏输入原密码；新包使用独立随机盐与随机数，旧包继续可用。本次草稿直接保留已经验证过的原加密配置文件。新的完整交接版本只有内容完成后才发布，不用正在制作的动作候选替换本页所链接的旧包。
 
 将 `private-settings.enc` 放在项目根目录，执行：
 

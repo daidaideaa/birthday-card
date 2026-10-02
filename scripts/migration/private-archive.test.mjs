@@ -14,6 +14,12 @@ test('private migration authenticates before extraction and preserves exact byte
     assert.equal(call('encrypt',plan,archive,password).status,0);
     const out=join(temp,'restored');assert.equal(call('decrypt',archive,out).status,0);
     assert.deepEqual(readFileSync(join(out,'settings/fixture.json')),content);
+    const next=join(temp,'next-private.enc');
+    assert.equal(call('encrypt-with-password',plan,next).status,0);
+    assert.notDeepEqual(readFileSync(next),readFileSync(archive),'same password uses fresh random salt and nonce');
+    const nextOut=join(temp,'next-restored');
+    assert.equal(call('decrypt',next,nextOut).status,0,'original password opens the new version');
+    assert.deepEqual(readFileSync(join(nextOut,'settings/fixture.json')),content);
     assert.notEqual(call('decrypt',archive,out).status,0,'refuses to overwrite');
     const tampered=readFileSync(archive);tampered[tampered.length-1]^=1;writeFileSync(join(temp,'tampered.enc'),tampered);
     assert.notEqual(call('decrypt',join(temp,'tampered.enc'),join(temp,'bad')).status,0);

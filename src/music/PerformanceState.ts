@@ -27,7 +27,22 @@ export interface PerformanceFrame {
   completed: boolean;
 }
 
+export interface PerformanceTimeline {
+  duration: number;
+  /** Authored seconds where the body is supported and the current gesture can stop. */
+  stops: readonly number[];
+}
+
 export class PerformanceState {
+  private settleTarget: number | null = null;
+  constructor(private readonly timeline?: PerformanceTimeline) {
+    if (timeline && (!Number.isFinite(timeline.duration) || timeline.duration <= 0 ||
+      !timeline.stops.length || timeline.stops[0] !== 0 ||
+      timeline.stops.at(-1) !== timeline.duration ||
+      timeline.stops.some((t, i) => !Number.isFinite(t) || t < 0 || (i > 0 && t <= timeline.stops[i - 1])))) {
+      throw new Error('Performance timeline must contain increasing stops from zero to duration');
+    }
+  }
   private phase = 0;
   private rate = 1;
   private accent = 0;
@@ -45,6 +60,7 @@ export class PerformanceState {
    */
   strike() {
     this.awaitingInput = false;
+    this.settleTarget = null;
     const now = this.clock;
     if (this.previous > -Infinity) {
       const gap = now - this.previous;
@@ -70,6 +86,7 @@ export class PerformanceState {
    * 这样长按延音不会被误判为停手。
    */
   advance(dt: number, holding: boolean): PerformanceFrame {
+    if (!Number.isFinite(dt) || dt < 0) throw new Error('Performance delta must be finite and nonnegative');
     this.clock += dt;
     const now = this.clock;
     const since = now - this.lastInput;
@@ -88,17 +105,31 @@ export class PerformanceState {
     else mode = "settling";
 
     if (mode === "playing") {
-      this.phase += (dt * this.rate) / CHOREOGRAPHY_SECONDS;
+      this.settleTarget = null;
+      this.phase += (dt * this.rate) / (this.timeline?.duration ?? CHOREOGRAPHY_SECONDS);
       if (this.phase >= 1) {
         // 走完一轮后保持在收势姿态，不无限自动循环同一段。
         this.phase = 1;
         this.completed = true;
       }
     } else if (mode === "settling" && this.phase > 0 && this.phase < 1) {
-      // 收势：继续极慢地走到最近的稳定落脚点，而不是原地冻结。
-      const settleTarget = Math.min(1, Math.ceil(this.phase * 8) / 8);
-      this.phase = Math.min(settleTarget, this.phase + dt * 0.35);
+      if (this.settleTarget === null) {
+        this.settleTarget = this.timeline
+          ? (this.timeline.stops.find(t => t / this.timeline!.duration >= this.phase - 1e-8) ?? this.timeline.duration) / this.timeline.duration
+          : Math.min(1, Math.ceil(this.phase * 8) / 8);
+      }
+      // The review clip advances at its authored speed to one persistent contact
+      // marker. Recomputing a target each frame could creep into the next step.
+      const step = this.timeline ? dt * this.rate / this.timeline.duration : dt * .35;
+      this.phase = Math.min(this.settleTarget, this.phase + step);
+      if (this.timeline && this.phase === this.settleTarget) {
+        this.awaitingInput = true;
+        mode = 'waiting';
+        if (this.phase === 1) this.completed = true;
+      }
     }
+
+    if (this.phase === 1 && !active) mode = 'waiting';
 
     return {
       progress: this.phase,
@@ -116,6 +147,7 @@ export class PerformanceState {
    * 也不会退回第一帧。
    */
   releaseInput() {
+    this.settleTarget = null;
     this.awaitingInput = true;
     this.lastInput = -Infinity;
     this.previous = -Infinity;
@@ -125,6 +157,7 @@ export class PerformanceState {
 
   /** 换章或重播：完全复位。 */
   reset() {
+    this.settleTarget = null;
     this.awaitingInput = false;
     this.phase = 0;
     this.rate = 1;

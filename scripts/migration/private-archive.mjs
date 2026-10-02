@@ -37,18 +37,22 @@ async function readPassword() {
 try {
   const [mode, input, output, passwordFile] = process.argv.slice(2);
   if (!input || !output) throw Error('Usage: node scripts/migration/private-archive.mjs decrypt private-settings.enc NEW_PRIVATE_DIRECTORY');
-  if (mode === 'encrypt') {
-    if (!passwordFile) throw Error('Password output path required');
-    await absent(output); await absent(passwordFile);
+  if (mode === 'encrypt' || mode === 'encrypt-with-password') {
+    const reuse = mode === 'encrypt-with-password';
+    if (!reuse && !passwordFile) throw Error('Password output path required');
+    if (reuse && passwordFile) throw Error('Existing password is read privately from stdin, never from command arguments');
+    await absent(output); if (!reuse) await absent(passwordFile);
     const plan=JSON.parse(await readFile(input,'utf8'));
     const files=[];
     for(const entry of plan.files){safePath('archive',entry.path);files.push({path:entry.path,data:(await readFile(entry.source)).toString('base64')});}
-    const password=randomBytes(32).toString('base64url'),salt=randomBytes(32),iv=randomBytes(12);
+    const password=reuse ? await readPassword() : randomBytes(32).toString('base64url');
+    if (password.length < 24) throw Error('Migration password must contain at least 24 characters');
+    const salt=randomBytes(32),iv=randomBytes(12);
     const cipher=createCipheriv('aes-256-gcm',derive(password,salt),iv);cipher.setAAD(aad);
     const encrypted=Buffer.concat([cipher.update(JSON.stringify({schema:1,files,notes:plan.notes})),cipher.final()]);
     await writeFile(output,Buffer.concat([MAGIC,salt,iv,cipher.getAuthTag(),encrypted]),{flag:'wx',mode:0o600});
-    await writeFile(passwordFile,password+'\n',{flag:'wx',mode:0o600});
-    console.log(`Encrypted ${files.length} project files. Password saved separately; do not upload it.`);
+    if (!reuse) await writeFile(passwordFile,password+'\n',{flag:'wx',mode:0o600});
+    console.log(`Encrypted ${files.length} project files. ${reuse ? 'Existing password preserved; fresh encryption salt and nonce.' : 'Password saved separately; do not upload it.'}`);
   } else if (mode === 'decrypt') {
     await absent(output);
     const blob=await readFile(input),n=MAGIC.length;
@@ -62,5 +66,5 @@ try {
     const targets=data.files.map(e=>({file:safePath(output,e.path),bytes:Buffer.from(e.data,'base64')}));
     for(const target of targets){await mkdir(dirname(target.file),{recursive:true});await writeFile(target.file,target.bytes,{flag:'wx',mode:0o600});}
     console.log(`Restored ${targets.length} files into ${resolve(output)}. Live accounts and services were not modified.`);
-  } else throw Error('Expected encrypt or decrypt');
+  } else throw Error('Expected encrypt, encrypt-with-password or decrypt');
 } catch (error) { console.error(error.message); process.exitCode=1; }

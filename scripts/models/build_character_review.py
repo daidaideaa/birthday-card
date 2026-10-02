@@ -368,7 +368,7 @@ def set_pose(rig, female, pose):
                 m=(correction @ control.matrix.to_3x3()).to_4x4();m.translation=control.matrix.translation;control.matrix=m
     bpy.context.view_layer.update()
 
-def export_pose(rig, objects, name, pose):
+def evaluated_objects(rig, objects, name, pose):
     deps=bpy.context.evaluated_depsgraph_get()
     collider=None
     waist=None
@@ -422,6 +422,10 @@ def export_pose(rig, objects, name, pose):
             if i < len(data.materials): data.materials[i]=slot.material
         for poly in data.polygons:poly.use_smooth=True
         outobjects.append(clean)
+    return outobjects
+
+def export_pose(rig, objects, name, pose):
+    outobjects=evaluated_objects(rig,objects,name,pose)
     bpy.ops.object.select_all(action='DESELECT')
     for obj in outobjects:obj.select_set(True)
     filepath=OUT/f'{name}-{pose}.glb'
@@ -433,17 +437,17 @@ def export_pose(rig, objects, name, pose):
     print('EXPORTED',filepath, count,filepath.stat().st_size,flush=True)
     return {'file':filepath.name,'vertices':count,'bytes':filepath.stat().st_size}
 
-manifest={'version':'characters-v1','status':'candidate — visual review required','characters':{}}
-names=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else ['snow','rain']
-for name in names:
-    rig,objects=prepare(name)
-    set_pose(rig,name=='rain','neutral')
-    # Pack textures for editing after moving the project to another computer.
-    bpy.ops.file.pack_all()
-    bpy.ops.wm.save_as_mainfile(filepath=str(BUILD/f'{name}-character-master.blend'),compress=True)
-    results=[]
-    for pose in ['neutral','smile','turn','hands','sitting']:
-        set_pose(rig,name=='rain',pose)
-        results.append(export_pose(rig,objects,name,pose))
-    manifest['characters'][name]=results
-(OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
+if __name__=='__main__':
+    manifest={'version':'characters-v1','status':'candidate — visual review required','characters':{}}
+    names=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else ['snow','rain']
+    for name in names:
+        rig,objects=prepare(name)
+        set_pose(rig,name=='rain','neutral')
+        bpy.ops.file.pack_all()
+        bpy.ops.wm.save_as_mainfile(filepath=str(BUILD/f'{name}-character-master.blend'),compress=True)
+        results=[]
+        for pose in ['neutral','smile','turn','hands','sitting']:
+            set_pose(rig,name=='rain',pose)
+            results.append(export_pose(rig,objects,name,pose))
+        manifest['characters'][name]=results
+    (OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')

@@ -39,6 +39,12 @@ copy_tree(ROOT/'.asset-build/character-review/check', Path('.asset-build/charact
 copy_tree(ROOT/'.asset-build/character-review/validation', Path('.asset-build/character-review/validation'))
 for file in (ROOT/'.asset-build/character-review').glob('*-character-master.blend'):
     shutil.copy2(file, stage/'.asset-build/character-review'/file.name)
+# Preserve runtime authoring and review evidence even in an unfinished recovery
+# checkpoint. A source-only archive cannot reproduce ignored local assets.
+for relative in ['.asset-build/duet-runtime', '.asset-build/performance-review/public',
+                 '.asset-build/performance-review/check', '.asset-build/performance-review/validation',
+                 '.asset-build/performance-preview', '.asset-build/lion-reference']:
+    if (ROOT/relative).is_dir(): copy_tree(ROOT/relative, Path(relative))
 # Preserve the final historical authoring projects too. Reproducible PNG frame
 # caches and .blend1 autosaves are in an optional history archive, not required here.
 for file in (args.legacy_root/'.asset-build/cinema').iterdir():
