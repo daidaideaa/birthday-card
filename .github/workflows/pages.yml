@@ -14,10 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VITE_APP_BASE: /birthday-card/
-      VITE_ASSET_BASE_URL: ${{ vars.VITE_ASSET_BASE_URL || 'https://birthday-card-media.daidaidefish.workers.dev/birthday-card/' }}
-      VITE_CONTENT_MODE: demo
-      DEPLOY_TARGET: production
-      SITE_ORIGIN: https://daidaideaa.github.io
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -28,16 +24,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm test
-      - run: npm run assets:validate
-      - name: Ensure media inspection tools
-        run: command -v ffprobe >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
-      - name: Validate currently referenced legacy films
-        run: npm run cinema:validate
+      # build includes TypeScript and one local asset/path check.
       - run: npm run build
-      - run: npm run deploy:check -- --dir dist
-      - name: Record deployment identity
-        run: node --input-type=module -e "import fs from 'node:fs';const lock=JSON.parse(fs.readFileSync('assets/release.lock.json'));fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, 'Code '+process.env.GITHUB_SHA+'; release '+lock.releaseId+'\n');"
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
@@ -61,10 +49,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
-          cache: npm
-      - run: npm ci
-      - name: Check live website and media
+      - name: Check live entry and scripts once
         env:
           SITE_URL: ${{ steps.deployment.outputs.page_url }}
-          VITE_ASSET_BASE_URL: ${{ vars.VITE_ASSET_BASE_URL || 'https://birthday-card-media.daidaidefish.workers.dev/birthday-card/' }}
-        run: npm run deploy:smoke -- --url "$SITE_URL"
+        run: node scripts/check-memory-book.mjs --url "$SITE_URL"

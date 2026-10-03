@@ -1,18 +1,21 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-export default defineConfig(({ mode }) => {
+import fs from "node:fs";
+import path from "node:path";
+
+export default defineConfig(({ mode, command }) => {
   const env = { ...loadEnv(mode, process.cwd(), ""), ...process.env };
   const base = env.VITE_APP_BASE || "/birthday-card/";
-  if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(base)) throw Error("VITE_APP_BASE 必须是 / 或 /birthday-card/ 形式的站点路径");
+  if (!new RegExp("^/(?:[A-Za-z0-9_-]+/)*$").test(base)) throw Error("VITE_APP_BASE 路径格式无效");
   return {
-  base,
-  plugins: [react()],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: { three: ["three"], vision: ["@mediapipe/tasks-vision"] },
+    base,
+    publicDir: command === "serve" ? "public" : false,
+    plugins: [react(), {
+      name: "memory-book-public-assets",
+      writeBundle(options) {
+        const output = path.resolve(options.dir || "dist");
+        fs.cpSync("public/memory-book", path.join(output, "memory-book"), { recursive: true });
       },
-    },
-  },
-};
+    }],
+  };
 });

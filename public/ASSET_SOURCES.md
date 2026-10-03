@@ -28,9 +28,15 @@
 
 源页面、稳定下载入口、许可及本地 ZIP 的 SHA-256 已记录在仓库 `scripts/cinema/sources.json`。源 ZIP 在忽略目录 `model-sources/studio/`，不会重复放进网页；网站不加载原始专业 `.blend`。这些条目记录输入和用途，影片是否完整以 `npm run cinema:validate` 的实际检查报告为准。
 
+## 2026-10-03 连续动作候选
+
+`duet-review-20261003-v1` 的 `snow-performance.glb` 与 `rain-performance.glb` 衍生自上表 Blender Studio Snow v4.2 / Rain v3.2（v3.3 源包），CC BY 4.0。项目修改了白衬衫权重、舞鞋、单手演奏、邀请牵手及共同动作时间线；导出保留骨架和原创编舞，再经 Meshopt 压缩。钢琴继续采用 jeremy / Poly Pizza 的 CC BY 3.0 模型，未改变来源许可。
+
+该版本已发布到现有 R2，通过独立预览使用；完整记录见 [重制进度](../docs/CHARACTER_REWORK.md)。美术验收仍为待完成，没有用这次功能检查证明精确指尖接触、服装动态或手机实机表现已达标。
+
 ## 保留素材与旧版历史
 
-以下实时角色与场景说明为旧版来源链。当前双人舞、狮子和宠物走 cinema 播放路径；旧 GLB 和其许可仍保留，贺卡、蛋糕继续实时三维渲染。
+以下保留各版的来源链。正常阅读路径已恢复实时互动；旧 cinema 文件和许可仍保留，不能把历史实现说明当作当前场景的运行方式。
 
 获取日期：2026-09-20。网图用于本次生日主题预览，不代表师宝宝的个人照片或真实共同经历。
 
@@ -70,3 +76,32 @@
 - 舞者、双犬和狮子由现有 Blender 源脚本精修；Meshopt 不改变来源许可。`scripts/models/sources.json` 记录可复现输入与哈希，幼狮制作基线固定为本仓库 e3ff45f 中的授权衍生模型。
 - 荣耀石轮廓与程序凹凸由代码生成。未新增电影截图、角色贴图、logo 或伪造个人照片。
 - Meshopt 解码器来自 Three.js 包中的 meshoptimizer（MIT）；KTX2 Basis Universal 转码器随 Three.js 构建复制（Apache-2.0）；网站构建保留解码器自带版权声明，完整许可随 `public/licenses/` 发布；该目录也保留新增 GSAP 的版权声明与标准许可链接。
+
+## 2026-10-03 魔法记忆之书：五张预览照片与两部原版动画
+
+以下为用户授权的新五章制作资源。五张照片均为网图示意，**不代表本人照片、共同出游或真实往事**；图注是面向未来的祝福。运行配置集中在 `src/memory-book/media.ts`，本地图片使用项目基础路径，适用于 GitHub Pages 的 `/birthday-card/` 子路径。
+
+### 本地照片
+
+原始图片页面均明确标注免费 [Unsplash License](https://unsplash.com/license)，不是 Unsplash+ 付费素材。2026-10-03 从对应 `images.unsplash.com` 原图分发地址获取 WebP 运行版本，只做等比例缩放及编码压缩，无生成、拼接、内容修饰或冒充私人照片。已实际查看选定的五张图。图片正文中的书籍属于摄影内容，不表达收礼人的信仰或阅读经历。
+
+| 本地文件 | 作者与原始页面 | 原图分发标识 | 运行尺寸 | 用途 |
+| --- | --- | --- | --- | --- |
+| `memory-book/photos/ocean-evening.webp` | [Veronica MORENO-ALVAREZ / Unsplash](https://unsplash.com/photos/ocean-waves-at-sunset-with-pink-sky-l_yA9G07D4A) | `photo-1767844077142-feb6e7308736` | 1600 × 1067 | 粉金色黄昏海面；相册第一张 |
+| `memory-book/photos/sunlit-book.webp` | [Aaron Burden / Unsplash](https://unsplash.com/photos/opened-book-on-brown-field-during-daytime-4uX_r8OhJ_o) | `photo-1593485589800-579b43749b15` | 1600 × 1200 | 日光中的打开书籍与小路 |
+| `memory-book/photos/city-lights.webp` | [Paolo Syiaco / Unsplash](https://unsplash.com/photos/bokeh-photography-of-city-lights-during-night-time-Uc8wfh1tPUk) | `photo-1619528614119-56530cb5ef1e` | 1600 × 1067 | 城市灯光散景；不标称深圳实景 |
+| `memory-book/photos/golden-path.webp` | [Stefano Pinotti / Unsplash](https://unsplash.com/photos/sunlight-streams-through-a-forest-path-AqFtUA6WhTI) | `photo-1762933604852-4b4409603588` | 1067 × 1600 | 金色日光的森林小路 |
+| `memory-book/photos/night-sky.webp` | [Nathan Anderson / Unsplash](https://unsplash.com/photos/milky-way-over-mountain-landscape-at-night-L95xDkSSuWw) | `photo-1488866022504-f2584929ca5f` | 1600 × 1077 | 星河与远山；相册末页 |
+
+五张运行图合计约 2.03 MiB。保留原有宽高比；界面裁切仅由 `object-position` 控制，放大时应能看完整图。许可允许免费下载和用于本项目；作者署名及原始页链接保留在上述表格和配置中。
+
+### 原版电影：官方远程画面与官方播放入口
+
+| 作品 | 展示画面与来源 | 官方播放入口 | 获取形态与边界 |
+| --- | --- | --- | --- |
+| 《小马王》 / Spirit: Stallion of the Cimarron（2002） | [DreamWorks 官方片目](https://www.dreamworks.com/movies/spirit-stallion-of-the-cimarron)中的[横幅宣传原图](https://www.dreamworks.com/storage/movies/spirit-stallion-of-the-cimarron/spirit-stallion-of-the-cimarron-hero-image.jpg) | [DreamWorks Spirit 官方账号预告](https://www.youtube.com/watch?v=RPJ4EQ2Eh9I) | 远程引用官方原图，不在仓库保存原片或宣传图副本；YouTube oEmbed 返回片名与 DreamWorks Spirit 账号，确认来源；地区播放与嵌入仍取决于官方服务 |
+| 《狮子王》 / The Lion King（1994） | [Disney 官方片目](https://movies.disney.com/the-lion-king)中的[辛巴与娜娜原版剧照](https://lumiere-a.akamaihd.net/v1/images/g_thelionking_01_fd5dcd2d.jpeg?region=0%2C0%2C1200%2C560) | [Disney 官方原版预告](https://video.disney.com/watch/the-lion-king-trailer-554364a2df54eb31138c2eaf) | 远程引用官方原图，不在仓库保存原片或剧照副本；官方页面明确是 1994 版 |
+
+电影图像版权分别属于 DreamWorks Animation / Disney。未取得开放再分发许可，**不将“官方网站可见”写成自由素材授权**，也未下载整部电影、抽取受保护视频或另造近似角色冒充原版。当前资源是官方静态画面和跳转入口，并非本站本地自动播放短片。远程图或播放服务不可用时，须仍保留标题、祝福、官方入口和继续下一章的功能，不能卡住蛋糕结尾。本项目原创的两段祝福不引用电影台词，也不声称官方背书。
+
+原版电影画面选图修正：实际查看 DreamWorks 的红黑剪影横幅及官方预告缩略图后，后者为 480 × 360 的雪中群马远景，均不适合表现 Spirit 的面部神态。现将 `media.ts` 中小马王展示图替换为 [Universal 同片官方发行页](https://www.universalpicturesathome.com/movies/spirit-stallion-of-the-cimarron) 的 Digital 版本 [Spirit 与 Rain 双角色海报](https://images.contentstack.io/v3/assets/blt13adb7e2033fcee5/blt2815f5291917d13f/690eacd9518443a93372835a/Spirit_PosterArt.jpg?width=800)。实际查看的远程版本为 **800 × 1132**，有原版两位角色清晰表情；这是官方海报，不称为电影截帧。保持远程引用及原版官方预告入口，未另存海报到仓库。该图为竖幅，展示应使用完整海报/`object-fit: contain`，不能硬铺满横幅裁掉耳朵和鼻尖。狮子王官方剧照同样应完整保留辛巴与娜娜的两位主体。

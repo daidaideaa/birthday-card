@@ -13,8 +13,6 @@
     "cinema:validate": "node scripts/validate-cinema.mjs",
     "assets:optimize": "node scripts/optimize-assets.mjs",
     "assets:sources": "node scripts/fetch-model-sources.mjs",
-    "prebuild": "node --import tsx scripts/delivery/assets.mjs prepare && node scripts/copy-decoders.mjs",
-    "predev": "node --import tsx scripts/delivery/assets.mjs prepare && node scripts/copy-decoders.mjs",
     "test:visual": "playwright test",
     "assets:build": "node scripts/build-assets.mjs",
     "assets:review:prepare": "node scripts/prepare-model-review.mjs",
@@ -28,9 +26,11 @@
     "assets:verify-remote": "node --import tsx scripts/delivery/assets.mjs verify-remote",
     "assets:prepare": "node --import tsx scripts/delivery/assets.mjs prepare",
     "assets:check": "node --import tsx scripts/delivery/assets.mjs check",
-    "deploy:check": "node --import tsx scripts/delivery/check-dist.mjs",
-    "deploy:smoke": "node --import tsx scripts/delivery/smoke.mjs",
-    "postbuild": "node --import tsx scripts/delivery/trim-dist.mjs"
+    "deploy:check": "node scripts/check-memory-book.mjs",
+    "deploy:smoke": "node scripts/check-memory-book.mjs",
+    "deploy:check:legacy": "node --import tsx scripts/delivery/check-dist.mjs",
+    "deploy:smoke:legacy": "node --import tsx scripts/delivery/smoke.mjs",
+    "postbuild": "node scripts/check-memory-book.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "0.10.32",

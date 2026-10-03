@@ -1,0 +1,30 @@
+[
+  {
+    "id": "book",
+    "generator": "built-in image_gen",
+    "date": "2026-10-03",
+    "source": "exec-3d951108-978d-4279-a408-c4742d2e0255.png",
+    "prompt": "Use case: illustration-story. Create a premium cinematic painted background for an intimate romantic magic-book birthday website, a single wide landscape illustration, 1536x1024. An exquisitely crafted antique dark chestnut leather spellbook stands slightly tilted upright, filling the RIGHT half of composition, on a dark walnut desk in a candlelit old wizard's library. Its front cover faces camera with elegant aged gold botanical filigree, a small crescent and star ornament, real thickness of many parchment pages, warm amber edge light, rich tactile leather. Central cover panel has NO WORDS, leave space for a small real HTML title. On left, deep atmospheric shadow and large quiet negative space for website text, just faint out of focus shelves. A small burgundy wax sealed envelope and quill sit in foreground. Dust motes, painterly film-quality lighting, romantic mysterious invitation, dark chocolate and muted antique gold, restrained midnight blue shadows. Beautiful natural physical materials, sophisticated magical realism, detailed professional illustrated film art, NOT 3D game render, not flat vector. No humans, no dog, no logos, no lettering, no UI. Book is the beautiful hero; avoid giant flying particles or excessive symbols. Keep book and desk completely visible with room around them."
+  },
+  {
+    "id": "cake",
+    "generator": "built-in image_gen",
+    "date": "2026-10-03",
+    "source": "exec-7c485108-1bac-4d89-aa6b-c1308f3eb1d7.png",
+    "prompt": "Use case: product-mockup. Create a breathtaking cinematic luxury birthday cake photograph with painterly magical atmosphere, landscape 1536x1024. Center a SINGLE tall round cake covered in sumptuous deep midnight navy buttercream, visible fine artisanal spatula texture and soft blue highlights, sparse very fine edible gold star constellations and tiny irregular gold leaf accents. A slender little gold crescent ornament above the cake. Exactly THREE thin gold candles, UNEVEN heights, ALL UNLIT with clearly visible black wicks. Cake occupies central 48 percent of image width and most of middle image height; cake top at around 38 percent image height, plate at 83 percent. Low antique gold cake plate, convincing contact shadow on dark walnut tabletop. At far back left a partially visible old leather spellbook and a very soft defocused candle. Deep navy magical night background with soft warm bokeh, subtle starry dust, cinematic soft side light, delicious finely crafted realistic food styling, editorial luxury, romantic warm candlelit old wizard library. No numbers, no text, no letters, no dogs, no people. Not cartoon, no plastic cylinder, no neon, no galaxy planets. Keep all candles unlit so real animated flames can be added later. This should look like the beautiful finale of a romantic magical film."
+  },
+  {
+    "id": "puppy-apricot",
+    "generator": "built-in image_gen",
+    "date": "2026-10-03",
+    "source": "exec-425534e9-f8d6-4acb-b0d3-1d7cd6a1f713.png",
+    "prompt": "Use case: illustration-story. Asset type: transparent 2D animation sprite atlas. A charming ORIGINAL apricot toy poodle puppy, professional traditionally hand-drawn feature animation character quality, warm watercolor gouache shading with delicate brown linework, wonderfully expressive large kind dark eyes, soft floppy curly ears, small dark brown button nose, compact fluffy body and tiny proper four paws, truly adorable, appealing silhouette and consistent anatomy. This is an original puppy, not any existing movie character. Draw ONE EXACTLY MATCHING puppy in EIGHT separate sequential poses, arranged in a strict 4 COLUMN x 2 ROW grid, equal sized cells, fully transparent background, 2048x1024 aspect 2:1. All puppies centered in their individual cell, same scale, enough clear padding, no pose touches adjacent cells, feet aligned to common baseline of each cell. Left to right first row: 1 puppy sitting happy eyes open facing slightly left toward viewer; 2 same seated puppy cute inquisitive head tilt and one ear lifting; 3 same puppy walking left front paw forward back paw opposite; 4 next walking pose legs reversed. Second row: 5 delighted relaxed eyes closed smile seated with tail lifted; 6 happy low playful bow front legs lowered bottom up; 7 peacefully lying down paws under chin eyes soft; 8 small joyful jump with all four paws just off ground, ears lifted. Rich apricot fur cream muzzle, stylized CURLY clumps not realistic individual hair. Each pose must be complete fully visible. NO ground, no white/checkerboard background, no shadows crossing cells, no labels, no text, no divider lines, no accessories. Genuine alpha transparency."
+  },
+  {
+    "id": "puppy-cream",
+    "generator": "built-in image_gen",
+    "date": "2026-10-03",
+    "source": "exec-bdf8dcab-a82e-467a-8a08-a42002333bd7.png",
+    "prompt": "Edit apricot puppy atlas: preserve 4x2 poses and transparency, change fur to pale ivory cream with quiet sweet expressions."
+  }
+]

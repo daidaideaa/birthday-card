@@ -1,0 +1,125 @@
+.memory-pets {
+  --pet-size: 138px;
+  position: absolute;
+  z-index: 8;
+  left: 0;
+  right: 0;
+  bottom: 14px;
+  height: var(--pet-size);
+  pointer-events: none;
+  contain: layout;
+}
+.memory-pet {
+  position: absolute;
+  width: var(--pet-size);
+  height: var(--pet-size);
+  bottom: 0;
+  transition: transform .18s linear;
+}
+.memory-pet-apricot { left: 4%; }
+.memory-pet-cream { right: 4%; --pet-size: 123px; }
+.memory-pet-touch {
+  position: absolute;
+  display: block;
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 48%;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.memory-pet-drawing {
+  position: absolute;
+  display: block;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-size: 400% 200%;
+  filter: drop-shadow(0 5px 5px #120e0d32);
+  transform-origin: 50% 91%;
+  user-select: none;
+  pointer-events: none;
+}
+.memory-pet-apricot.memory-pet-walking .memory-pet-drawing { transform: scaleX(-1); }
+.memory-pet-shadow {
+  position: absolute;
+  left: 20%;
+  bottom: 5%;
+  width: 62%;
+  height: 7%;
+  background: radial-gradient(ellipse, #090b11a3, #090b1100 72%);
+  opacity: .63;
+  transition: transform .15s, opacity .15s;
+}
+.memory-pet-jumping .memory-pet-drawing { transform: translateY(-8px); }
+.memory-pet-jumping .memory-pet-shadow { transform: scale(.7); opacity: .35; }
+.memory-pet-touch:focus-visible { outline: 1px dashed #d5b777; outline-offset: 5px; }
+.memory-pet-touch-cue {
+  position: absolute;
+  display: block;
+  left: 50%;
+  bottom: -9px;
+  transform: translateX(-50%);
+  opacity: 0;
+  white-space: nowrap;
+  color: #ecd8ae;
+  font: 10px/1.4 'Noto Serif SC', 'Songti SC', serif;
+  letter-spacing: .15em;
+  background: #17212bdb;
+  padding: 3px 9px;
+  border: 1px solid #e0c49536;
+  border-radius: 12px;
+  transition: opacity .2s;
+  pointer-events: none;
+}
+.memory-pet-touch:hover .memory-pet-touch-cue,
+.memory-pet-touch:focus-visible .memory-pet-touch-cue { opacity: 1; }
+.memory-pet-reply {
+  display: block;
+  position: absolute;
+  bottom: 99%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  border-radius: 12px 12px 12px 3px;
+  background: #f6eacd;
+  border: 1px solid #d7bb843b;
+  color: #594832;
+  font: 11px/1.6 'Noto Serif SC', 'Songti SC', serif;
+  white-space: nowrap;
+  box-shadow: 0 4px 18px #02071225;
+  pointer-events: none;
+  animation: memory-pet-reply-in .2s ease both;
+}
+.memory-pet-reply::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 47%;
+  border: 5px solid transparent;
+  border-bottom: 0;
+  border-top-color: #f6eacd;
+}
+.memory-pets-reading { --pet-size: 105px; opacity: .86; bottom: 8px; }
+.memory-pets-reading .memory-pet-cream { --pet-size: 94px; }
+.memory-pet-still, .memory-pet-still * { transition: none !important; animation: none !important; }
+@keyframes memory-pet-reply-in { from { opacity: 0; margin-bottom: -3px; } to { opacity: 1; margin-bottom: 0; } }
+@media (max-width: 700px) {
+  .memory-pets { --pet-size: 100px; bottom: 9px; }
+  .memory-pet-cream { --pet-size: 88px; }
+  .memory-pet-apricot { left: 1.5%; }
+  .memory-pet-cream { right: 2%; }
+  .memory-pet-reply { font-size: 9px; padding: 6px 8px; }
+  .memory-pet-apricot .memory-pet-reply { left: 54%; }
+  .memory-pet-cream .memory-pet-reply { left: 44%; }
+  .memory-pets-reading { --pet-size: 84px; }
+  .memory-pets-reading .memory-pet-cream { --pet-size: 77px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .memory-pet, .memory-pet * { transition: none !important; animation: none !important; }
+}

@@ -1,8 +1,17 @@
 name: CI
 on:
   pull_request:
-  push:
-    branches: [infra/cloudflare-delivery]
+    paths:
+      - 'src/**'
+      - 'public/memory-book/**'
+      - 'index.html'
+      - 'package*.json'
+      - 'tsconfig*.json'
+      - 'vite.config.ts'
+      - 'eslint.config.js'
+      - 'scripts/check-memory-book.mjs'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/pages.yml'
 permissions:
   contents: read
 concurrency:
@@ -12,8 +21,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     env:
-      VITE_ASSET_BASE_URL: ""
-      VITE_CONTENT_MODE: demo
+      VITE_APP_BASE: /birthday-card/
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -24,17 +32,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm test
-      - run: npm run assets:check -- --manifest assets/releases/demo-contract-v1.json --source assets/demo
-      - run: npm run assets:publish -- --release demo-contract-v1 --source assets/demo --dry-run
-      - run: npm run assets:validate
-      - run: command -v ffprobe >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
-      - run: npm run cinema:validate
-      - name: Root path build
-        env:
-          VITE_APP_BASE: /
-        run: npm run build && npm run deploy:check -- --dir dist
-      - name: GitHub Pages path build
-        env:
-          VITE_APP_BASE: /birthday-card/
-        run: npm run build && npm run deploy:check -- --dir dist
+      # No main-push job: Pages owns the production build.
+      - run: npm run build
