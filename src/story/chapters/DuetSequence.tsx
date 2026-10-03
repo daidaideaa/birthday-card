@@ -9,6 +9,10 @@ import { AccompanimentKeys } from "../../music/AccompanimentKeys";
 import { PerformanceState, type PerformanceFrame } from "../../music/PerformanceState";
 import { DuetStage } from "../../scene/DuetStage";
 import { reducedMotion } from "../../utils/device";
+import { AuthoredDuetStage } from "../../scene/AuthoredDuetStage";
+import { DUET_TIMELINE } from "../../music/duetTimeline";
+
+const authoredReview = import.meta.env.MODE === 'story-review';
 
 /** 进入舞蹈所需的击键数：几个音就起身，不要求弹对旋律。 */
 const NOTES_TO_RISE = 5;
@@ -31,7 +35,7 @@ export function DuetSequence({
 }: DuetSequenceProps) {
   const host = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(true);
-  const performance = useRef(new PerformanceState());
+  const performance = useRef(new PerformanceState(authoredReview ? DUET_TIMELINE : undefined));
   const frameRef = useRef<PerformanceFrame>({
     progress: 0, phase: 0, mode: "waiting", rate: 1, accent: 0, completed: false,
   });
@@ -42,6 +46,7 @@ export function DuetSequence({
   const [mode, setMode] = useState<PerformanceFrame["mode"]>("waiting");
   const [stageOk, setStageOk] = useState<boolean | null>(null);
   const strikes = useRef(0);
+  const rose = useRef(false);
   const settledOnce = useRef(false);
   const settle = useRef(onSettled);
   settle.current = onSettled;
@@ -64,13 +69,17 @@ export function DuetSequence({
     const tick = (now: number) => {
       raf = 0;
       if (!canRun()) return;
-      const dt = previous ? Math.min((now - previous) / 1000, 0.1) : 1 / 60;
+      const dt = previous ? Math.min((now - previous) / 1000, authoredReview ? 1 : .1) : 1 / 60;
       previous = now;
       const current = heldRef.current;
       const frame = performance.current.advance(dt, current.length > 0);
       frameRef.current = frame;
       if (host.current) host.current.dataset.progress = frame.progress.toFixed(6);
       setMode((old) => (old === frame.mode ? old : frame.mode));
+      if (authoredReview && !rose.current && frame.progress * DUET_TIMELINE.duration >= 3.2 && !current.length) {
+        rose.current = true;
+        setShot('duet');
+      }
       if (frame.completed && !settledOnce.current && frame.mode !== "playing") {
         settledOnce.current = true;
         settle.current();
@@ -135,7 +144,7 @@ export function DuetSequence({
      * 起身进入舞蹈会让键盘轻量化、布局重排。只在手指全部离开键盘后
      * 才切换，否则正在滑奏的手指会因为键盘在指下改变尺寸而丢键。
      */
-    if (next.length === 0 && strikes.current >= NOTES_TO_RISE) setShot("duet");
+    if (!authoredReview && next.length === 0 && strikes.current >= NOTES_TO_RISE) setShot("duet");
   }, []);
 
   const noteOn = useCallback(
@@ -161,12 +170,12 @@ export function DuetSequence({
 
   return (
     <div ref={host} className="duet-sequence" data-shot={shot} data-mode={mode} data-active={active}>
-      <DuetStage
+      {authoredReview ? <AuthoredDuetStage frameRef={frameRef} heldRef={heldRef} onReady={setStageOk} /> : <DuetStage
         frameRef={frameRef}
         heldRef={heldRef}
         shot={shot}
         onReady={setStageOk}
-      />
+      />}
       <AccompanimentKeys
         active={active}
         onNoteOn={noteOn}

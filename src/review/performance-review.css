@@ -1,0 +1,12 @@
+:root { font-family: 'Microsoft YaHei', system-ui, sans-serif; color: #f8eee4; background: #161921; --space-1:4px; --space-2:8px; --space-3:12px; --space-6:24px; --small-size:13px; --on-dark-soft:#dfcbbb; --accent:#d9b988; --sans:system-ui; }
+* { box-sizing:border-box; }
+body { margin:0; }
+.performance-review { max-width:1080px; margin:auto; padding:30px 24px 40px; }
+header span { font-size:12px; letter-spacing:.2em; color:#c2a991; } h1 { font:400 30px Georgia,serif; margin:12px 0; } header p { color:#aaabb4; font-size:13px; }
+.performance-review .duet-stage { aspect-ratio:16/10; max-height:none; height:610px; border-radius:12px; border:1px solid #ffffff12; }
+.review-transport { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:20px 0; }
+button,select { border:1px solid #ffffff26; border-radius:6px; background:#ffffff08; color:#e7d4be; padding:9px 15px; font:inherit; cursor:pointer; }
+button:hover { background:#ffffff17; } button:disabled { opacity:.5; cursor:wait; } select option { background:#24232d; } output { font:12px monospace; color:#b7a491; margin-left:auto; }
+input[type=range] { width:100%; accent-color:#ddbb87; }
+nav { display:flex; gap:8px; flex-wrap:wrap; } nav button { padding:7px 12px; font-size:12px; } .mute-button { margin-top:15px; }
+@media(max-width:600px) { .performance-review { padding:20px 12px; } h1 { font-size:26px; } .performance-review .duet-stage { height:480px; } .review-transport { gap:7px; } button,select { padding:8px; font-size:12px; } }

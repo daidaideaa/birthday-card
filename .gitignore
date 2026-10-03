@@ -19,3 +19,6 @@ playwright-report/
 *.blend
 *.blend1
 __pycache__/
+private-restored/
+*-password.txt
+*.private-plan.json

@@ -1,0 +1,118 @@
+{
+  "version": "characters-v1",
+  "kind": "static-character-inspection-poses",
+  "reviewOnly": true,
+  "visualApproval": "pending",
+  "runtimeChoreography": false,
+  "delivery": {
+    "app": "GitHub Pages compatible independent static preview",
+    "media": "GitHub migration release; production Cloudflare release unchanged",
+    "published": false
+  },
+  "sources": [
+    {
+      "character": "snow",
+      "creator": "Blender Foundation / Blender Studio",
+      "url": "https://studio.blender.org/characters/snow/v4/",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "character": "rain",
+      "creator": "Blender Foundation / Blender Studio",
+      "url": "https://studio.blender.org/characters/rain/v3/",
+      "license": "CC-BY-4.0"
+    }
+  ],
+  "files": [
+    {
+      "file": "snow-neutral.glb",
+      "vertices": 103561,
+      "bytes": 6175984,
+      "actor": "snow",
+      "sha256": "b7b61db3908e5f1376718570d138a670618b6027665a8af0bd089526ab225770",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "snow-smile.glb",
+      "vertices": 103561,
+      "bytes": 6175984,
+      "actor": "snow",
+      "sha256": "8093f223654eaaa167d8ed54eeb3db15ba9ae38ee2d312685f2a938918b510d1",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "snow-turn.glb",
+      "vertices": 103561,
+      "bytes": 6175976,
+      "actor": "snow",
+      "sha256": "2ec4fc31b0369f693d943f845efe4213077c5dedbc647dd592a875e942c49f0c",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "snow-hands.glb",
+      "vertices": 103561,
+      "bytes": 6175976,
+      "actor": "snow",
+      "sha256": "9d4142bebe5cdf727b9bc947dd24d6d5b764addb611bb3eb2327768cdfe02854",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "snow-sitting.glb",
+      "vertices": 103561,
+      "bytes": 6176040,
+      "actor": "snow",
+      "sha256": "d8af818e5973d4cd46cefa4b28317acced9eef84955d0322cb59f3be3bfd028d",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "rain-neutral.glb",
+      "vertices": 54542,
+      "bytes": 3215144,
+      "actor": "rain",
+      "sha256": "df310339ff6eff0cd016a955d0bafc18d5bc5d0ecc898ce5adde16d8676bb2f4",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "rain-smile.glb",
+      "vertices": 54542,
+      "bytes": 3215144,
+      "actor": "rain",
+      "sha256": "83e957abcdf7b909442e9f3e494946b5573dd73878d5278107a90543fa7040dc",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "rain-turn.glb",
+      "vertices": 54542,
+      "bytes": 3215140,
+      "actor": "rain",
+      "sha256": "f9d661608e7eb3494df040e371edaa2404c571214447feb525f46508f8ebc11d",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "rain-hands.glb",
+      "vertices": 54542,
+      "bytes": 3215144,
+      "actor": "rain",
+      "sha256": "2d006dd191725b935d7bb344c8dfa01309eaf4e3d7e4e4d3d6b1f1dc1abbce0b",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "rain-sitting.glb",
+      "vertices": 54542,
+      "bytes": 3215156,
+      "actor": "rain",
+      "sha256": "9ad02a34cfae270d1a6c9d4e844655f886b4d69cf6fdd0079f5c44246154724c",
+      "errors": 0,
+      "warnings": 0
+    }
+  ]
+}
