@@ -2,12 +2,13 @@ import { chromium } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 const out = '.asset-build/performance-review/check';
 await mkdir(out, { recursive: true });
-const browser = await chromium.launch({ headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const browser = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL,
+  args: process.env.PLAYWRIGHT_CHANNEL ? [] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1050 }, deviceScaleFactor: 1 });
 const errors = [];
 page.on('pageerror', e => errors.push(e.message));
 page.on('response', r => { if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`); });
-await page.goto('http://127.0.0.1:5184/birthday-card/performance-review.html');
+await page.goto(process.env.PERFORMANCE_REVIEW_URL || 'http://127.0.0.1:5184/birthday-card/performance-review.html');
 await page.locator('[data-ready="true"]').waitFor({ timeout: 60000 });
 for (const [label, name] of [['弹琴', 'piano'], ['起身', 'stand'], ['走近', 'approach'], ['牵手', 'hold'], ['侧步', 'step'], ['转身', 'turn'], ['收势', 'settle']]) {
   await page.getByRole('button', { name: label, exact: true }).click();

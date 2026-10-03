@@ -29,7 +29,11 @@ export function loadAssetManifest(): Promise<AssetManifest> {
     if (manifest.contentMode !== (import.meta.env.VITE_CONTENT_MODE || "demo")) throw Error("资源清单 contentMode 与构建配置不一致");
     resolveAsset = createAssetResolver(manifest, mediaRoot(import.meta.env.VITE_ASSET_BASE_URL, import.meta.env.BASE_URL, location.origin, import.meta.env.DEV));
     return structuredClone(manifest);
-  })();
+  })().catch(error => {
+    // A failed first request must not poison every later explicit retry.
+    pending = undefined;
+    throw error;
+  });
 }
 export function getAssetUrl(id: string, variant: AssetVariantName = "standard") {
   if (!resolveAsset) throw Error("请先 await loadAssetManifest() 再读取资源");

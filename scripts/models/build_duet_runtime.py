@@ -16,7 +16,11 @@ FPS=24;DURATION=26
 # Every walking interval begins and ends with all feet on the terrace.
 STEPS=[(5.6,6.65),(6.65,7.7),(7.7,8.75),(12,13.3),(13.3,14.6),
        (14.6,15.9),(16.4,17.7),(17.7,19),(19.5,20.8),(20.8,22.1)]
-STOPS=[0,3.2,5.6,6.65,7.7,8.75,10.2,12,13.3,14.6,15.9,16.4,17.7,19,19.5,20.8,22.1,24,26]
+# Seated / supported gestures may pause before an entire gesture is complete.
+# Walking may pause after the leading foot lands, before the trailing step.
+STOPS=sorted(set([round(i*.4,4) for i in range(15)]+
+    [5.6,6.65,7.7,8.75,9.2,9.7,10.2,10.8,11.4,12,13.3,14.6,15.9,16.4,17.7,19,19.5,20.8,22.1,22.7,23.3,23.9,24.5,25.1,25.6,26]+
+    [round(a+(b-a)*.67,4) for a,b in STEPS]))
 
 def ease(v):
     v=max(0,min(1,v));return v*v*(3-2*v)
@@ -105,16 +109,21 @@ def author_pose(rig,name,t,base):
         control=('IK-Hand.' if female else 'IK-Wrist.')+side
         rest=base[control].copy()
         free=Vector((sign*(.25 if female else .30),-.04,.86 if female else .95))
-        if not female:free=Vector((sign*.13,-.28,.80)).lerp(free,stand)
+        if not female:
+            seated=Vector((-.13,-.28,.80)) if side=='R' else Vector((.19,.01,.62))
+            free=seated.lerp(free,stand)
         inner=side==('R' if female else 'L')
         if inner:
             invitation=ease((t-7.7)/1.05)
             # The wrist is behind the palm, so meeting wrists makes the fingers
             # cross. Offset each wrist by its palm length to meet the palms.
-            local=world.inverted()@(center+Vector((.079 if female else -.089,0,.005 if female else -.005)))
+            # A supported open-hand hold: the smaller palm rests above his.
+            # Keep wrist spacing as well as palm thickness; coincident fingers
+            # made the previous closed grip interpenetrate at every stop.
+            local=world.inverted()@(center+Vector((.104 if female else -.101,-.008 if female else .008,.033 if female else -.005)))
             free=free.lerp(local,join if female else max(join,invitation))
         rotation=Matrix.Rotation(sign*1.28,3,'Y').to_quaternion()
-        if not female:
+        if not female and side=='R':
             piano=Matrix.Rotation(-sign*math.pi/2,3,'Z').to_quaternion()
             rotation=piano.slerp(rotation,stand)
         if inner:
@@ -128,7 +137,9 @@ def author_pose(rig,name,t,base):
             for joint in [1,2,3]:
                 bone=rig.pose.bones.get(f'FK-{finger}{joint}.{side}' if female else f'FK-Finger_{finger}{joint}.{side}')
                 if bone:
-                    bone.rotation_euler.x=.12+(.36*join if inner else 0)+(0.18 if joint>1 else 0)
+                    relaxed=.12+(0.18 if joint>1 else 0)
+                    grip=([.02,.12,.10] if female else [.08,.15,.12])[joint-1]
+                    bone.rotation_euler.x=relaxed+(grip-relaxed)*join if inner else relaxed
     # Facial rig remains in the actor: tiny gaze changes and independent blinks.
     head=rig.pose.bones['FK-Head'];head.rotation_euler=(.025*math.sin(t*.7),(.12 if female else -.10)*join,.015*math.sin(t*.4))
     blink=max([max(0,1-abs(t-c)/.12) for c in [1.7,4.8,8.4,12.2,16.9,21.1,24.4]])

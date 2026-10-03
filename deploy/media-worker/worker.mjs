@@ -1,7 +1,10 @@
-import manifest from '../../assets/releases/runtime-20260925-v1.json';
-const allowed = new Map(Object.values(manifest.assets).flatMap(entry => Object.values(entry.variants)).map(v => [`/birthday-card/${v.path}`, v]));
-allowed.set(`/birthday-card/releases/${manifest.releaseId}/ready.json`, { mime: 'application/json' });
-const origins = new Set(['https://daidaideaa.github.io', 'http://localhost:5173', 'http://127.0.0.1:5173']);
+import production from '../../assets/releases/runtime-20260925-v1.json';
+import duetReview from '../../assets/releases/duet-review-20261003-v1.json';
+// Retain the approved production release while the candidate is reviewed.
+const manifests = [production, duetReview];
+const allowed = new Map(manifests.flatMap(manifest => Object.values(manifest.assets).flatMap(entry => Object.values(entry.variants))).map(v => [`/birthday-card/${v.path}`, v]));
+for (const manifest of manifests) allowed.set(`/birthday-card/releases/${manifest.releaseId}/ready.json`, { mime: 'application/json' });
+const origins = new Set(['https://daidaideaa.github.io', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5184', 'http://127.0.0.1:5184', 'http://127.0.0.1:5185']);
 
 export function byteRange(header, size) {
   if (!header) return undefined;

@@ -4,6 +4,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createModelLoader } from '../utils/modelLoader';
 import { assetUrl } from '../utils/assetUrl';
+import { getAssetUrl, loadAssetManifest } from '../utils/mediaUrl';
 import { createJazzEnvironment } from './JazzEnvironment';
 import { WHITE_NOTES, BLACK_NOTES, BLACK_AFTER_WHITE } from '../audio/PianoVoices';
 import type { PerformanceFrame } from '../music/PerformanceState';
@@ -43,13 +44,16 @@ export function AuthoredDuetStage({ frameRef, heldRef, onReady, inspect = false,
   const ready = useRef(onReady); ready.current = onReady;
   const viewRef = useRef(view); viewRef.current = view;
   const [status, setStatus] = useState('loading');
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const mount = host.current;
     if (!mount) return;
+    setStatus('loading');
+    delete mount.dataset.ready;
     let dirty = true;
     const quality = qualityPolicy();
     let renderer: THREE.WebGLRenderer;
-    try { renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true }); }
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
     catch { setStatus('error'); ready.current?.(false); return; }
     const gl = renderer.getContext(), debug = gl.getExtension('WEBGL_debug_renderer_info');
     const software = debug && /swiftshader|llvmpipe|software|basic render/i.test(String(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)));
@@ -98,12 +102,15 @@ export function AuthoredDuetStage({ frameRef, heldRef, onReady, inspect = false,
     const actors: { root: THREE.Object3D; mixer: THREE.AnimationMixer; action: THREE.AnimationAction }[] = [];
     let fingers: PianoFingerLayer | undefined;
     const keys = new Map<number, THREE.Mesh>();
+    const targets = new Map<number, THREE.Vector3>();
     let disposed = false, visible = true, raf = 0, last = 0;
     const load = async () => {
+      const remote = Boolean(import.meta.env.VITE_ASSET_BASE_URL);
+      if (remote) await loadAssetManifest();
       const results = await Promise.allSettled([
-        loader.loadAsync(assetUrl('review-assets/duet-performance-v1/snow-performance.glb')),
-        loader.loadAsync(assetUrl('review-assets/duet-performance-v1/rain-performance.glb')),
-        loader.loadAsync(assetUrl('models/grand-piano.glb')),
+        loader.loadAsync(remote ? getAssetUrl('duet.male') : assetUrl('review-assets/duet-performance-v1/snow-performance.glb')),
+        loader.loadAsync(remote ? getAssetUrl('duet.female') : assetUrl('review-assets/duet-performance-v1/rain-performance.glb')),
+        loader.loadAsync(remote ? getAssetUrl('legacy.models.grand_piano.glb') : assetUrl('models/grand-piano.glb')),
       ]);
       const invalid = results.slice(0, 2).some(r => r.status === 'fulfilled' && r.value.animations.length !== 1);
       if (disposed || invalid || results.some(r => r.status === 'rejected')) {
@@ -128,6 +135,7 @@ export function AuthoredDuetStage({ frameRef, heldRef, onReady, inspect = false,
       const addKey = (note: number, x: number, y: number, z: number, black: boolean) => {
         const mesh = new THREE.Mesh(new THREE.BoxGeometry(black ? .58 : .9, .047, black ? .16 : .3), new THREE.MeshStandardMaterial({ color: black ? '#19151b' : '#fff4da', roughness: .35, emissive: '#d4993f', emissiveIntensity: 0 }));
         mesh.position.set(x, y, z); mesh.userData.rest = y; piano.add(mesh); keys.set(note, mesh);
+        targets.set(note, new THREE.Vector3());
       };
       WHITE_NOTES.forEach((n, i) => addKey(n, 5.49, 5.263, -.62 + i * .33, false));
       BLACK_NOTES.forEach(n => addKey(n, 5.63, 5.32, -.62 + (BLACK_AFTER_WHITE[n] + .5) * .33, true));
@@ -155,7 +163,11 @@ export function AuthoredDuetStage({ frameRef, heldRef, onReady, inspect = false,
       if (sampledTime !== time || dirty || keysMoving) {
         fingers?.restore();
         for (const actor of actors) { actor.action.time = time; actor.mixer.update(0); }
-        fingers?.apply(heldRef.current, time);
+        for (const [note, key] of keys) {
+          key.updateWorldMatrix(true, false);
+          targets.get(note)!.copy(key.localToWorld(new THREE.Vector3(-.1, .024, 0)));
+        }
+        fingers?.apply(heldRef.current, time, targets);
       }
       for (const [note, mesh] of keys) {
         const down = heldRef.current.includes(note);
@@ -176,16 +188,21 @@ export function AuthoredDuetStage({ frameRef, heldRef, onReady, inspect = false,
       else if (!raf) raf = requestAnimationFrame(render);
     };
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(); }); observer.observe(mount);
-    document.addEventListener('visibilitychange', sync); void load(); sync();
+    document.addEventListener('visibilitychange', sync);
+    void load().catch(() => { if (!disposed) { setStatus('error'); ready.current?.(false); } });
+    sync();
     return () => {
       disposed = true; cancelAnimationFrame(raf); ro.disconnect(); observer.disconnect();
       document.removeEventListener('visibilitychange', sync); controls?.dispose();
       actors.forEach(a => { a.mixer.stopAllAction(); a.mixer.uncacheRoot(a.root); });
       disposeTree(scene); env.dispose(); key.shadow.dispose(); disposeLoader(); renderer.dispose(); renderer.domElement.remove();
     };
-  }, [frameRef, heldRef, inspect]);
+  }, [frameRef, heldRef, inspect, attempt]);
   return <div className="duet-stage authored-duet-stage" data-status={status}>
     <div className="duet-stage__viewport" ref={host} />
-    {status !== 'ready' && <p className="duet-stage__status">{status === 'error' ? '人物暂时无法载入，请检查预览资源。' : '正在准备暮色舞台…'}</p>}
+    {status !== 'ready' && <div className="duet-stage__status" role="status">
+      <p>{status === 'error' ? '暮色舞台暂时没有载入。可以重试，也可以继续读信。' : '正在准备暮色舞台…'}</p>
+      {status === 'error' && <button type="button" className="text-button" onClick={() => setAttempt(value => value + 1)}>重新载入舞台</button>}
+    </div>}
   </div>;
 }

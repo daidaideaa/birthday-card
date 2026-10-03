@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   mode: 'story-review',
   base: '/birthday-card/',
-  publicDir: '.asset-build/performance-review/public',
+  publicDir: process.env.VITE_ASSET_BASE_URL ? '.asset-build/performance-remote/public' : '.asset-build/performance-review/public',
   plugins: [react()],
   server: { host: '127.0.0.1', port: 5184, strictPort: true },
   build: {

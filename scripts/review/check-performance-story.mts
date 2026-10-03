@@ -2,7 +2,7 @@ import { chromium, expect } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import { duet } from '../../tests/visual/interactive-helpers';
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL });
 const baseURL = process.env.PERFORMANCE_REVIEW_URL || 'http://127.0.0.1:5184/birthday-card/';
 const origin = new URL(baseURL).origin;
 const page = await browser.newPage({ baseURL, viewport: { width: 1280, height: 1000 } });
@@ -29,4 +29,8 @@ await expect(page.locator('.authored-duet-stage')).toHaveCount(0);
 await writeFile('.asset-build/performance-review/check/story-integration.json', JSON.stringify({ baseURL, errors, blockedExternal, newStageLoaded: true, inputAdvanced: true, releaseStopped: true, letterRetained: true }, null, 2));
 expect(errors).toEqual([]);
 console.log('Full story loads authored stage, responds to keys, settles, and returns to the original letter.');
+} catch (error) {
+  await page.screenshot({ path: '.asset-build/performance-review/check/story-failure.png' });
+  await writeFile('.asset-build/performance-review/check/story-failure.json', JSON.stringify({ errors, blockedExternal, url: page.url(), text: await page.locator('body').innerText() }, null, 2));
+  throw error;
 } finally { await browser.close(); }

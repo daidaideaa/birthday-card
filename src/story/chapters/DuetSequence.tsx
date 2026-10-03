@@ -177,7 +177,7 @@ export function DuetSequence({
         onReady={setStageOk}
       />}
       <AccompanimentKeys
-        active={active}
+        active={active && stageOk !== null}
         onNoteOn={noteOn}
         onNoteOff={onNoteOff}
         onHeldChange={heldChange}
