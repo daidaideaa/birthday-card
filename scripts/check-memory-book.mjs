@@ -6,8 +6,9 @@ const { values } = parseArgs({ options: {
   dir: { type: 'string', default: 'dist' },
   url: { type: 'string' },
 } });
-const requiredArt = ['book.webp', 'cake.webp', 'puppy-apricot.webp', 'puppy-cream.webp'];
-const mediaExtension = /\.(?:webp|png|jpe?g|svg|gif|avif|woff2?|mp3|ogg|wav|m4a|mp4|webm)$/i;
+const requiredArt = ['magic-book.glb', 'star-cake.glb', 'teddy-rig.webp', 'wind-and-stars.webp', 'films/spirit-pair.json', 'films/lion-nuzzle.json'];
+const retired = new Set(['book.webp', 'cake.webp', 'puppy-apricot.webp', 'puppy-cream.webp']);
+const mediaExtension = /\.(?:webp|png|jpe?g|svg|gif|avif|glb|woff2?|mp3|ogg|wav|m4a|mp4|webm)$/i;
 
 function localReferences(html) {
   return [...new Set([...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)]
@@ -49,7 +50,7 @@ async function localCheck() {
       const file = path.join(directory, entry.name);
       if (entry.isSymbolicLink()) throw Error(`新版素材不应为联接：${file}`);
       if (entry.isDirectory()) await checkMedia(file);
-      else if (mediaExtension.test(entry.name)) {
+      else if (!retired.has(entry.name) && mediaExtension.test(entry.name)) {
         await nonemptyFile(root, path.join('memory-book', path.relative(source, file)));
         count++;
       }

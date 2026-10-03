@@ -78,47 +78,26 @@ export const photos: MemoryPhoto[] = [
 export interface MemoryFilm {
   id: string;
   title: string;
-  englishTitle: string;
   year: number;
-  image: string;
-  src: string;
-  caption: string;
   credit: string;
   sourceUrl: string;
-  watchUrl: string;
-  imageDelivery: 'official-remote';
-  objectPosition: string;
 }
 
-// Official promotional images remain on their original hosts. They are not open-license files.
-// These are the 2002 / 1994 hand-drawn films, not the later remakes or generated imitations.
+// Short community reaction GIFs are the motion references, not an open-license film library.
+// The production foregrounds retain the original 2002 / 1994 animation and rights attribution.
 export const movies: MemoryFilm[] = [
   {
     id: 'spirit',
-    title: '小马王',
-    englishTitle: 'Spirit: Stallion of the Cimarron',
+    title: '小马王（2002）',
     year: 2002,
-    image: 'https://images.contentstack.io/v3/assets/blt13adb7e2033fcee5/blt2815f5291917d13f/690eacd9518443a93372835a/Spirit_PosterArt.jpg?width=800',
-    src: 'https://images.contentstack.io/v3/assets/blt13adb7e2033fcee5/blt2815f5291917d13f/690eacd9518443a93372835a/Spirit_PosterArt.jpg?width=800',
-    caption: '愿你一直有奔向旷野的勇气，也有不必独自面对风雨的温柔。',
-    credit: '© DreamWorks Animation · Universal 官方原版海报',
-    sourceUrl: 'https://www.universalpicturesathome.com/movies/spirit-stallion-of-the-cimarron',
-    watchUrl: 'https://www.youtube.com/watch?v=RPJ4EQ2Eh9I',
-    imageDelivery: 'official-remote',
-    objectPosition: '50% 50%',
+    credit: '© DreamWorks Animation · 短动作来源 MrThreat / Tenor',
+    sourceUrl: 'https://tenor.com/view/horses-spirit-spirit2002-spirit-stallion-of-the-cimarron-gif-14770152',
   },
   {
     id: 'lion-king',
-    title: '狮子王',
-    englishTitle: 'The Lion King',
+    title: '狮子王（1994）',
     year: 1994,
-    image: 'https://lumiere-a.akamaihd.net/v1/images/g_thelionking_01_fd5dcd2d.jpeg?region=0%2C0%2C1200%2C560',
-    src: 'https://lumiere-a.akamaihd.net/v1/images/g_thelionking_01_fd5dcd2d.jpeg?region=0%2C0%2C1200%2C560',
-    caption: '愿你无论走到哪里，都记得自己值得被爱，也值得拥有自己的辽阔。',
-    credit: '© Disney · 官方原版剧照',
-    sourceUrl: 'https://movies.disney.com/the-lion-king',
-    watchUrl: 'https://video.disney.com/watch/the-lion-king-trailer-554364a2df54eb31138c2eaf',
-    imageDelivery: 'official-remote',
-    objectPosition: '50% 50%',
+    credit: '© Disney · 短动作来源 Sephirock38 / Tenor',
+    sourceUrl: 'https://tenor.com/view/lion-king-simba-nala-in-love-gif-18769637',
   },
 ];

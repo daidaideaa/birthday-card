@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import Journey from "./Journey";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+const Journey = lazy(() => import("./Journey"));
 import Pets from "./Pets";
+const Cinema = lazy(() => import("./Cinema"));
+import MagicObject from "./MagicObject";
 import { photos, movies } from "./media";
 import { assetUrl } from "../utils/assetUrl";
 import "./memory-book.css";
+import "./magic-object.css";
 
 const chapters = ["只认识你", "两条来路", "藏起时光", "风与星光", "为你点亮"];
 const ids = ["invitation", "journey", "photos", "cinema", "wish"];
@@ -19,7 +22,7 @@ const letter = [
 ];
 const media = (path: string) => /^https:\/\//.test(path) ? path : assetUrl(path);
 
-function useMusic() {
+function useMusic(filmPlaying: boolean) {
   const audio = useRef<AudioContext | null>(null);
   const [playing, setPlaying] = useState(false);
   const toggle = () => {
@@ -29,7 +32,8 @@ function useMusic() {
     setPlaying(!playing);
   };
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || filmPlaying) { if (audio.current) void audio.current.suspend(); return; }
+    void audio.current?.resume();
     const context = audio.current;
     if (!context) return;
     let step = 0;
@@ -55,7 +59,7 @@ function useMusic() {
     const visibility=()=>{if(document.hidden)void context.suspend();else void context.resume().catch(()=>setPlaying(false));};
     document.addEventListener("visibilitychange",visibility);
     return()=>{clearInterval(timer);document.removeEventListener("visibilitychange",visibility);};
-  },[playing]);
+  },[playing,filmPlaying]);
   useEffect(()=>()=>{void audio.current?.close();},[]);
   return {playing,toggle};
 }
@@ -66,9 +70,7 @@ export default function MemoryGift(){
   const [reducedMotion,setReducedMotion]=useState(()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [awake,setAwake]=useState(false);
   const [photo,setPhoto]=useState(0);
-  const [movie,setMovie]=useState(0);
-  const [wind,setWind]=useState(0);
-  const [star,setStar]=useState<number|null>(null);
+  const [filmPlaying,setFilmPlaying]=useState(false);
   const [wish,setWish]=useState<"lit"|"making"|"blown">("lit");
   const [celebrate,setCelebrate]=useState(0);
   const [modal,setModal]=useState<"letter"|"photo"|"credits"|null>(null);
@@ -76,10 +78,8 @@ export default function MemoryGift(){
   const [hidden,setHidden]=useState(document.hidden);
   const timers=useRef<number[]>([]);
   const dialog=useRef<HTMLDialogElement>(null);
-  const music=useMusic();
+  const music=useMusic(filmPlaying);
   const currentPhoto=photos[photo];
-  const currentMovie=movies[movie];
-  const later=(fn:()=>void,delay:number)=>{timers.current.push(window.setTimeout(fn,delay));};
   const go=useCallback((target:number)=>{
     if(target===chapter||target<0||target>4||transition)return;
     timers.current.forEach(clearTimeout);timers.current=[];
@@ -108,8 +108,9 @@ export default function MemoryGift(){
     if(!modal&&dialog.current?.open)dialog.current?.close();
   },[modal]);
   const openBook=()=>{
-    if(transition||awake)return;
-    setAwake(true);later(()=>go(1),reducedMotion?100:1500);
+    if(transition)return;
+    if(awake){go(1);return;}
+    setAwake(true);
   };
   const blow=()=>{
     if(wish==="lit"){setWish("making");return;}
@@ -127,12 +128,11 @@ export default function MemoryGift(){
     {menu&&<nav className="chapter-menu" aria-label="章节目录">{chapters.map((c,i)=><button key={c} aria-current={chapter===i?"page":undefined} onClick={()=>go(i)}><span>{numerals[i]}</span>{c}<small>↗</small></button>)}<button onClick={()=>setReducedMotion(!reducedMotion)}>减少动态 <small>{reducedMotion?"已开启":"未开启"}</small></button><button onClick={()=>{setMenu(false);setModal("credits");}}>关于这份礼物 <small>✧</small></button></nav>}
     <div className="chapter-stage" aria-busy={!!transition}>
       {chapter===0&&<section className={"invitation "+(awake?"is-awake":"")} aria-label="第一章 这本书只认识你">
-        <img className="invitation-art" src={assetUrl("memory-book/book.webp")} alt="烛光书房里，一本有金色花纹的古旧魔法书，旁边放着封蜡信封" fetchPriority="high"/><div className="invitation-shade"/>
-        <div className="invitation-copy"><p className="eyebrow">THE FIRST PAGE OF OUR STORY</p><div className="tiny-rule"/><h1>今晚，<br/>故事只认识<span>你。</span></h1><p className="intro-lines">有一本书，等了很久。<br/>直到你来，它才有了名字。</p><button className="gold-button" onClick={openBook} disabled={awake}>{awake?"再翻开这本书":"打开这本书"}<span>✧</span></button><p className="quiet-note">一场只为你准备的，生日奇遇</p></div>
-        <button className="cover-name" onClick={openBook} aria-label="触碰书封，唤醒魔法书" disabled={awake}><span className="cover-symbol">✦</span><span className="cover-recipient">{awake?"师宝宝":"献给，唯一的你"}</span><i>THE BOOK OF YOU</i><span className="cover-ornament">── ✧ ──</span></button>
+        <MagicObject kind="book" open={awake} reducedMotion={reducedMotion} onOpen={()=>setAwake(value=>!value)}/>
+        <div className="invitation-copy"><p className="eyebrow">THE FIRST PAGE OF OUR STORY</p><div className="tiny-rule"/><h1>今晚，<br/>故事只认识<span>你。</span></h1><p className="intro-lines">有一本书，等了很久。<br/>直到你来，它才有了名字。</p><button className="gold-button" onClick={openBook}>{awake?"跟着书页出发":"打开这本书"}<span>✧</span></button><p className="quiet-note">{awake?"师宝宝，这本书终于等到了你。":"一场只为你准备的，生日奇遇"}</p></div>
         <div className="floating-dust" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:(9+i*5)%95+"%",top:(i*17)%92+"%",animationDelay:-(i*.7)+"s"}}/>)}</div>
       </section>}
-      {chapter===1&&<section className="journey-chapter" aria-label="第二章 两条路终于同向"><Journey onComplete={()=>go(2)} reducedMotion={reducedMotion}/></section>}
+      {chapter===1&&<section className="journey-chapter" aria-label="第二章 两条路终于同向"><Suspense fallback={<p className="chapter-loading">沙粒正在汇集成故事…</p>}><Journey onComplete={()=>go(2)} reducedMotion={reducedMotion}/></Suspense></section>}
       {chapter===2&&<section className="photos-chapter" aria-label="第三章 照片与书信">
         <div className="section-heading"><p className="eyebrow">CHAPTER III · LITTLE MOMENTS</p><h1>把喜欢的时刻，<em>藏进书里。</em></h1><p>有些风景，想和你慢慢看。</p></div>
         <div className="album">
@@ -141,24 +141,13 @@ export default function MemoryGift(){
         </div>
         <div className="chapter-bottom"><span>把平凡的一天，也过成值得收藏的一页。</span><button className="text-button" onClick={()=>setModal("letter")}>打开给你的信 <b>↗</b></button><button className="text-button" onClick={()=>go(3)}>下一章 <b>→</b></button></div>
       </section>}
-      {chapter===3&&<section className={"cinema-chapter film-"+movie} aria-label="第四章 风与星光">
-        <div className="cinema-visual" key={currentMovie.id}>
-          <img src={media(currentMovie.image)} alt={currentMovie.title+"原版官方画面"} referrerPolicy="no-referrer"/><div className="film-vignette"/>
-          {movie===0&&<div className={"wind-lines wind-"+wind} key={wind} aria-hidden="true">{[0,1,2,3,4].map(i=><i key={i} style={{top:25+i*11+"%",animationDelay:i*.17+"s"}}/>)}</div>}
-          {movie===1&&<div className="movie-stars">{[0,1,2,3,4].map(i=><button key={i} className={star===i?"is-lit":""} style={{left:25+i*13+"%",top:16+(i%3)*12+"%"}} onClick={()=>setStar(i)} aria-label={"点亮第"+(i+1)+"颗星"}>✦</button>)}</div>}
-        </div>
-        <div className="cinema-copy"><p className="eyebrow">CHAPTER IV · THE WIND & THE STARS</p><h1>{movie===0?<>愿你自由，<br/><em>也有归处。</em></>:<>愿你勇敢，<br/><em>也一直被爱。</em></>}</h1><p>{movie===0?"把一缕风藏进书页。愿你始终有奔向远方的勇气，也有可以安心停下的地方。":"有些光，走得再远也不会熄灭。抬头的时候，希望你总能记得：你值得被温柔地爱着。"}</p><div className="film-identity"><span>{currentMovie.year}</span><div><strong>{currentMovie.title}</strong><small>原版动画 · 官方画面</small></div></div><button className="gold-button" onClick={()=>movie===0?setWind(n=>n+1):go(4)}>{movie===0?"让风吹过这一页":"把星光带到生日里"}<span>{movie===0?"〰":"✧"}</span></button><a className="official-link" href={currentMovie.watchUrl} target="_blank" rel="noreferrer">在官方页面看原作 ↗</a></div>
-        <div className="film-switch"><button className={movie===0?"active":""} onClick={()=>setMovie(0)}><span>01</span> 风的方向<small>小马王</small></button><i/><button className={movie===1?"active":""} onClick={()=>setMovie(1)}><span>02</span> 星光的回答<small>狮子王</small></button>{movie===0?<button className="film-next" onClick={()=>setMovie(1)}>沿着风，看见星光 →</button>:<button className="film-next" onClick={()=>go(4)}>为你点亮 →</button>}</div>
-      </section>}
+      {chapter===3&&<Suspense fallback={<p className="chapter-loading">正在为你掀开银幕…</p>}><Cinema reducedMotion={reducedMotion} muted={!music.playing} onComplete={()=>go(4)} onPlaybackChange={setFilmPlaying}/></Suspense>}
       {chapter===4&&<section className={"wish-chapter wish-"+wish} aria-label="第五章 魔法星空蛋糕">
         <div className="wish-heading"><p className="eyebrow">CHAPTER V · MAKE A LITTLE WISH</p><h1>{wish==="blown"?"师宝宝，生日快乐。":wish==="making"?"这一刻，把愿望留给你。":"今晚的星光，都为你亮起。"}</h1><p>{wish==="blown"?"愿你一直勇敢，也一直被爱。":wish==="making"?"不用说出来，也不必着急。许好了，就轻轻吹灭蜡烛。":"先别急着吹灭蜡烛，把最想实现的愿望，悄悄放在心里。"}</p></div>
-        <div className="cake-scene"><img src={assetUrl("memory-book/cake.webp")} alt="深蓝奶油与金色星轨装饰的生日蛋糕，月亮饰片和三根金色蜡烛"/>
-          {[{x:42.2,y:15.8},{x:45.4,y:4.8},{x:49,y:11.2}].map((p,i)=><div className={"candle-light candle-"+i} key={i} style={{left:p.x+"%",top:p.y+"%"}}><i className="flame"/><i className="flame-glow"/><i className="candle-smoke"/></div>)}
-          {wish==="blown"&&<div className="wish-sparkles" aria-hidden="true">{Array.from({length:15},(_,i)=><i key={i} style={{left:20+i*4+"%",animationDelay:i*.08+"s"}}>✧</i>)}</div>}
-        </div>
+        <MagicObject kind="cake" extinguished={wish==="blown"} reducedMotion={reducedMotion}/>
         <div className="wish-actions">{wish!=="blown"?<button className="gold-button" onClick={blow}>{wish==="lit"?"许个愿吧":"轻轻吹灭蜡烛"}<span>✧</span></button>:<><p className="after-wish">书里还留着一些空白，想和你一页一页地写。</p><div><button className="text-button" onClick={()=>setModal("letter")}>重读给你的信 ↗</button><button className="text-button" onClick={()=>go(2)}>回看照片 ↗</button><button className="text-button" onClick={()=>setWish("lit")}>再点亮一次 ✧</button></div></>}</div>
       </section>}
-      <Pets scene={chapter} quiet={modal!==null} reducedMotion={reducedMotion} celebrate={celebrate}/>
+      <Pets scene={chapter} quiet={modal!==null||filmPlaying} reducedMotion={reducedMotion} celebrate={celebrate}/>
     </div>
     <footer className="gift-footer"><span className="footer-dedication">FOR YOU, AND ONLY YOU.</span><nav aria-label="故事章节">{chapters.map((c,i)=><button key={c} onClick={()=>go(i)} aria-current={i===chapter?"step":undefined} aria-label={"第"+(i+1)+"章 "+c}><span>{String(i+1).padStart(2,"0")}</span><i/>{c}</button>)}</nav><button className="footer-about" onClick={()=>setModal("credits")} aria-label="关于这份礼物">✧</button></footer>
     {!!transition&&<div className={"chapter-transition transition-"+transition} aria-hidden="true"><div className="turning-paper"/><div className="transition-thread"/><span className="transition-star">✦</span></div>}
@@ -166,7 +155,7 @@ export default function MemoryGift(){
       <div className="dialog-content"><button className="dialog-close" onClick={()=>setModal(null)} aria-label="关闭">×</button>
         {modal==="letter"&&<article className="letter-paper"><p className="eyebrow">SOME WORDS, JUST FOR YOU</p><span className="letter-stamp">✧</span><h2>亲爱的师宝宝：</h2>{letter.map(p=><p key={p}>{p}</p>)}<p>愿你一直勇敢，也一直被爱。</p><p className="letter-signature">生日快乐呀 ♡</p><small className="draft-note">书信暂拟，之后可以换成我想亲口对你说的话。</small><button className="letter-continue" onClick={()=>{setModal(null);go(3);}}>把这封信收好，去看看风与星光 →</button></article>}
         {modal==="photo"&&<figure className="full-photo"><img src={media(currentPhoto.src)} alt={currentPhoto.title}/><figcaption>{currentPhoto.title}<small>示意照片 · {currentPhoto.credit}</small></figcaption></figure>}
-        {modal==="credits"&&<article className="credits-paper"><p className="eyebrow">ABOUT THIS LITTLE GIFT</p><h2>为你，留一点魔法。</h2><p>一本只认识你的书，两条在深圳汇合的路，一封慢慢读的信，还有今晚的星空。</p><p>相册暂用5张风景网图，之后可以换成我们的照片。书信是暂拟文字；旅程只记录已经知道的地点，没有补写年份和往事。</p><h3>画面与声音</h3><p>古书、星空蛋糕与两只二维泰迪为本项目生成的原创画稿。音乐为本项目合成的轻柔钟琴旋律。两部电影保留官方原版画面与官方观看入口，电影版权属于各权利人。</p>{movies.map(m=><p key={m.id}><a href={m.sourceUrl} target="_blank" rel="noreferrer">{m.title} · {m.credit} ↗</a></p>)}<h3>示意照片</h3>{photos.map(p=><p key={p.id}><a href={p.sourceUrl} target="_blank" rel="noreferrer">{p.title} · {p.credit} ↗</a></p>)}<button className="letter-continue" onClick={()=>setReducedMotion(!reducedMotion)}>{reducedMotion?"恢复完整动态":"使用减少动态效果"}</button></article>}
+        {modal==="credits"&&<article className="credits-paper"><p className="eyebrow">ABOUT THIS LITTLE GIFT</p><h2>为你，留一点魔法。</h2><p>一本只认识你的书，两条在深圳汇合的路，一封慢慢读的信，还有今晚的星空。</p><p>相册暂用5张风景网图，之后可以换成我们的照片。书信是暂拟文字；旅程只记录已经知道的地点，没有补写年份和往事。</p><h3>画面与声音</h3><p>古书和星空蛋糕由 Blender 建模，支持实时转动、翻页与烛火；二维泰迪拥有分层连续动作。沙画使用开源 SandKit，地图轮廓来自 Natural Earth。音乐为本项目合成的轻柔钟琴旋律。</p><p>电影章将《小马王》《狮子王》的原版角色短动作分离后，融入新的旷野与星空，重新编排为这一页祝福。电影角色与原画版权属于各权利人，背景和场景编排为本项目制作。</p>{movies.map(m=><p key={m.id}><a href={m.sourceUrl} target="_blank" rel="noreferrer">{m.title} · {m.credit} ↗</a></p>)}<h3>示意照片</h3>{photos.map(p=><p key={p.id}><a href={p.sourceUrl} target="_blank" rel="noreferrer">{p.title} · {p.credit} ↗</a></p>)}<button className="letter-continue" onClick={()=>setReducedMotion(!reducedMotion)}>{reducedMotion?"恢复完整动态":"使用减少动态效果"}</button></article>}
       </div>
     </dialog>
   </main>;

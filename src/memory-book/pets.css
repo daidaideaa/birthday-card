@@ -1,33 +1,35 @@
 .memory-pets {
-  --pet-size: 138px;
+  --pet-size: 182px;
   position: absolute;
   z-index: 8;
   left: 0;
   right: 0;
-  bottom: 14px;
+  bottom: 6px;
   height: var(--pet-size);
   pointer-events: none;
   contain: layout;
 }
 .memory-pet {
   position: absolute;
+  left: 0;
   width: var(--pet-size);
   height: var(--pet-size);
   bottom: 0;
-  transition: transform .18s linear;
+  margin-left: calc(var(--pet-size) / -2);
+  will-change: transform;
 }
-.memory-pet-apricot { left: 4%; }
-.memory-pet-cream { right: 4%; --pet-size: 123px; }
+.memory-pet-cream { --pet-size: 171px; bottom: 3px; }
 .memory-pet-touch {
   position: absolute;
   display: block;
   appearance: none;
+  inset: 0;
   width: 100%;
   height: 100%;
   padding: 0;
   margin: 0;
   border: 0;
-  border-radius: 48%;
+  border-radius: 45%;
   background: transparent;
   cursor: pointer;
   pointer-events: auto;
@@ -38,32 +40,29 @@
   position: absolute;
   display: block;
   inset: 0;
-  background-repeat: no-repeat;
-  background-size: 400% 200%;
-  filter: drop-shadow(0 5px 5px #120e0d32);
-  transform-origin: 50% 91%;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 4px 3px #100c0938);
   user-select: none;
   pointer-events: none;
 }
-.memory-pet-apricot.memory-pet-walking .memory-pet-drawing { transform: scaleX(-1); }
+.memory-pet-fur-cream { filter: saturate(.42) brightness(1.17) drop-shadow(0 4px 3px #100c0938); }
 .memory-pet-shadow {
   position: absolute;
-  left: 20%;
-  bottom: 5%;
-  width: 62%;
-  height: 7%;
-  background: radial-gradient(ellipse, #090b11a3, #090b1100 72%);
-  opacity: .63;
-  transition: transform .15s, opacity .15s;
+  left: 14%;
+  bottom: 10%;
+  width: 68%;
+  height: 8%;
+  background: radial-gradient(ellipse, #090b116e, #090b1100 72%);
+  opacity: .8;
 }
-.memory-pet-jumping .memory-pet-drawing { transform: translateY(-8px); }
-.memory-pet-jumping .memory-pet-shadow { transform: scale(.7); opacity: .35; }
-.memory-pet-touch:focus-visible { outline: 1px dashed #d5b777; outline-offset: 5px; }
+.memory-pet-touch:focus-visible { outline: 1px dashed #d5b777; outline-offset: -10px; }
 .memory-pet-touch-cue {
   position: absolute;
   display: block;
   left: 50%;
-  bottom: -9px;
+  bottom: 5px;
   transform: translateX(-50%);
   opacity: 0;
   white-space: nowrap;
@@ -82,7 +81,7 @@
 .memory-pet-reply {
   display: block;
   position: absolute;
-  bottom: 99%;
+  bottom: 88%;
   left: 50%;
   transform: translateX(-50%);
   padding: 8px 12px;
@@ -105,21 +104,29 @@
   border-bottom: 0;
   border-top-color: #f6eacd;
 }
-.memory-pets-reading { --pet-size: 105px; opacity: .86; bottom: 8px; }
-.memory-pets-reading .memory-pet-cream { --pet-size: 94px; }
-.memory-pet-still, .memory-pet-still * { transition: none !important; animation: none !important; }
+.memory-pet-heart {
+  position: absolute;
+  top: 1%;
+  left: 45%;
+  color: #efbe9c;
+  font-size: 25px;
+  opacity: 0;
+  filter: drop-shadow(0 0 9px #cf955170);
+}
+.memory-pet[data-mood='loved'] .memory-pet-heart { animation: memory-pet-heart 1.4s ease-out infinite; }
+.memory-pets-reading { --pet-size: 139px; opacity: .9; bottom: 2px; }
+.memory-pets-reading .memory-pet-cream { --pet-size: 133px; }
+.memory-pets-still .memory-pet-heart { animation: none !important; }
+.memory-pets-still .memory-pet[data-mood='loved'] .memory-pet-heart { opacity: 1; }
 @keyframes memory-pet-reply-in { from { opacity: 0; margin-bottom: -3px; } to { opacity: 1; margin-bottom: 0; } }
+@keyframes memory-pet-heart { 0% { opacity: 0; transform: translateY(8px) scale(.7); } 25% { opacity: .85; } 100% { opacity: 0; transform: translateY(-18px) scale(1.1); } }
 @media (max-width: 700px) {
-  .memory-pets { --pet-size: 100px; bottom: 9px; }
-  .memory-pet-cream { --pet-size: 88px; }
-  .memory-pet-apricot { left: 1.5%; }
-  .memory-pet-cream { right: 2%; }
-  .memory-pet-reply { font-size: 9px; padding: 6px 8px; }
-  .memory-pet-apricot .memory-pet-reply { left: 54%; }
-  .memory-pet-cream .memory-pet-reply { left: 44%; }
-  .memory-pets-reading { --pet-size: 84px; }
-  .memory-pets-reading .memory-pet-cream { --pet-size: 77px; }
+  .memory-pets { --pet-size: 144px; bottom: 1px; }
+  .memory-pet-cream { --pet-size: 133px; }
+  .memory-pet-reply { font-size: 9px; padding: 6px 8px; max-width: 142px; white-space: normal; text-align: center; }
+  .memory-pets-reading { --pet-size: 118px; }
+  .memory-pets-reading .memory-pet-cream { --pet-size: 109px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .memory-pet, .memory-pet * { transition: none !important; animation: none !important; }
+  .memory-pet * { transition: none !important; animation: none !important; }
 }

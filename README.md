@@ -1,16 +1,16 @@
 # 师宝宝 · 一本只认识你的魔法书
 
-中文互动生日礼物，使用 React、TypeScript、Canvas 与二维动画。网站通过 [GitHub Pages](https://daidaideaa.github.io/birthday-card/) 展示，基础路径为 /birthday-card/。
+送给「师宝宝」的中文互动生日礼物。React、TypeScript、Canvas 与 Three.js 共同呈现五章童话，发布地址为 [GitHub Pages](https://daidaideaa.github.io/birthday-card/)，基础路径为 `/birthday-card/`。当前源码已进入新立体书与分层动画版本；线上内容随 Pages 工作流发布更新。
 
 ## 当前五章
 
-1. 古书认出她：烛光书房、触碰显名、开书转场。
-2. 两条来路：她的河南→天津→北京·中国政法大学→香港·香港科技大学→深圳；他的武汉→南京·东南大学→上海·上海交通大学→深圳。独立路线、可触摸沙画，在深圳汇合。
-3. 照片与信：5张网图占位，逐页浏览、原比例放大、完整暂拟书信。
-4. 风与星光：2002《小马王》和1994《狮子王》官方原版画面、风与星点互动、官方观看入口。目前是静帧互动，未制作原片无缝混剪。
-5. 为你点亮：深蓝金色星空蛋糕、许愿、熄烛、生日祝福与回看入口。
+1. **古书认出她**：Blender 制作的皮革与金饰立体古书，可拖动观察；触碰显名，封面和纸页在 Three.js 中实时翻动。
+2. **两条来路**：SandKit WebGL2 沙粒引擎连续勾勒城市、流沙散开并聚成下一站，可暂停、触摸擦拭、回看。她从河南→天津→北京·中国政法大学→香港·香港科技大学→深圳；他从武汉→南京·东南大学→上海·上海交通大学→深圳。最后在真实中国地理轮廓上分别绘出暖金与月白两条路线，在深圳结起小结，寓意「各自走来的路，从这里开始并肩」。
+3. **照片与信**：五张明确标记的 Unsplash 网图占位，保留原比例放大和完整暂拟书信，等待替换为两人的照片。
+4. **风与星光**：将 2002《小马王》的 Spirit / Rain、1994《狮子王》的 Simba / Nala 原版短动作逐帧抠出，在原创旷野背景上重新布景；草、风、星与镜头分别运动。20 秒 Canvas 叙事支持暂停、重看、点星送风，原动作保留各自帧时长，不播放电影原声。已实际播放完整段落并检查角色轮廓和结尾；来源与完成边界见素材记录。
+5. **为你点亮**：Blender 制作的深蓝金色星空蛋糕，可旋转观赏、许愿、熄灭实时烛火，并回看五章。
 
-两只陪伴角色是杏色、奶油色的精绘二维泰迪，含歪头、走动、摸摸回应、趴下和短庆祝。背景音乐需主动开启；支持全局静音、后台暂停及减少动态。
+杏色与奶油色两只二维泰迪使用透明部件画稿，头、耳、躯干、四肢、尾巴各自连续运动。它们会短距离走动、歪头、眨眼、回应摸摸，读信时安静下来。音乐需主动开启；交互支持键盘、后台暂停及减少动态。WebGL 不可用时提供明确说明和章节导航；沙画另有可读静态回退。
 
 ## 运行
 
@@ -22,25 +22,28 @@ npm run dev
 npm run build
 ~~~
 
-打开命令显示的 /birthday-card/ 地址。新版不需要下载旧模型、启动Blender或准备R2清单。
+打开命令显示的 `/birthday-card/` 地址。网站直接加载提供的 GLB、画稿和动作图集；启动网站不需要 Blender，也不需要 R2 或后端。修改三维模型时再使用 Blender 运行原创脚本 `scripts/models/build_magic_objects.py`。
 
-build 包含类型检查、静态构建和一次本地资源路径检查。仅需针对具体改动做必要检查，不反复计算SHA、扫描旧资源或跑长循环。旧视觉测试保留手动入口，不自动运行三设备旧主线。
+`build` 包含类型检查、静态构建和一次本地资源路径检查。只针对改动做必要验证；不反复计算 SHA、扫描旧资源或运行长循环。旧视觉测试保留手动入口。
 
 ## 修改入口
 
-- 五章主页面、暂拟信与许愿：src/memory-book/MemoryGift.tsx
-- 双人路线与沙画：src/memory-book/Journey.tsx
-- 照片与电影来源：src/memory-book/media.ts
-- 两只泰迪的动作：src/memory-book/Pets.tsx
-- 运行素材：public/memory-book/
-- 生成画稿提示词与来源：assets/memory-book-artwork.json
+- 五章主页面、暂拟信与许愿：[MemoryGift.tsx](src/memory-book/MemoryGift.tsx)
+- 立体书、翻页、蛋糕与烛火：[MagicObject.tsx](src/memory-book/MagicObject.tsx)
+- Blender 原创模型生成：[build_magic_objects.py](scripts/models/build_magic_objects.py)
+- 沙画时间线、两条路线和中国地图：[Journey.tsx](src/memory-book/Journey.tsx)
+- 照片与电影来源配置：[media.ts](src/memory-book/media.ts)
+- 原版角色逐帧合成舞台：[Cinema.tsx](src/memory-book/Cinema.tsx)
+- 两只泰迪的部件动画：[Pets.tsx](src/memory-book/Pets.tsx)
+- 运行素材：[public/memory-book](public/memory-book/)
+- 画稿完整提示词、模型与历史状态：[memory-book-artwork.json](assets/memory-book-artwork.json)
 - 详细创作方案：[整体计划](docs/plans/生日礼物_整体创作与制作计划.md)
-- 素材来源：[记录](public/ASSET_SOURCES.md)
+- 许可与素材处理记录：[素材来源](public/ASSET_SOURCES.md)
 
-照片与书信明确标为占位/暂拟，没有补造日期、学历、校区或两人的往事。电影图片来自官方远程地址，网络不可用时仍能阅读文字、前往官方入口、继续到蛋糕。
+不补造年份、校区或共同经历。河南只作省级示意位置，其余城市使用 Natural Earth 坐标；两条路线分别叙述，不暗示同时旅行。电影角色帧来自公开社区短 GIF，版权仍属于 DreamWorks / Disney，来源公开不代表开放再分发授权。
 
 ## 发布
 
-main 的 Pages 工作流执行 lint、build、发布及一次线上入口检查。构建只复制 public/memory-book 中实际选择的素材，不把旧模型、影片与制作中间文件发布。
+`main` 的 Pages 工作流执行 lint、build、发布及一次线上入口检查。构建复制当前 `public/memory-book` 运行素材，排除已退役的 `book.webp`、`cake.webp`、`puppy-apricot.webp`、`puppy-cream.webp`；制作母版、中间文件、原始 GIF 与旧 R2 模型不随新版发布。
 
-旧 R2、Worker、模型源文件及历史实现保留，当前魔法书不依赖这些资源。旧3D候选PR不合并到新版；历史制作细节可在Git历史与既有交接资料查看。
+旧 R2、Worker、人物与三维犬、琴舞等源码和来源记录只用于恢复历史。当前五章不加载这些旧角色与影片；书和蛋糕使用新版独立三维模型。

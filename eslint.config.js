@@ -7,6 +7,7 @@ export default tseslint.config(
       "dist/**",
       "node_modules/**",
       "public/basis/**",
+      "src/memory-book/vendor/**",
       ".asset-build/**",
       "model-sources/**",
       "test-results/**",

@@ -4,27 +4,121 @@
     "generator": "built-in image_gen",
     "date": "2026-10-03",
     "source": "exec-3d951108-978d-4279-a408-c4742d2e0255.png",
-    "prompt": "Use case: illustration-story. Create a premium cinematic painted background for an intimate romantic magic-book birthday website, a single wide landscape illustration, 1536x1024. An exquisitely crafted antique dark chestnut leather spellbook stands slightly tilted upright, filling the RIGHT half of composition, on a dark walnut desk in a candlelit old wizard's library. Its front cover faces camera with elegant aged gold botanical filigree, a small crescent and star ornament, real thickness of many parchment pages, warm amber edge light, rich tactile leather. Central cover panel has NO WORDS, leave space for a small real HTML title. On left, deep atmospheric shadow and large quiet negative space for website text, just faint out of focus shelves. A small burgundy wax sealed envelope and quill sit in foreground. Dust motes, painterly film-quality lighting, romantic mysterious invitation, dark chocolate and muted antique gold, restrained midnight blue shadows. Beautiful natural physical materials, sophisticated magical realism, detailed professional illustrated film art, NOT 3D game render, not flat vector. No humans, no dog, no logos, no lettering, no UI. Book is the beautiful hero; avoid giant flying particles or excessive symbols. Keep book and desk completely visible with room around them."
+    "prompt": "Use case: illustration-story. Create a premium cinematic painted background for an intimate romantic magic-book birthday website, a single wide landscape illustration, 1536x1024. An exquisitely crafted antique dark chestnut leather spellbook stands slightly tilted upright, filling the RIGHT half of composition, on a dark walnut desk in a candlelit old wizard's library. Its front cover faces camera with elegant aged gold botanical filigree, a small crescent and star ornament, real thickness of many parchment pages, warm amber edge light, rich tactile leather. Central cover panel has NO WORDS, leave space for a small real HTML title. On left, deep atmospheric shadow and large quiet negative space for website text, just faint out of focus shelves. A small burgundy wax sealed envelope and quill sit in foreground. Dust motes, painterly film-quality lighting, romantic mysterious invitation, dark chocolate and muted antique gold, restrained midnight blue shadows. Beautiful natural physical materials, sophisticated magical realism, detailed professional illustrated film art, NOT 3D game render, not flat vector. No humans, no dog, no logos, no lettering, no UI. Book is the beautiful hero; avoid giant flying particles or excessive symbols. Keep book and desk completely visible with room around them.",
+    "status": "retired",
+    "replacedBy": "magic-book-3d",
+    "runtimeUsage": "历史首版画稿；当前 Vite 发布排除 book.webp、cake.webp、puppy-apricot.webp、puppy-cream.webp。保留来源与提示词。"
   },
   {
     "id": "cake",
     "generator": "built-in image_gen",
     "date": "2026-10-03",
     "source": "exec-7c485108-1bac-4d89-aa6b-c1308f3eb1d7.png",
-    "prompt": "Use case: product-mockup. Create a breathtaking cinematic luxury birthday cake photograph with painterly magical atmosphere, landscape 1536x1024. Center a SINGLE tall round cake covered in sumptuous deep midnight navy buttercream, visible fine artisanal spatula texture and soft blue highlights, sparse very fine edible gold star constellations and tiny irregular gold leaf accents. A slender little gold crescent ornament above the cake. Exactly THREE thin gold candles, UNEVEN heights, ALL UNLIT with clearly visible black wicks. Cake occupies central 48 percent of image width and most of middle image height; cake top at around 38 percent image height, plate at 83 percent. Low antique gold cake plate, convincing contact shadow on dark walnut tabletop. At far back left a partially visible old leather spellbook and a very soft defocused candle. Deep navy magical night background with soft warm bokeh, subtle starry dust, cinematic soft side light, delicious finely crafted realistic food styling, editorial luxury, romantic warm candlelit old wizard library. No numbers, no text, no letters, no dogs, no people. Not cartoon, no plastic cylinder, no neon, no galaxy planets. Keep all candles unlit so real animated flames can be added later. This should look like the beautiful finale of a romantic magical film."
+    "prompt": "Use case: product-mockup. Create a breathtaking cinematic luxury birthday cake photograph with painterly magical atmosphere, landscape 1536x1024. Center a SINGLE tall round cake covered in sumptuous deep midnight navy buttercream, visible fine artisanal spatula texture and soft blue highlights, sparse very fine edible gold star constellations and tiny irregular gold leaf accents. A slender little gold crescent ornament above the cake. Exactly THREE thin gold candles, UNEVEN heights, ALL UNLIT with clearly visible black wicks. Cake occupies central 48 percent of image width and most of middle image height; cake top at around 38 percent image height, plate at 83 percent. Low antique gold cake plate, convincing contact shadow on dark walnut tabletop. At far back left a partially visible old leather spellbook and a very soft defocused candle. Deep navy magical night background with soft warm bokeh, subtle starry dust, cinematic soft side light, delicious finely crafted realistic food styling, editorial luxury, romantic warm candlelit old wizard library. No numbers, no text, no letters, no dogs, no people. Not cartoon, no plastic cylinder, no neon, no galaxy planets. Keep all candles unlit so real animated flames can be added later. This should look like the beautiful finale of a romantic magical film.",
+    "status": "retired",
+    "replacedBy": "star-cake-3d",
+    "runtimeUsage": "历史首版画稿；当前 Vite 发布排除 book.webp、cake.webp、puppy-apricot.webp、puppy-cream.webp。保留来源与提示词。"
   },
   {
     "id": "puppy-apricot",
     "generator": "built-in image_gen",
     "date": "2026-10-03",
     "source": "exec-425534e9-f8d6-4acb-b0d3-1d7cd6a1f713.png",
-    "prompt": "Use case: illustration-story. Asset type: transparent 2D animation sprite atlas. A charming ORIGINAL apricot toy poodle puppy, professional traditionally hand-drawn feature animation character quality, warm watercolor gouache shading with delicate brown linework, wonderfully expressive large kind dark eyes, soft floppy curly ears, small dark brown button nose, compact fluffy body and tiny proper four paws, truly adorable, appealing silhouette and consistent anatomy. This is an original puppy, not any existing movie character. Draw ONE EXACTLY MATCHING puppy in EIGHT separate sequential poses, arranged in a strict 4 COLUMN x 2 ROW grid, equal sized cells, fully transparent background, 2048x1024 aspect 2:1. All puppies centered in their individual cell, same scale, enough clear padding, no pose touches adjacent cells, feet aligned to common baseline of each cell. Left to right first row: 1 puppy sitting happy eyes open facing slightly left toward viewer; 2 same seated puppy cute inquisitive head tilt and one ear lifting; 3 same puppy walking left front paw forward back paw opposite; 4 next walking pose legs reversed. Second row: 5 delighted relaxed eyes closed smile seated with tail lifted; 6 happy low playful bow front legs lowered bottom up; 7 peacefully lying down paws under chin eyes soft; 8 small joyful jump with all four paws just off ground, ears lifted. Rich apricot fur cream muzzle, stylized CURLY clumps not realistic individual hair. Each pose must be complete fully visible. NO ground, no white/checkerboard background, no shadows crossing cells, no labels, no text, no divider lines, no accessories. Genuine alpha transparency."
+    "prompt": "Use case: illustration-story. Asset type: transparent 2D animation sprite atlas. A charming ORIGINAL apricot toy poodle puppy, professional traditionally hand-drawn feature animation character quality, warm watercolor gouache shading with delicate brown linework, wonderfully expressive large kind dark eyes, soft floppy curly ears, small dark brown button nose, compact fluffy body and tiny proper four paws, truly adorable, appealing silhouette and consistent anatomy. This is an original puppy, not any existing movie character. Draw ONE EXACTLY MATCHING puppy in EIGHT separate sequential poses, arranged in a strict 4 COLUMN x 2 ROW grid, equal sized cells, fully transparent background, 2048x1024 aspect 2:1. All puppies centered in their individual cell, same scale, enough clear padding, no pose touches adjacent cells, feet aligned to common baseline of each cell. Left to right first row: 1 puppy sitting happy eyes open facing slightly left toward viewer; 2 same seated puppy cute inquisitive head tilt and one ear lifting; 3 same puppy walking left front paw forward back paw opposite; 4 next walking pose legs reversed. Second row: 5 delighted relaxed eyes closed smile seated with tail lifted; 6 happy low playful bow front legs lowered bottom up; 7 peacefully lying down paws under chin eyes soft; 8 small joyful jump with all four paws just off ground, ears lifted. Rich apricot fur cream muzzle, stylized CURLY clumps not realistic individual hair. Each pose must be complete fully visible. NO ground, no white/checkerboard background, no shadows crossing cells, no labels, no text, no divider lines, no accessories. Genuine alpha transparency.",
+    "status": "retired",
+    "replacedBy": "teddy-rig",
+    "runtimeUsage": "历史首版画稿；当前 Vite 发布排除 book.webp、cake.webp、puppy-apricot.webp、puppy-cream.webp。保留来源与提示词。"
   },
   {
     "id": "puppy-cream",
     "generator": "built-in image_gen",
     "date": "2026-10-03",
     "source": "exec-bdf8dcab-a82e-467a-8a08-a42002333bd7.png",
-    "prompt": "Edit apricot puppy atlas: preserve 4x2 poses and transparency, change fur to pale ivory cream with quiet sweet expressions."
+    "prompt": "Edit apricot puppy atlas: preserve 4x2 poses and transparency, change fur to pale ivory cream with quiet sweet expressions.",
+    "status": "retired",
+    "replacedBy": "teddy-rig",
+    "runtimeUsage": "历史首版画稿；当前 Vite 发布排除 book.webp、cake.webp、puppy-apricot.webp、puppy-cream.webp。保留来源与提示词。"
+  },
+  {
+    "id": "magic-book-3d",
+    "status": "active",
+    "date": "2026-10-03",
+    "generator": "Project-authored Blender Python geometry + Three.js runtime",
+    "source": "scripts/models/build_magic_objects.py",
+    "runtime": "public/memory-book/magic-book.glb",
+    "master": ".asset-build/memory-book/masters/magic-book.blend",
+    "implementation": "src/memory-book/MagicObject.tsx",
+    "provenance": "本项目原创几何、材质与交互；不是静图转动或第三方电影模型。",
+    "changes": [
+      "独立书封和六页翻页铰链",
+      "实时页片弯曲、封面翻开和绕物体查看",
+      "浏览器程序生成皮革纹理、纸面题字和环境烛光"
+    ],
+    "prompt": null,
+    "promptNote": "由可编辑脚本建模，未使用图像生成提示词。"
+  },
+  {
+    "id": "star-cake-3d",
+    "status": "active",
+    "date": "2026-10-03",
+    "generator": "Project-authored Blender Python geometry + Three.js runtime",
+    "source": "scripts/models/build_magic_objects.py",
+    "runtime": "public/memory-book/star-cake.glb",
+    "master": ".asset-build/memory-book/masters/star-cake.blend",
+    "implementation": "src/memory-book/MagicObject.tsx",
+    "provenance": "本项目原创深蓝金色星空蛋糕网格、奶油表面、装饰、盘架与烛台。",
+    "changes": [
+      "实时三维旋转查看",
+      "独立烛火精灵和局部光，响应许愿熄灭",
+      "保留奶油细节、金饰与可编辑 Blender 母版"
+    ],
+    "prompt": null,
+    "promptNote": "由可编辑脚本建模，未使用图像生成提示词。"
+  },
+  {
+    "id": "teddy-rig",
+    "status": "active",
+    "date": "2026-10-03",
+    "generator": "built-in image_gen",
+    "source": ".asset-build/memory-book/masters/teddy-rig.png",
+    "master": ".asset-build/memory-book/masters/teddy-rig.png",
+    "runtime": "public/memory-book/teddy-rig.webp",
+    "referenceImage": "public/memory-book/puppy-apricot.webp",
+    "prompt": "Use case: illustration-story. Production asset for a real-time 2D cutout animated Teddy poodle puppy, using reference only for the adorable fluffy golden-apricot curly fur style and expressive eyes. Create an EXACT 4-column by 2-row equal-cell sprite parts atlas, 2048x1024, genuinely transparent background. Each component centered in its 512x512 cell, generous empty margins, no component crosses cells. These are DETACHED anatomical parts for one consistent puppy rig, not complete dogs. The body will face three-quarter RIGHT. Top row cells left-to-right: 1) plump horizontal curly-fur torso ONLY, no head/no legs/no tail, chest at right and rump at left, occupies 80% cell width and 50% height, clean fluffy silhouette. 2) large rounded adorable head ONLY with soft cream muzzle, brown nose and small happy open mouth with pink tongue, two glossy dark puppy eyes, NO ears and no neck, head looks slightly right; head occupies 75% width and 72% height. 3) ONE long fluffy floppy ear, rounded teardrop shape, dark cinnamon inner shading, hangs downward, narrow attachment at top, occupies 36% width and 70% height. 4) ONE curled fluffy pompom tail on a curved tapered short stem, rising toward upper left, occupies 45% width and 64% height. Bottom row cells left-to-right: 5) ONE complete front leg including big soft round paw, joint at top, slight bend, thick fluffy silhouette, occupies 32% width and 65% height. 6) ONE complete rear leg including rounded thigh and soft paw, occupies 42% width and 65% height. 7) same detached head as top row cell 2, same pose/size/position/muzzle/nose/mouth, but both eyes gently CLOSED for blink, no ears. 8) same detached head as top row cell 2, same pose/size/position/muzzle/nose, eyes delighted CLOSED and mouth happy smile, no ears. Visual quality: premium traditionally painted animated feature-film development art, real tiny curls with soft watercolor/gouache fur, clear warm shading, rich appealing facial planes, hand-painted rather than 3D render. NO labels, NO text, NO backgrounds, NO shadows beyond local form shading, NO accessories. Arrange parts exact within 4x2 grid so they can be addressed independently by SVG viewBox.",
+    "transparentBackground": true,
+    "requestedDimensions": [
+      2048,
+      1024
+    ],
+    "actualDimensions": [
+      1774,
+      887
+    ],
+    "processing": "保留原始 alpha，仅使用 sharp 编码 WebP（quality 88、alphaQuality 100）；没有绘画修改。",
+    "animation": "SVG viewBox 读取分离部件；躯干、四肢、头、耳、尾分别进行关节变换，眨眼、行走、嗅闻、碰鼻与触摸回应按实时状态驱动。奶油角色使用 CSS saturate(.42) brightness(1.17)、镜像及独立节奏；不再切换八张完整狗姿态。",
+    "implementation": "src/memory-book/Pets.tsx",
+    "promptRecord": ".asset-build/memory-book/masters/teddy-rig.prompt.txt"
+  },
+  {
+    "id": "wind-and-stars",
+    "status": "active-background",
+    "date": "2026-10-03",
+    "generator": "built-in image_gen",
+    "source": "C:/Users/luomin/.codex/generated_images/01a101e8-6b60-72c3-aba9-e1d7660af812/exec-6c4bf423-6b41-4401-a3ea-0e1a3f39e4a5.png",
+    "master": ".asset-build/memory-book/wind-and-stars-master.png",
+    "runtime": "public/memory-book/wind-and-stars.webp",
+    "prompt": "Use case: illustration-story.\nAsset type: original background painting for a cinematic 2D animated web stage; this is ONLY a scenery layer, not an animation or a finished poster.\nCreate a beautifully authored, restrained, hand-painted 16:9 landscape panorama, ideally 2048 x 1152 pixels. A vast open grassland at the precise poetic moment when the last warm sunset gives way to a deep-blue evening sky. One continuous coherent location and lighting transition, not a split image. Low rolling violet mountains on the distant horizon, pale warm gold along that horizon, layered painterly indigo and dusty blue clouds above, with just a few tiny early stars high in the sky. Spacious and tender, expansive and romantic.\nComposition: horizon at about 63% of image height; traversable flat earth and short ochre grasses occupy the lower third. Leave the middle 75% of the width uncluttered at ground level so separately composited hand-drawn animals can run horizontally across it. Modest low sandstone rocks and gentle grassy slopes at the extreme left and right edges frame the scene, never large hero rock formations. Distant hill layers have carefully varied silhouettes and atmospheric perspective. The center of the ground is clearly readable and calm.\nMedium: premium traditional feature-animation background painting, fine gouache and watercolor on paper with soft dry-brush texture, intentional painted edges, subtle value structure, clean large silhouettes and exquisitely controlled color, genuinely drawn and painted appearance rather than photorealism or 3D rendering. Preserve natural modest contrast so the animated foreground characters will read.\nPalette: warm honey and muted amber low on the horizon and on a little of the ground, dusty plum distant hills, midnight ultramarine and slate-blue upper sky, subdued warm-gray rocks, restrained sage and ochre grass.\nConstraints: absolutely no people, animals, movie characters, recognizable film landmarks, buildings, text, lettering, logo, title, frame or watermark. Entirely original scenery. No neon, no lens flare, no bloom, no glowing particles, no glitter, no glowing grass, no magical beams, no Milky Way, no over-saturated orange-purple AI fantasy gradient. No busy foreground vegetation and no central obstacle. No collage and no separate panels. Opaque background.",
+    "transparentBackground": false,
+    "actualDimensions": [
+      1672,
+      941
+    ],
+    "runtimeDimensions": [
+      1600,
+      900
+    ],
+    "runtimeBytes": 287242,
+    "processing": "仅等比例缩放并编码 WebP（quality 93）；保留原始母版。",
+    "role": "原创静态后景：金色夕照旷野过渡到暮蓝星空，不含电影角色、标志或文字。它不是动画或电影原景；角色动作、草、风和星光由其它素材与独立运行图层承担。"
   }
 ]
