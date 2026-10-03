@@ -60,7 +60,9 @@ export async function fetchChecked(url, options = {}) {
 }
 export async function verifyRemote(manifest, { full = false, origin = process.env.SITE_ORIGIN } = {}) {
   const root = publicRoot(process.env.VITE_ASSET_BASE_URL);
-  const headers = origin ? { Origin: new URL(origin).origin } : {};
+  // CDN compression can omit Content-Length (notably JSON via Brotli).
+  // Integrity checks compare stored bytes, so request the identity representation.
+  const headers = { 'Accept-Encoding': 'identity', ...(origin ? { Origin: new URL(origin).origin } : {}) };
   const ready = await (await fetchChecked(new URL(`releases/${manifest.releaseId}/ready.json`, root), { headers })).json();
   if (ready.manifestSha256 !== hash(JSON.stringify(manifest)) || ready.releaseId !== manifest.releaseId) throw Error('远端 ready 与批准清单不一致');
   for (const variant of variants(manifest)) {

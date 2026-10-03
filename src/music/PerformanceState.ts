@@ -90,7 +90,7 @@ export class PerformanceState {
     this.clock += dt;
     const now = this.clock;
     const since = now - this.lastInput;
-    const active = holding || since < SETTLE_AFTER;
+    const active = holding || since < (this.timeline ? .12 : SETTLE_AFTER);
     if (this.intervals.length >= 2) {
       const mean = this.intervals.reduce((a, b) => a + b, 0) / this.intervals.length;
       // 间隔越短速度越快，但夹在 0.85–1.15 之间。

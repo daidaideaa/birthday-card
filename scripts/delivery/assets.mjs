@@ -11,7 +11,7 @@ try {
   const command = positionals[0];
   if (command === 'prepare') {
     const mode = args.mode ?? (process.env.VITE_ASSET_BASE_URL ? 'remote' : 'local');
-    if (!['local', 'remote'].includes(mode)) throw Error('--mode 必须是 local 或 remote');
+    if (!['local', 'remote', 'manifest'].includes(mode)) throw Error('--mode 必须是 local、remote 或 manifest');
     let manifest;
     if (args.source) {
       assertReleaseId(args.release);
@@ -39,6 +39,12 @@ try {
     if (process.env.DEPLOY_TARGET === 'production') {
       const selected = await selectedRelease(args.release, true);
       if (JSON.stringify(selected) !== JSON.stringify(manifest)) throw Error('生产批准清单不一致');
+    }
+    if (mode === 'manifest') {
+      // Stage an immutable snapshot before the gateway and R2 objects exist.
+      // This does not select it for either a local build or production.
+      console.log(`清单已就绪：${manifest.releaseId}；未修改构建资源或批准锁文件`);
+      process.exit(0);
     }
     if (mode === 'remote') {
       await verifyRemote(manifest);

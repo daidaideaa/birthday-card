@@ -45,6 +45,7 @@ export function AccompanimentKeys({
   const owned = useRef(new Map<number, number>());
   /** note → 按住它的指针数；与音频层的持有计数同构，但不依赖音频可用。 */
   const counts = useRef(new Map<number, number>());
+  const keyboardOwned = useRef(new Map<string, number>());
   const [heldSet, setHeldSet] = useState<ReadonlySet<number>>(() => new Set());
   const notify = useRef(onHeldChange);
   notify.current = onHeldChange;
@@ -153,11 +154,32 @@ export function AccompanimentKeys({
 
   const releaseEverything = useCallback(() => {
       for (const pointerId of [...owned.current.keys()]) release(pointerId);
-      // 键盘操作留下的持有计数也一并清空。
-      for (const note of [...counts.current.keys()]) noteOffRef.current(note);
+      for (const note of keyboardOwned.current.values()) noteOffRef.current(note);
+      keyboardOwned.current.clear();
       counts.current.clear();
       commit();
   }, [release, commit]);
+
+  const keyboardDown = (event: React.KeyboardEvent, note: number) => {
+    if (!active || (event.key !== ' ' && event.key !== 'Enter')) return;
+    event.preventDefault();
+    const owner = `${note}:${event.key}`;
+    if (event.repeat || keyboardOwned.current.has(owner)) return;
+    keyboardOwned.current.set(owner, note);
+    press(note); noteOnRef.current(note, .8);
+  };
+  const keyboardUp = (event: React.KeyboardEvent, note: number) => {
+    if (event.key !== ' ' && event.key !== 'Enter') return;
+    event.preventDefault();
+    if (!keyboardOwned.current.delete(`${note}:${event.key}`)) return;
+    lift(note); noteOffRef.current(note);
+  };
+  const keyboardBlur = (note: number) => {
+    // Focus changes release only keyboard owners, never another held pointer.
+    for (const [owner, held] of keyboardOwned.current) if (held === note) {
+      keyboardOwned.current.delete(owner); lift(note); noteOffRef.current(note);
+    }
+  };
 
   useEffect(() => {
     if (!active) releaseEverything();
@@ -249,24 +271,9 @@ export function AccompanimentKeys({
             className={"key key--white" + (heldSet.has(note) ? " is-held" : "")}
             aria-label={`弹奏${SOLFEGE[note]}`}
             aria-pressed={heldSet.has(note)}
-            onKeyDown={(event) => {
-              if (event.key !== " " && event.key !== "Enter") return;
-              event.preventDefault();
-              if (event.repeat) return;
-              press(note);
-              noteOnRef.current(note, 0.8);
-            }}
-            onKeyUp={(event) => {
-              if (event.key !== " " && event.key !== "Enter") return;
-              lift(note);
-              noteOffRef.current(note);
-            }}
-            onBlur={() => {
-              // 焦点离开时若仍在按住，释放它。
-              if (!heldSet.has(note)) return;
-              lift(note);
-              noteOffRef.current(note);
-            }}
+            onKeyDown={event => keyboardDown(event, note)}
+            onKeyUp={event => keyboardUp(event, note)}
+            onBlur={() => keyboardBlur(note)}
           >
             <span aria-hidden="true">{NOTE_NAMES[note]}</span>
           </button>
@@ -286,23 +293,9 @@ export function AccompanimentKeys({
             }}
             aria-label={`弹奏${SOLFEGE[note]}`}
             aria-pressed={heldSet.has(note)}
-            onKeyDown={(event) => {
-              if (event.key !== " " && event.key !== "Enter") return;
-              event.preventDefault();
-              if (event.repeat) return;
-              press(note);
-              noteOnRef.current(note, 0.8);
-            }}
-            onKeyUp={(event) => {
-              if (event.key !== " " && event.key !== "Enter") return;
-              lift(note);
-              noteOffRef.current(note);
-            }}
-            onBlur={() => {
-              if (!heldSet.has(note)) return;
-              lift(note);
-              noteOffRef.current(note);
-            }}
+            onKeyDown={event => keyboardDown(event, note)}
+            onKeyUp={event => keyboardUp(event, note)}
+            onBlur={() => keyboardBlur(note)}
           />
         ))}
       </div>

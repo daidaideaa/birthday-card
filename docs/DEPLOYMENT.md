@@ -57,3 +57,43 @@ GitHub Pages 无法使用 Cloudflare 的 `_headers` 自定义响应头，不把�
 保留正式版本及前两个批准 release，不自动清理桶。GitHub Pages 回滚应重新运行上一个已验证提交的发布工作流或提交经确认的代码/lock 回退；不能只修改远端 latest。先验证旧 release key 存在且可读，再发布其固定 manifest。尚无 R2 正式发布时，现有本地媒体随历史 GitHub Pages 构建保留。
 
 HTTP smoke 不代替真实 iPhone Safari 的图片/GLB/音频解码、冷缓存网络和手势验收。新 2D 狮子动画尚未由美术任务交付，部署任务不声称它已存在。
+
+## 2026-10-03 动作候选发布
+
+新增不可变版本 `duet-review-20261003-v1`：39 个资源、56,066,636 字节（约 53.5 MiB），另有最终 `ready.json`。保留原 36 个资源以固定整站单一快照，新增男/女骨架动画及时间线。两个 GLB 均内嵌依赖，完整 SHA-256、MIME、长度、CORS、immutable 缓存校验通过。Cloudflare Worker 版本为 `7a4bb6f1-453b-4a2a-8e8e-c11df51a82a6`，同时允许现有生产与新预览清单；仅新增预览 localhost Origin，没有开放任意 Origin 或写接口。
+
+`assets/release.lock.json` 仍锁定 `runtime-20260925-v1`。旧版 36 个对象发布后再次 HEAD 校验通过，作为当前生产/回退入口继续保留。这是旧入口核验，未实际重新部署旧版 Pages，也未把候选切换为生产。
+
+远程校验明确请求 `Accept-Encoding: identity`，因为 CDN 对 JSON 启用 Brotli 时会省略 `Content-Length`。浏览器可继续使用协商压缩；完整性校验比较存储字节。对应回归测试为 `tests/remote-integrity.test.ts`。
+
+在 Node 22.12+ 的新 checkout 中直接预览云端候选，不需要 `.blend` 或本地 GLB：
+
+```powershell
+$env:VITE_ASSET_BASE_URL='https://birthday-card-media.daidaidefish.workers.dev/birthday-card/'
+$env:ASSET_RELEASE_ID='duet-review-20261003-v1'
+$env:SITE_ORIGIN='https://daidaideaa.github.io'
+npm ci
+npm run dev:performance
+```
+
+默认打开 `http://127.0.0.1:5184/birthday-card/`，独立动作页为 `performance-review.html`。`predev:performance` / `prebuild:performance` 自动检查远端并生成独立公开预览目录；不会写生产锁。远程 `npm run build:performance` 自动移除清单登记的大资源，只留下网页与署名等小文件，随后运行：
+
+```powershell
+npm run deploy:check -- --dir .asset-build/performance-preview
+$env:PLAYWRIGHT_CHANNEL='msedge'
+$env:PERFORMANCE_REVIEW_URL='http://127.0.0.1:5184/birthday-card/'
+node --import tsx scripts/review/check-performance-remote.mts
+```
+
+本轮已经实际通过的远程浏览器检查禁止回落到本地 GLB/MP4/MP3，并验证了两个人物解码、琴键推进、松手停止及完整书信入口。输出在 `.asset-build/performance-review/check/remote.json`。本机最终静态预览也可从端口 5185 打开。
+
+后续重新制作时使用全新 release ID：
+
+```sh
+node --import tsx scripts/review/package-performance.mjs <new-release-id>
+# 更新 Worker 允许清单并部署，保留已批准版本
+node --import tsx scripts/delivery/assets.mjs publish --release <new-release-id> --source .asset-build/performance-review/public --transport wrangler --apply
+node --import tsx scripts/delivery/assets.mjs verify-remote --release <new-release-id> --full
+```
+
+`prepare --mode manifest` 只生成/校验不可变清单，解决首次上传前网关与 ready 尚不存在的准备顺序；不生成站点清单、不选择生产版本。公开发布不包含母版、私密迁移文件或 OAuth 凭据。

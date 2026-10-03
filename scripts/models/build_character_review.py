@@ -152,6 +152,45 @@ def folded_collar(sign,mat,rig):
     obj.modifiers['Tailored surface'].levels=0
     return obj
 
+def body_weights(obj, body):
+    """Bind the whole garment consistently, including the old/new sleeve seam."""
+    tree=KDTree(len(body.data.vertices))
+    for vertex in body.data.vertices: tree.insert(vertex.co,vertex.index)
+    tree.balance()
+    obj.vertex_groups.clear()
+    mapping={g.index:obj.vertex_groups.new(name=g.name) for g in body.vertex_groups}
+    for vertex in obj.data.vertices:
+        samples=tree.find_n(vertex.co,4)
+        total=sum(1/(distance+.003)**2 for _,_,distance in samples)
+        weights={}
+        for _,index,distance in samples:
+            factor=1/(distance+.003)**2/total
+            for group in body.data.vertices[index].groups:
+                weights[group.group]=weights.get(group.group,0)+group.weight*factor
+        for index,weight in weights.items():
+            if weight>.00001:mapping[index].add([vertex.index],weight,'REPLACE')
+
+def dance_slippers(body,rig,mat):
+    """Low soft dance shoes with an open instep, fitted to the source feet."""
+    obj=body.copy();obj.data=body.data.copy();obj.name='Soft dance slippers'
+    bpy.context.collection.objects.link(obj);obj.animation_data_clear();obj.shape_key_clear()
+    for mod in list(obj.modifiers):
+        if mod.type!='ARMATURE':obj.modifiers.remove(mod)
+    bm=bmesh.new();bm.from_mesh(obj.data)
+    def opening(p):
+        # Covered toe and heel, lower cut across the instep.
+        toe=max(0,min(1,(-p.y-.072)/.05))
+        heel=max(0,min(1,(p.y+.005)/.035))
+        return .027+.033*toe+.035*heel
+    bmesh.ops.delete(bm,geom=[v for v in bm.verts if v.co.z>opening(v.co) or abs(v.co.x)<.025],context='VERTS')
+    bm.normal_update()
+    for vertex in bm.verts:vertex.co+=vertex.normal*.0035
+    bm.to_mesh(obj.data);bm.free();assign(obj,mat)
+    obj.hide_render=False;obj.hide_viewport=False;obj.hide_set(False)
+    sub=obj.modifiers.new('Soft leather edge','SUBSURF');sub.levels=1
+    edge=obj.modifiers.new('Turned leather','SOLIDIFY');edge.thickness=.002
+    return obj
+
 def prepare(name):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rig, objects = append_character(name)
@@ -239,6 +278,9 @@ def prepare(name):
         sculpt_with_correctives(bpy.data.objects['GEO-snow-head'],face_proportions)
     if female:
         rig.pose.bones['Properties_Character_Rain']['Scarf']=False
+        shoes=bpy.data.objects['GEO-rain-shoes'];visible.remove(shoes);shoes.hide_render=True;shoes.hide_set(True)
+        visible.append(dance_slippers(bpy.data.objects['GEO-rain-body'],rig,
+                       pbr('Champagne dance leather',(.38,.24,.115),.48)))
         props=rig.pose.bones['Properties_IKFK']; props['ik_spine']=0
         props['ik_fingers_left']=0; props['ik_fingers_right']=0
         props['ik_stretch_arms']=0
@@ -300,6 +342,10 @@ def prepare(name):
             bpy.ops.mesh.primitive_uv_sphere_add(segments=12,ring_count=8,location=(0,y-.002,z),scale=(.0045,.002,.0045))
             o=bpy.context.object; o.name='Shirt button'; bpy.ops.object.transform_apply(location=True,rotation=False,scale=True)
             assign(o,mats['shirt']); bind(o,rig,'DEF-Chest');visible.append(o)
+    if not female:
+        for obj in visible:
+            if obj.name.startswith(('Tailored','Double cuffs','Shirt collar','Pointed collar')):
+                body_weights(obj,bpy.data.objects['GEO-snow-body'])
     return rig,visible
 
 def set_pose(rig, female, pose):
