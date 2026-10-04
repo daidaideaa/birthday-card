@@ -3,6 +3,7 @@ const Journey = lazy(() => import("./Journey"));
 import Pets from "./Pets";
 const Cinema = lazy(() => import("./Cinema"));
 import MagicObject from "./MagicObject";
+import ChapterTransition from "./ChapterTransition";
 import { photos, movies } from "./media";
 import { assetUrl } from "../utils/assetUrl";
 import "./memory-book.css";
@@ -13,8 +14,8 @@ const ids = ["invitation", "journey", "photos", "cinema", "wish"];
 const numerals = ["I", "II", "III", "IV", "V"];
 const letter = [
 "今晚，我想送给你一本有一点偏心的书。它记不住所有咒语，却记得你的名字；它也没有收藏整个世界，只想把一些温柔的光，留在你翻开它的时候。",
-"从河南到天津，从北京到香港，再到深圳，你走过的每一段路，都值得被认真地看见。我没有参与其中的每一天，也不会假装知道每一页故事。但如果你愿意，我想慢慢听你讲：那些让你开心的、让你骄傲的，还有偶尔觉得有一点辛苦的时刻。",
-"我的那条路，从武汉，经过南京和上海，也来到了深圳。很高兴，两条各自向前的路，后来有了可以并排写下的一页。",
+"从河南周口到天津，从北京的中国政法大学到香港科技大学，再到深圳，你走过的每一段路，都值得被认真地看见。我没有参与其中的每一天，也不会假装知道每一页故事。但如果你愿意，我想慢慢听你讲：那些让你开心的、让你骄傲的，还有偶尔觉得有一点辛苦的时刻。",
+"我的那条路，从湖北武汉，经过南京的东南大学、上海交通大学，也来到了深圳。很高兴，两条各自向前的路，后来有了可以并排写下的一页。",
 "所以这本书里，我留了风，留了星光，也留了几张以后可以换成我们照片的位置。希望它不只是带你回头看看，也能让你期待，前面还有多少风景值得我们慢慢发现。",
 "新的一岁，愿你继续喜欢自己喜欢的事，走自己想走的路。想勇敢的时候，就向前一点；想休息的时候，也可以安心停下来。不必每一天都很厉害，你的快乐本身就很值得被放在心上。",
 "等你翻到最后，那只深蓝色的蛋糕会替今晚留住一点星空。先别急着吹灭蜡烛，把那个最想实现的愿望，悄悄留给自己。",
@@ -22,7 +23,7 @@ const letter = [
 ];
 const media = (path: string) => /^https:\/\//.test(path) ? path : assetUrl(path);
 
-function useMusic(filmPlaying: boolean) {
+function useMusic() {
   const audio = useRef<AudioContext | null>(null);
   const [playing, setPlaying] = useState(false);
   const toggle = () => {
@@ -32,7 +33,7 @@ function useMusic(filmPlaying: boolean) {
     setPlaying(!playing);
   };
   useEffect(() => {
-    if (!playing || filmPlaying) { if (audio.current) void audio.current.suspend(); return; }
+    if (!playing) { if (audio.current) void audio.current.suspend(); return; }
     void audio.current?.resume();
     const context = audio.current;
     if (!context) return;
@@ -59,7 +60,7 @@ function useMusic(filmPlaying: boolean) {
     const visibility=()=>{if(document.hidden)void context.suspend();else void context.resume().catch(()=>setPlaying(false));};
     document.addEventListener("visibilitychange",visibility);
     return()=>{clearInterval(timer);document.removeEventListener("visibilitychange",visibility);};
-  },[playing,filmPlaying]);
+  },[playing]);
   useEffect(()=>()=>{void audio.current?.close();},[]);
   return {playing,toggle};
 }
@@ -70,7 +71,6 @@ export default function MemoryGift(){
   const [reducedMotion,setReducedMotion]=useState(()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [awake,setAwake]=useState(false);
   const [photo,setPhoto]=useState(0);
-  const [filmPlaying,setFilmPlaying]=useState(false);
   const [wish,setWish]=useState<"lit"|"making"|"blown">("lit");
   const [celebrate,setCelebrate]=useState(0);
   const [modal,setModal]=useState<"letter"|"photo"|"credits"|null>(null);
@@ -78,7 +78,7 @@ export default function MemoryGift(){
   const [hidden,setHidden]=useState(document.hidden);
   const timers=useRef<number[]>([]);
   const dialog=useRef<HTMLDialogElement>(null);
-  const music=useMusic(filmPlaying);
+  const music=useMusic();
   const currentPhoto=photos[photo];
   const go=useCallback((target:number)=>{
     if(target===chapter||target<0||target>4||transition)return;
@@ -86,11 +86,11 @@ export default function MemoryGift(){
     if(target===0)setAwake(false);
     setMenu(false);setModal(null);
     setTransition(target<chapter?"return":["book","sand","wind","star"][chapter]||"book");
-    const duration=reducedMotion?90:800;
+    const duration=reducedMotion?100:1800;
     timers.current.push(window.setTimeout(()=>{
       setChapter(target);window.history.pushState(null,"","#"+ids[target]);
       window.scrollTo({top:0,behavior:"instant"});
-    },duration*.55),window.setTimeout(()=>setTransition(""),duration+500));
+    },duration*.48),window.setTimeout(()=>setTransition(""),duration));
   },[chapter,reducedMotion,transition]);
   useEffect(()=>{
     const onHash=()=>{
@@ -116,7 +116,7 @@ export default function MemoryGift(){
     if(wish==="lit"){setWish("making");return;}
     setWish("blown");setCelebrate(n=>n+1);
   };
-  return <main className={"memory-gift scene-"+chapter+(reducedMotion?" reduce-motion":"")+(hidden?" is-hidden":"")}>
+  return <main className={"memory-gift scene-"+chapter+(reducedMotion?" reduce-motion":"")+(hidden?" is-hidden":"")+(transition?" is-transitioning":"")}>
     <style>{'@font-face{font-family:GiftSerif;src:url("'+assetUrl("memory-book/serif.woff")+'") format("woff");font-display:swap}'}</style>
     <header className="gift-header">
       <button className="gift-brand" onClick={()=>go(0)} aria-label="回到古书封面"><span className="brand-star">✧</span><span>写给师宝宝的一场梦<small>A LITTLE MAGIC, JUST FOR YOU</small></span></button>
@@ -126,7 +126,8 @@ export default function MemoryGift(){
       </div>
     </header>
     {menu&&<nav className="chapter-menu" aria-label="章节目录">{chapters.map((c,i)=><button key={c} aria-current={chapter===i?"page":undefined} onClick={()=>go(i)}><span>{numerals[i]}</span>{c}<small>↗</small></button>)}<button onClick={()=>setReducedMotion(!reducedMotion)}>减少动态 <small>{reducedMotion?"已开启":"未开启"}</small></button><button onClick={()=>{setMenu(false);setModal("credits");}}>关于这份礼物 <small>✧</small></button></nav>}
-    <div className="chapter-stage" aria-busy={!!transition}>
+    <div className="chapter-stage" aria-busy={!!transition} inert={!!transition}>
+      <div className="chapter-content" key={chapter}>
       {chapter===0&&<section className={"invitation "+(awake?"is-awake":"")} aria-label="第一章 这本书只认识你">
         <MagicObject kind="book" open={awake} reducedMotion={reducedMotion} onOpen={()=>setAwake(value=>!value)}/>
         <div className="invitation-copy"><p className="eyebrow">THE FIRST PAGE OF OUR STORY</p><div className="tiny-rule"/><h1>今晚，<br/>故事只认识<span>你。</span></h1><p className="intro-lines">有一本书，等了很久。<br/>直到你来，它才有了名字。</p><button className="gold-button" onClick={openBook}>{awake?"跟着书页出发":"打开这本书"}<span>✧</span></button><p className="quiet-note">{awake?"师宝宝，这本书终于等到了你。":"一场只为你准备的，生日奇遇"}</p></div>
@@ -141,16 +142,17 @@ export default function MemoryGift(){
         </div>
         <div className="chapter-bottom"><span>把平凡的一天，也过成值得收藏的一页。</span><button className="text-button" onClick={()=>setModal("letter")}>打开给你的信 <b>↗</b></button><button className="text-button" onClick={()=>go(3)}>下一章 <b>→</b></button></div>
       </section>}
-      {chapter===3&&<Suspense fallback={<p className="chapter-loading">正在为你掀开银幕…</p>}><Cinema reducedMotion={reducedMotion} muted={!music.playing} onComplete={()=>go(4)} onPlaybackChange={setFilmPlaying}/></Suspense>}
+      {chapter===3&&<Suspense fallback={<p className="chapter-loading">风正把这一页轻轻吹开…</p>}><Cinema reducedMotion={reducedMotion} muted={!music.playing} active={!modal&&!transition} onComplete={()=>go(4)}/></Suspense>}
       {chapter===4&&<section className={"wish-chapter wish-"+wish} aria-label="第五章 魔法星空蛋糕">
         <div className="wish-heading"><p className="eyebrow">CHAPTER V · MAKE A LITTLE WISH</p><h1>{wish==="blown"?"师宝宝，生日快乐。":wish==="making"?"这一刻，把愿望留给你。":"今晚的星光，都为你亮起。"}</h1><p>{wish==="blown"?"愿你一直勇敢，也一直被爱。":wish==="making"?"不用说出来，也不必着急。许好了，就轻轻吹灭蜡烛。":"先别急着吹灭蜡烛，把最想实现的愿望，悄悄放在心里。"}</p></div>
         <MagicObject kind="cake" extinguished={wish==="blown"} reducedMotion={reducedMotion}/>
         <div className="wish-actions">{wish!=="blown"?<button className="gold-button" onClick={blow}>{wish==="lit"?"许个愿吧":"轻轻吹灭蜡烛"}<span>✧</span></button>:<><p className="after-wish">书里还留着一些空白，想和你一页一页地写。</p><div><button className="text-button" onClick={()=>setModal("letter")}>重读给你的信 ↗</button><button className="text-button" onClick={()=>go(2)}>回看照片 ↗</button><button className="text-button" onClick={()=>setWish("lit")}>再点亮一次 ✧</button></div></>}</div>
       </section>}
-      <Pets scene={chapter} quiet={modal!==null||filmPlaying} reducedMotion={reducedMotion} celebrate={celebrate}/>
+      </div>
+      <Pets scene={chapter} quiet={modal!==null||chapter===3} reducedMotion={reducedMotion} celebrate={celebrate}/>
     </div>
     <footer className="gift-footer"><span className="footer-dedication">FOR YOU, AND ONLY YOU.</span><nav aria-label="故事章节">{chapters.map((c,i)=><button key={c} onClick={()=>go(i)} aria-current={i===chapter?"step":undefined} aria-label={"第"+(i+1)+"章 "+c}><span>{String(i+1).padStart(2,"0")}</span><i/>{c}</button>)}</nav><button className="footer-about" onClick={()=>setModal("credits")} aria-label="关于这份礼物">✧</button></footer>
-    {!!transition&&<div className={"chapter-transition transition-"+transition} aria-hidden="true"><div className="turning-paper"/><div className="transition-thread"/><span className="transition-star">✦</span></div>}
+    {!!transition&&<ChapterTransition kind={transition} reducedMotion={reducedMotion}/>}
     <dialog ref={dialog} className={"gift-dialog modal-"+modal} onCancel={()=>setModal(null)} onClose={()=>setModal(null)} onClick={event=>{if(event.target===event.currentTarget)setModal(null);}}>
       <div className="dialog-content"><button className="dialog-close" onClick={()=>setModal(null)} aria-label="关闭">×</button>
         {modal==="letter"&&<article className="letter-paper"><p className="eyebrow">SOME WORDS, JUST FOR YOU</p><span className="letter-stamp">✧</span><h2>亲爱的师宝宝：</h2>{letter.map(p=><p key={p}>{p}</p>)}<p>愿你一直勇敢，也一直被爱。</p><p className="letter-signature">生日快乐呀 ♡</p><small className="draft-note">书信暂拟，之后可以换成我想亲口对你说的话。</small><button className="letter-continue" onClick={()=>{setModal(null);go(3);}}>把这封信收好，去看看风与星光 →</button></article>}

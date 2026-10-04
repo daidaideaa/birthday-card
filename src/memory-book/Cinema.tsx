@@ -86,13 +86,17 @@ function paint(ctx: CanvasRenderingContext2D, art: Scenery, time: number, still:
   }
   ctx.globalAlpha = 1;
   // New layers, camera placement and choreography surround the extracted original motion.
-  const horseOpacity = blend(time, .3, 1) * (1 - blend(time, 4.8, 6.8));
-  const lionOpacity = blend(time, 7, 8.3) * (1 - blend(time, 16, 19.7) * .42);
+  const horseOpacity = blend(time, .3, 1) * (1 - blend(time, 4.2, 6.6));
+  const lionOpacity = blend(time, 7, 8.3) * (1 - blend(time, 11.5, 14.5));
   ctx.save(); ctx.globalAlpha = horseOpacity * .16; ctx.fillStyle = '#241b22'; ctx.beginPath(); ctx.ellipse(660, 605, 275, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   character(ctx, art.horses, still ? .8 : time - 1, 235 + drift, 360, 820, horseOpacity);
-  character(ctx, art.lions, still ? .72 : time - 8.3, 310 - drift * .35, 330, 660, lionOpacity);
+  // Keep faces above the subtitle band, with a soft foreground joining the source crop.
+  character(ctx, art.lions, still ? .72 : time - 8.3, 350 - drift * .35, 245, 580, lionOpacity);
   // The original shot already hides the hooves in grass; the new field continues that occlusion.
   ctx.save(); ctx.globalAlpha = horseOpacity; ctx.drawImage(art.foreground, drift, 0); ctx.restore();
+  const closeupFloor = ctx.createLinearGradient(0, 548, 0, 605);
+  closeupFloor.addColorStop(0, 'rgba(14,25,36,0)'); closeupFloor.addColorStop(1, `rgba(14,25,36,${lionOpacity})`);
+  ctx.fillStyle = closeupFloor; ctx.fillRect(0, 548, WIDTH, HEIGHT - 548);
   // Low foreground grasses hide only the naturally cropped lower edge of the close-up.
   const earth = ctx.createLinearGradient(0, 608, 0, HEIGHT);
   earth.addColorStop(0, 'rgba(15,25,32,0)'); earth.addColorStop(.5, `rgba(14,27,34,${.6 + night * .24})`); earth.addColorStop(1, '#0d1b29');
@@ -119,15 +123,16 @@ function paint(ctx: CanvasRenderingContext2D, art: Scenery, time: number, still:
   ctx.strokeStyle = `rgba(239,215,165,${constellation * .45})`; ctx.lineWidth = 1; ctx.beginPath();
   nodes.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
   nodes.slice(0, -1).forEach(([x, y], i) => star(ctx, x, y, 3 + (i % 2), constellation * .9));
-  const falling = blend(time, 15, LENGTH); const sx = 1030 - falling * 190; const sy = 119 + falling * falling * 488;
+  const falling = blend(time, 15, LENGTH); const sx = 930 - falling * 150; const sy = 119 + falling * falling * 488;
   const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, 53);
   glow.addColorStop(0, `rgba(254,215,130,${.27 + wish * .15})`); glow.addColorStop(1, 'rgba(254,215,130,0)');
   ctx.fillStyle = glow; ctx.fillRect(sx - 53, sy - 53, 106, 106); star(ctx, sx, sy, 9 + wish * 3, .93);
-  if (falling > 0) { ctx.strokeStyle = `rgba(249,220,163,${.45 * (1 - falling)})`; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(1030, 119); ctx.quadraticCurveTo(950, 155, sx, sy); ctx.stroke(); }
+  if (falling > 0) { ctx.strokeStyle = `rgba(249,220,163,${.45 * (1 - falling)})`; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(930, 119); ctx.quadraticCurveTo(860, 155, sx, sy); ctx.stroke(); }
 }
 
 export default function Cinema({ reducedMotion, active = true, onComplete, onPlaybackChange }: CinemaProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const theater = useRef<HTMLDivElement>(null);
   const time = useRef(0);
   const wishUntil = useRef(0);
   const [art, setArt] = useState<Scenery | null>(null);
@@ -135,8 +140,9 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
   const [position, setPosition] = useState(0);
   const [attempt, setAttempt] = useState(0);
   const [wishCount, setWishCount] = useState(0);
-  const playbackCallback = useRef(onPlaybackChange);
-  useEffect(() => { playbackCallback.current = onPlaybackChange; onPlaybackChange?.(false); }, [onPlaybackChange]);
+  const [framing, setFraming] = useState({ width: WIDTH, height: HEIGHT, x: 0, y: 0 });
+  const resumeAfterOcclusion = useRef(false);
+  useEffect(() => { onPlaybackChange?.(state === 'playing' && active && !reducedMotion); return () => onPlaybackChange?.(false); }, [state, active, reducedMotion, onPlaybackChange]);
   useEffect(() => {
     const abort = new AbortController(); let cancelled = false; setState('loading');
     Promise.all([loadImage('memory-book/wind-and-stars.webp'), loadCharacter('spirit-pair', abort.signal), loadCharacter('lion-nuzzle', abort.signal)])
@@ -145,11 +151,20 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
     return () => { cancelled = true; abort.abort(); };
   }, [attempt]);
   useEffect(() => {
-    if (!active) setState((value) => value === 'playing' ? 'paused' : value);
-    const pause = () => { if (document.hidden) setState((value) => value === 'playing' ? 'paused' : value); };
+    if (!active && state === 'playing') { resumeAfterOcclusion.current = true; setState('paused'); }
+    if (active && !document.hidden && !reducedMotion && (state === 'ready' || resumeAfterOcclusion.current)) { resumeAfterOcclusion.current = false; setState('playing'); }
+  }, [active, state, reducedMotion]);
+  useEffect(() => {
+    const pause = () => {
+      if (document.hidden) setState((value) => { if (value === 'playing') { resumeAfterOcclusion.current = true; return 'paused'; } return value; });
+      else if (active && !reducedMotion) setState(value => {
+        if (value === 'ready' || resumeAfterOcclusion.current) { resumeAfterOcclusion.current = false; return 'playing'; }
+        return value;
+      });
+    };
     document.addEventListener('visibilitychange', pause);
     return () => document.removeEventListener('visibilitychange', pause);
-  }, [active]);
+  }, [active, reducedMotion]);
   useEffect(() => {
     if (!art || !canvas.current) return;
     const element = canvas.current; const ctx = element.getContext('2d'); if (!ctx) return;
@@ -160,7 +175,16 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
       const wish = reducedMotion ? 0 : cap((wishUntil.current - performance.now()) / 2100);
       paint(ctx, art, sceneTime, reducedMotion, wish);
     };
-    const resize = () => { const ratio = Math.min(window.devicePixelRatio || 1, 1.75); element.width = Math.round(element.clientWidth * ratio); element.height = Math.round(element.width * HEIGHT / WIDTH); render(); };
+    const resize = () => {
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.75);
+      element.width = Math.round(element.clientWidth * ratio); element.height = Math.round(element.width * HEIGHT / WIDTH);
+      const bounds = element.getBoundingClientRect(), parent = theater.current?.getBoundingClientRect();
+      if (parent) {
+        const width = Math.max(bounds.width, bounds.height * WIDTH / HEIGHT), height = width * HEIGHT / WIDTH;
+        setFraming({width,height,x:bounds.left-parent.left+(bounds.width-width)/2,y:bounds.top-parent.top+(bounds.height-height)/2});
+      }
+      render();
+    };
     const observer = new ResizeObserver(resize); observer.observe(element); resize();
     const tick = (now: number) => {
       if (state === 'playing' && active && !reducedMotion && !document.hidden) {
@@ -169,7 +193,7 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
         if (time.current >= LENGTH) { setPosition(LENGTH); setState('ended'); }
       }
       last = now; render();
-      if (state === 'playing' && !reducedMotion) raf = requestAnimationFrame(tick);
+      if (state === 'playing' && active && !reducedMotion && !document.hidden) raf = requestAnimationFrame(tick);
     };
     render(); if (state === 'playing' && !reducedMotion) raf = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(raf); observer.disconnect(); };
@@ -183,29 +207,24 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
     if (state === 'ended') { time.current = 0; setPosition(0); }
     setState((value) => value === 'playing' ? 'paused' : 'playing');
   };
-  const replay = () => { time.current = reducedMotion ? 2 : 0; setPosition(time.current); setState(reducedMotion ? 'paused' : 'playing'); setWishCount((n) => n + 1); };
   const makeWish = () => { wishUntil.current = performance.now() + 2100; setWishCount((n) => n + 1); if (state === 'ready') start(); };
-  const finish = () => { playbackCallback.current?.(false); onComplete(); };
+  const finish = () => { onPlaybackChange?.(false); onComplete(); };
   const caption = position < 5 ? '愿你有奔向旷野的自由。' : position < 8 ? '风走过很远的路，终于遇见了星光。' : position < 15 ? '也有停下时，可以安心靠近的温柔。' : '今晚，把最亮的一颗，留给你。';
   const starFall = blend(position, 15, LENGTH);
-  const starStyle = { left: `${(1030 - starFall * 190) / WIDTH * 100}%`, top: `${(119 + starFall * starFall * 488) / HEIGHT * 100}%` };
+  const starStyle = { left: framing.x + (930 - starFall * 150) / WIDTH * framing.width, top: framing.y + (119 + starFall * starFall * 488) / HEIGHT * framing.height };
   const loading = state === 'loading';
-  return <section className={`memory-cinema${reducedMotion ? ' memory-cinema--still' : ''}`} data-cinema-state={state} aria-labelledby="memory-cinema-title">
-    <header className="memory-cinema__intro"><p className="memory-cinema__eyebrow">THE WIND BROUGHT YOU HERE</p><h2 id="memory-cinema-title">风与星光，都来祝福你</h2><p>有些奇遇，走过辽阔的旷野。<br />有些温柔，最后停在你身边。</p></header>
-    <div className="memory-cinema__theater">
+  return <section className={`memory-cinema${reducedMotion ? ' memory-cinema--still' : ''}${position > 15 ? ' memory-cinema--night' : ''}`} data-cinema-state={state} aria-labelledby="memory-cinema-title">
+    <header className="memory-cinema__intro"><p className="memory-cinema__eyebrow">IV · A WISH IN THE WIND</p><h2 id="memory-cinema-title">风与星光</h2></header>
+    <div className="memory-cinema__theater" ref={theater}>
       <canvas ref={canvas} className="memory-cinema__canvas" role="img" aria-label="金色旷野里，小马王与雨亲昵嬉戏。风带着光点经过，暮色下辛巴与娜娜相依，星光为你亮起。" />
       <div className="memory-cinema__vignette" aria-hidden="true" />
       {(loading || state === 'error') && <div className="memory-cinema__waiting" role="status"><span aria-hidden="true">✧</span><p>{loading ? '风正把这一页，轻轻吹开……' : '这一页暂时没展开，再轻轻试一次。'}</p></div>}
       {!loading && state !== 'error' && <button className="memory-cinema__wish" style={starStyle} type="button" onClick={makeWish} aria-label="轻触星星，送出一阵祝福" title="轻触星星，送出一阵祝福"><span aria-hidden="true">✧</span></button>}
-      {state === 'ready' && <div className="memory-cinema__invitation"><button type="button" onClick={start}>让这页童话醒来 <span aria-hidden="true">↗</span></button></div>}
-      <span className="memory-cinema__corner" aria-hidden="true">IV · A WISH IN THE WIND</span>
     </div>
-    <div className="memory-cinema__caption" aria-live="polite"><p>{caption}</p><small>{state === 'paused' && !reducedMotion ? '停在这里，也很好。' : wishCount > 0 ? '你的祝福，星星已经听见了。' : '轻触画面里的星星，把祝福交给风。'}</small></div>
-    <progress className="memory-cinema__progress" max={LENGTH} value={position} aria-label="风与星光的故事进度" />
+    <div className="memory-cinema__caption" aria-live="polite"><p key={caption}>{caption}</p><small>{state === 'paused' && !reducedMotion ? '停在这里，也很好。' : wishCount > 0 ? '你的祝福，星星已经听见了。' : '让风替你收藏，自由与温柔。'}</small></div>
     <div className="memory-cinema__actions">
-      {state !== 'ready' && <button type="button" className="memory-cinema__quiet-button" onClick={start} disabled={loading}>{state === 'error' ? '再展开一次' : reducedMotion ? state === 'ended' ? '回到旷野' : '下一幅星光' : state === 'playing' ? '暂停，停留一下' : state === 'ended' ? '再看一次' : '继续这段奇遇'}</button>}
-      {!loading && state !== 'error' && state !== 'ready' && state !== 'ended' && <button type="button" className="memory-cinema__quiet-button" onClick={replay}>从风吹起的地方重看</button>}
-      <button type="button" className="memory-cinema__next" onClick={finish}>把星光带去下一页 <span aria-hidden="true">→</span></button>
+      <button type="button" className="memory-cinema__quiet-button" onClick={start} disabled={loading}>{state === 'error' ? '再展开一次' : reducedMotion ? state === 'ended' ? '回到旷野' : '下一幅星光' : state === 'playing' ? '停留片刻' : state === 'ended' ? '再赴一场奇遇' : '让风继续'}</button>
+      <button type="button" className={`memory-cinema__next${state === 'ended' ? ' is-ready' : ''}`} onClick={finish}>{state === 'ended' ? '把星光，变成你的生日烛光' : '跟着星光走'} <span aria-hidden="true">→</span></button>
     </div>
   </section>;
 }

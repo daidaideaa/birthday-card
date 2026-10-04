@@ -1,12 +1,26 @@
-.magic-object{position:relative;isolation:isolate;min-width:0}.magic-object-canvas{width:100%;height:100%;position:absolute;inset:0}.magic-object-canvas canvas{display:block;width:100%;height:100%;cursor:grab;outline:none}.magic-object-canvas canvas:active{cursor:grabbing}.object-loading,.object-unavailable{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);font-size:12px;color:#cdb987;letter-spacing:2px;text-align:center}.object-unavailable button{background:#cab078;color:#201b15;border:0;padding:10px 20px}.object-tools{position:absolute;bottom:21px;left:5%;right:5%;display:flex;gap:18px;align-items:center;justify-content:center;color:#cbb887;font-size:10px;letter-spacing:1px;pointer-events:none;text-shadow:0 1px 8px #000}.object-tools button{pointer-events:auto;font-size:9px;background:#10151fc9;border:1px solid #b699632e;border-radius:2px;padding:8px 10px}.object-tools span{opacity:.8}.magic-object-book{position:absolute;inset:0 -5% 0 38%;height:100%;background:radial-gradient(ellipse at 50% 35%,#69503735,transparent 65%)}.invitation{background:radial-gradient(ellipse at 70% 30%,#282521,#11161c 76%);height:max(700px,calc(100svh - 166px))}.invitation-copy{width:44%;pointer-events:none;padding-left:6.5%}.invitation-copy button{pointer-events:auto}.invitation-copy h1{font-size:clamp(36px,3.5vw,59px)}.invitation.is-awake .invitation-copy h1 span{color:#f2d595}.invitation .floating-dust{pointer-events:none;opacity:.4}.magic-object-cake{height:590px;width:min(100%,1040px);margin:-20px auto 0;background:radial-gradient(ellipse,#23374c30,transparent 68%)}.wish-chapter{background:radial-gradient(ellipse at 50% 40%,#12233a,#080f19 72%);padding-bottom:130px;min-height:820px}.wish-actions{position:relative;margin:0 auto}.magic-object-cake .object-tools{bottom:8px}.wish-heading{position:relative;z-index:1}.object-tools button:hover{background:#c6a265;color:#131922}
-@media(max-width:1000px){.magic-object-book{inset:0 -15% 0 35%}.invitation-copy{padding-left:5%;width:46%}.invitation-copy h1{font-size:42px}.object-tools{gap:10px;font-size:9px}.object-tools button{font-size:8px}.magic-object-book .object-tools{left:15%;right:15%}.magic-object-cake{height:540px}}
-@media(max-width:680px){.invitation{height:890px}.magic-object-book{inset:0 -20% auto;height:490px}.magic-object-book .object-tools{bottom:18px;left:15%;right:15%;flex-wrap:wrap;gap:8px}.invitation-copy{position:absolute;bottom:120px;width:100%;padding:0 24px;text-align:center}.invitation-copy h1{font-size:32px;margin:10px 0}.invitation-copy h1 br{display:none}.invitation-copy>.eyebrow{font-size:8px}.intro-lines{margin:12px 0 23px}.magic-object-cake{height:455px;width:116%;margin:0 -8% 5px}.magic-object-cake .object-tools{left:10%;right:10%;gap:8px;flex-wrap:wrap;bottom:0}.object-tools>span{width:100%;text-align:center}.wish-chapter{padding-bottom:145px;min-height:840px}.wish-actions{margin:10px 0 0}.object-tools button{font-size:9px}.wish-heading{padding-top:30px}}
-
+/* Three-dimensional hero stages; chapter placement belongs to memory-book.css. */
+.magic-object{position:relative;isolation:isolate;min-width:0}
+.magic-object-canvas{width:100%;height:100%;position:absolute;inset:0}
+.magic-object-canvas canvas{display:block;width:100%;height:100%;cursor:grab;outline:none}
+.magic-object-canvas canvas:active{cursor:grabbing}
+.magic-object-book{position:absolute;inset:0 -5% 0 35%;height:100%}
+.magic-object-book .magic-object-canvas{mask-image:linear-gradient(90deg,transparent,#000 11%,#000 91%,transparent)}
+.magic-object-book:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,#0b0e14 0%,transparent 24%,transparent 74%,#0b0e1480 100%)}
+.magic-object-cake{position:absolute;inset:0;width:100%;height:100%;background:radial-gradient(ellipse at 50% 50%,#253b5828,transparent 68%)}
+.magic-object-cake .magic-object-canvas{mask-image:linear-gradient(0deg,transparent,#000 16%,#000 82%,transparent)}
+.object-loading,.object-unavailable{position:absolute;z-index:2;left:50%;top:48%;transform:translate(-50%,-50%);font-size:12px;color:#cdb987;letter-spacing:3px;text-align:center;line-height:2}
+.object-loading{animation:object-breathe 2s ease-in-out infinite}
+.object-unavailable button{background:#cab078;color:#201b15;border:0;padding:10px 20px}
+.object-tools{position:absolute;z-index:2;bottom:17%;left:7%;right:7%;display:flex;gap:16px;align-items:center;justify-content:center;color:#d5c29f;font-size:10px;letter-spacing:2px;pointer-events:none;text-shadow:0 1px 10px #000;opacity:.55;transition:opacity .5s}
+.magic-object-book .object-tools{bottom:16%}
+.magic-object-cake .object-tools{bottom:25%}
+.object-tools button{pointer-events:auto;font-size:9px;color:#ead8b7;background:transparent;border:0;border-bottom:1px solid #baa57438;border-radius:0;padding:7px 2px;opacity:0;transition:opacity .3s}
+.magic-object:hover .object-tools,.magic-object:focus-within .object-tools{opacity:.9}
+.magic-object:hover .object-tools button,.magic-object:focus-within .object-tools button{opacity:1}
+.object-tools button:hover{color:#fff2d0;border-color:#e3c081}
+.object-tools span{opacity:.8}
 .chapter-loading{text-align:center;color:#cbb688;letter-spacing:2px;padding:180px 20px;min-height:550px;font-size:13px}
-
-.magic-object-book .magic-object-canvas{mask-image:linear-gradient(90deg,transparent,#000 7%,#000 96%,transparent)}
-@media(max-width:680px){.magic-object-book{inset:0 -5% auto}.magic-object-book .magic-object-canvas{mask-image:linear-gradient(0deg,transparent,#000 12%,#000 95%,transparent)}}
-
-/* Leave a real floor for the two moving companions, outside navigation. */
-.journey-chapter .journey-stage{padding-bottom:185px}.photos-chapter{padding-bottom:180px}.wish-chapter{padding-bottom:185px}.magic-object-book .object-tools{top:20px;bottom:auto}
-@media(max-width:680px){.journey-chapter .journey-stage{padding-bottom:145px}.photos-chapter{padding-bottom:145px}.wish-chapter{padding-bottom:145px}.magic-object-book .object-tools{top:15px;bottom:auto}}
+@keyframes object-breathe{50%{opacity:.45}}
+@media(max-width:1000px){.magic-object-book{inset:0 -8% 0 32%}.object-tools{font-size:9px;gap:10px}.object-tools button{font-size:8px}}
+@media(max-width:680px){.magic-object-book{inset:64px -12% auto;height:53svh;min-height:360px}.magic-object-book .magic-object-canvas{mask-image:linear-gradient(0deg,transparent,#000 12%,#000 84%,transparent)}.magic-object-book .object-tools{bottom:7%;left:8%;right:8%;font-size:9px}.magic-object-cake .object-tools{bottom:28%;font-size:9px}.object-tools button{display:none}.magic-object-cake{inset:60px -14% 125px;width:128%;height:auto}}
+@media(prefers-reduced-motion:reduce){.object-loading{animation:none}}

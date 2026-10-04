@@ -14,8 +14,7 @@ export default defineConfig(({ mode, command }) => {
       name: "memory-book-public-assets",
       writeBundle(options) {
         const output = path.resolve(options.dir || "dist");
-        const retired = new Set(["book.webp", "cake.webp", "puppy-apricot.webp", "puppy-cream.webp"]);
-        fs.cpSync("public/memory-book", path.join(output, "memory-book"), { recursive: true, filter: file => !retired.has(path.basename(file)) });
+        fs.cpSync("public/memory-book", path.join(output, "memory-book"), { recursive: true });
         fs.copyFileSync("src/memory-book/vendor/sandkit/LICENSE", path.join(output, "memory-book", "SandKit-LICENSE.txt"));
       },
     }],

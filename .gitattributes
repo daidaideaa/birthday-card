@@ -1,2 +1,4 @@
-assets/demo/*.svg text eol=lf
-assets/releases/*.json text eol=lf
+* text=auto
+*.glb binary
+*.webp binary
+*.woff binary

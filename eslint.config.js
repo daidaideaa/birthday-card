@@ -6,12 +6,9 @@ export default tseslint.config(
     ignores: [
       "dist/**",
       "node_modules/**",
-      "public/basis/**",
       "src/memory-book/vendor/**",
       ".asset-build/**",
-      "model-sources/**",
-      "test-results/**",
-      "playwright-report/**",
+      "private-restored/**",
     ],
   },
   js.configs.recommended,
