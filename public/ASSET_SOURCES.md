@@ -19,7 +19,7 @@
 
 两件模型由 `scripts/models/build_magic_objects.py` 使用 Blender Python 创建，无第三方人物网格、电影贴图或 AI 静态图替代立体几何。古书含皮革封面、金饰、书脊、独立封面轴与纸页轴；蛋糕含深蓝奶油表面、金色星月装饰、烛身与托盘。`MagicObject.tsx` 添加实时灯光、材质细节、纸页弯曲、相机交互和烛火。
 
-可编辑 Blender 母版位于忽略目录 `.asset-build/memory-book/masters/magic-book.blend`、`star-cake.blend`；发布使用对应 GLB。几何由原创脚本制作；本轮另用内置 imagegen 制作皮革装帧和植物书页纹理，来源与提示词单独记录，贴图不取代立体书几何。浏览器中实时驱动书页与烛火，不声称 GLB 内包含已烘焙演出动画。
+可编辑 Blender 母版位于忽略目录 `.asset-build/memory-book/masters/magic-book.blend`、`star-cake.blend`；发布使用对应 GLB。几何由原创脚本制作；本轮另用内置 imagegen 制作近黑皮革装帧与手抄魔法笔记纹理（旧植物书页已退役），来源与提示词单独记录，贴图不取代立体书几何。浏览器中实时驱动书页与烛火，不声称 GLB 内包含已烘焙演出动画。
 
 ### 沙画引擎、技能与中国地图
 
@@ -59,6 +59,16 @@
 原始 GIF 保存在忽略的 `.asset-build/memory-book/film-source/`，不随网站发布。狮子使用手工轮廓、光流跟随及窄边带修边；双马使用静止背景重建差分与轮廓清理。保留原角色 RGB、相对遮挡和各帧时长，不补造被原画边缘、草或对方身体遮住的部位。可编辑逐帧遮罩保存在制作目录。Spirit / Rain 的蹄部原有草遮挡，狮子为延伸到画幅下沿的近景，合成时通过镜头位置和原创前景草承接裁切。
 
 `Cinema.tsx` 将原版动作置于原创 20 秒 Canvas 段落：Spirit / Rain 的原动作、暮色转深、Simba / Nala 的原版依偎、星光落向下一页；原动作各播放一次，短暂停留后淡出到风与星空，避免长时间保持末帧；没有无限循环或倒放冒充长动作。进入章节自然展开，已移除进度条及播放器外框；暂停、重看、点星送风和减少动态下三幅静态推进已接入，未使用 iframe、预告播放器或原片音轨。**已观察完整播放到20秒结束，落星交互位置随时间更新；另针对狮子近景下沿修正后观察一张画面。未反复长循环测试。**
+
+### V7 · 古书、幼犬与构图（2026-10-04）
+
+手机背景 memory-book/library-cinema-portrait.webp 是以内置imagegen参考原书房重新构图的836×1881竖幅，保留两侧书架、完整窗与桌面；未用程序拉伸或裁图冒充新构图。母版和完整prompt在制作目录及统一生成记录中。
+
+书封与纸页去除花卉藤蔓，改为旧皮铜件、封蜡与虚构魔法笔记。完整提示词在 assets/memory-book-artwork.json；母版 book-wizard-cover-source.png、book-spell-notes-source.png 及 wizard-book-generation.json 位于本地忽略的制作目录。memory-book/manuscript-leaf.webp 是同一手稿的机械WebP编码，用于纸页经过镜头的转场。
+
+memory-book/teddy-puppy-expressions.webp 是内置imagegen参考已有泰迪风格生成的RGBA表情图集（1024×1536）；分别为睁眼、闭眼和轻吐舌，身体与长耳仍单独运动。完整原始提示词及参考关系在生成记录；机械编码入口 scripts/pets/prepare-puppy-expressions.py。没有购买素材或调用付费API。
+
+useMusic.ts 为本项目原创WebAudio声景，由用户主动开启。本地合成钢琴泛音、轻钟音、柔和低音/和弦及立体声混响，不含电影原声或第三方录音。背景、角色和声音都不冒称人工逐帧绘制或实拍录制。
 
 ## 五张预览照片（2026-10-03）
 

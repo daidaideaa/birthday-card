@@ -131,6 +131,10 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
     let model: THREE.Group | undefined;
     let cover: THREE.Object3D | undefined;
     let coverAngle = .025, openPhase = 0;
+    const inkReveal = { value: 0 };
+    let pageEdgeMaterial: THREE.LineBasicMaterial | undefined;
+    let inkMotes: THREE.Points | undefined;
+    const inkPositions = new Float32Array(18 * 3);
     const pages: THREE.Object3D[] = [];
     const paperSurfaces: Array<Array<{ mesh: THREE.Mesh; positions: Float32Array }>> = [];
     const flames: THREE.Sprite[] = [];
@@ -167,8 +171,24 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
       });
       group.add(model);
       if (kind === 'book') {
-        const dedication = new THREE.Mesh(new THREE.PlaneGeometry(2.32, 3.11), new THREE.MeshStandardMaterial({ map: pageTexture, transparent: true, roughness: 1, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 }));
+        const ink = new THREE.MeshStandardMaterial({ map: pageTexture, transparent: true, roughness: 1, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
+        ink.onBeforeCompile = shader => {
+          shader.uniforms.uInkReveal = inkReveal;
+          shader.fragmentShader = 'uniform float uInkReveal;\n' + shader.fragmentShader;
+          shader.fragmentShader = shader.fragmentShader.replace('#include <alphamap_fragment>', '#include <alphamap_fragment>\ndiffuseColor.a *= smoothstep(1.0 - vMapUv.y - 0.04, 1.0 - vMapUv.y + 0.04, uInkReveal);');
+        };
+        ink.customProgramCacheKey = () => 'wizard-book-dedication-ink';
+        const dedication = new THREE.Mesh(new THREE.PlaneGeometry(2.32, 3.11), ink);
         dedication.rotation.x = -Math.PI / 2; dedication.position.set(.02, .344, 0); model.add(dedication);
+        pageEdgeMaterial = new THREE.LineBasicMaterial({ color: 0xd3bf8c, transparent: true, opacity: 0, depthWrite: false });
+        const edge = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-1.16, .347, -1.56), new THREE.Vector3(1.18, .347, -1.56),
+          new THREE.Vector3(1.18, .347, 1.56), new THREE.Vector3(-1.16, .347, 1.56),
+        ]), pageEdgeMaterial);
+        model.add(edge);
+        const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.BufferAttribute(inkPositions, 3));
+        inkMotes = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x6f4a27, size: .015, transparent: true, opacity: 0, depthWrite: false }));
+        model.add(inkMotes);
       }
       cover = model.getObjectByName('CoverHinge');
       for (let i = 0; i < 6; i++) {
@@ -228,6 +248,18 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
         group.scale.setScalar(1.08 - openPhase * .23);
         group.position.x = openPhase * .65;
         awakening.intensity = openPhase * .48;
+        inkReveal.value = reduced ? (state.current.open ? 1.06 : 0) : THREE.MathUtils.smoothstep(openPhase, .76, .994) * 1.06;
+        const recognition = reduced ? 0 : Math.sin(THREE.MathUtils.smoothstep(openPhase, .46, 1) * Math.PI);
+        if (pageEdgeMaterial) pageEdgeMaterial.opacity = recognition * .42;
+        if (inkMotes) {
+          (inkMotes.material as THREE.PointsMaterial).opacity = recognition * .48;
+          for (let i = 0; i < 18; i++) {
+            inkPositions[i * 3] = Math.sin(i * 12.34) * .82 + Math.sin(elapsed * .8 + i) * .008;
+            inkPositions[i * 3 + 1] = .36 + recognition * (.02 + (i % 4) * .013);
+            inkPositions[i * 3 + 2] = Math.cos(i * 7.81) * 1.15;
+          }
+          inkMotes.geometry.attributes.position.needsUpdate = true;
+        }
         pages.forEach((page, i) => {
           const delay = .58 + i * .045;
           const turn = THREE.MathUtils.smoothstep(openPhase, delay, Math.min(1, delay + .19));
@@ -298,7 +330,7 @@ function disposeObject(object: THREE.Object3D) {
   object.traverse(child => {
     if (child instanceof THREE.Light && 'shadow' in child) (child as THREE.DirectionalLight).shadow?.dispose();
     if (child instanceof THREE.InstancedMesh) child.dispose();
-    if (child instanceof THREE.Mesh || child instanceof THREE.Points || child instanceof THREE.Sprite) {
+    if (child instanceof THREE.Mesh || child instanceof THREE.Points || child instanceof THREE.Sprite || child instanceof THREE.Line) {
       if ('geometry' in child) geometries.add(child.geometry);
       const assigned = Array.isArray(child.material) ? child.material : [child.material];
       assigned.forEach(material => {

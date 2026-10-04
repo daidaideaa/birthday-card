@@ -6,7 +6,7 @@ const { values } = parseArgs({ options: {
   dir: { type: 'string', default: 'dist' },
   url: { type: 'string' },
 } });
-const requiredArt = ['magic-book.glb', 'star-cake.glb', 'library-cinema.webp', 'teddy-apricot-painted.webp', 'teddy-cream-painted.webp', 'wind-and-stars.webp', 'films/spirit-pair.json', 'films/lion-nuzzle.json'];
+const requiredArt = ['magic-book.glb', 'star-cake.glb', 'library-cinema.webp', 'library-cinema-portrait.webp', 'manuscript-leaf.webp', 'teddy-apricot-painted.webp', 'teddy-cream-painted.webp', 'teddy-puppy-expressions.webp', 'wind-and-stars.webp', 'films/spirit-pair.json', 'films/lion-nuzzle.json'];
 const mediaExtension = /\.(?:webp|png|jpe?g|svg|gif|avif|glb|woff2?|mp3|ogg|wav|m4a|mp4|webm)$/i;
 
 function localReferences(html) {

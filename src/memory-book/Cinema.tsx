@@ -142,6 +142,13 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
   const [wishCount, setWishCount] = useState(0);
   const [framing, setFraming] = useState({ width: WIDTH, height: HEIGHT, x: 0, y: 0 });
   const resumeAfterOcclusion = useRef(false);
+  const completeRef = useRef(onComplete);
+  useEffect(() => { completeRef.current = onComplete; }, [onComplete]);
+  useEffect(() => {
+    if (state !== 'ended' || !active || reducedMotion) return;
+    const timer = window.setTimeout(() => completeRef.current(), 2600);
+    return () => clearTimeout(timer);
+  }, [state, active, reducedMotion]);
   useEffect(() => { onPlaybackChange?.(state === 'playing' && active && !reducedMotion); return () => onPlaybackChange?.(false); }, [state, active, reducedMotion, onPlaybackChange]);
   useEffect(() => {
     const abort = new AbortController(); let cancelled = false; setState('loading');

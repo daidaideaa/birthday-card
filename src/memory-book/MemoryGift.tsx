@@ -3,7 +3,8 @@ const Journey = lazy(() => import("./Journey"));
 import Pets from "./Pets";
 const Cinema = lazy(() => import("./Cinema"));
 import MagicObject from "./MagicObject";
-import ChapterTransition from "./ChapterTransition";
+import useMusic from "./useMusic";
+import ChapterTransition, { transitionDuration, type TransitionKind } from "./ChapterTransition";
 import { photos, movies } from "./media";
 import { assetUrl } from "../utils/assetUrl";
 import "./memory-book.css";
@@ -23,51 +24,10 @@ const letter = [
 ];
 const media = (path: string) => /^https:\/\//.test(path) ? path : assetUrl(path);
 
-function useMusic() {
-  const audio = useRef<AudioContext | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const toggle = () => {
-    if (!audio.current) { try { audio.current = new AudioContext(); } catch { return; } }
-    if (!playing) void audio.current.resume().catch(() => setPlaying(false));
-    else void audio.current.suspend();
-    setPlaying(!playing);
-  };
-  useEffect(() => {
-    if (!playing) { if (audio.current) void audio.current.suspend(); return; }
-    void audio.current?.resume();
-    const context = audio.current;
-    if (!context) return;
-    let step = 0;
-    const melody = [261.63,392,523.25,440,329.63,392,587.33,523.25,349.23,440,698.46,587.33,329.63,392,523.25,392];
-    const note = () => {
-      if (document.hidden || context.state !== "running") return;
-      const now = context.currentTime;
-      const frequency = melody[step++ % melody.length];
-      for (const [multiple, level] of [[1,.034],[2,.009],[3,.003]]) {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.type = "sine"; oscillator.frequency.value = frequency * multiple;
-        gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(level, now+.02);
-        gain.gain.exponentialRampToValueAtTime(.0001, now+2.7);
-        oscillator.connect(gain).connect(context.destination);
-        oscillator.start(now); oscillator.stop(now+2.8);
-        oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};
-      }
-    };
-    note();
-    const timer=window.setInterval(note,1300);
-    const visibility=()=>{if(document.hidden)void context.suspend();else void context.resume().catch(()=>setPlaying(false));};
-    document.addEventListener("visibilitychange",visibility);
-    return()=>{clearInterval(timer);document.removeEventListener("visibilitychange",visibility);};
-  },[playing]);
-  useEffect(()=>()=>{void audio.current?.close();},[]);
-  return {playing,toggle};
-}
-
 export default function MemoryGift(){
   const [chapter,setChapter]=useState(()=>Math.max(0,ids.indexOf(window.location.hash.slice(1))));
-  const [transition,setTransition]=useState("");
+  const [transition,setTransition]=useState<TransitionKind|"">("");
+  const [chromeVisible,setChromeVisible]=useState(true);
   const [reducedMotion,setReducedMotion]=useState(()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [awake,setAwake]=useState(false);
   const [photo,setPhoto]=useState(0);
@@ -78,20 +38,31 @@ export default function MemoryGift(){
   const [hidden,setHidden]=useState(document.hidden);
   const timers=useRef<number[]>([]);
   const dialog=useRef<HTMLDialogElement>(null);
-  const music=useMusic();
+  const music=useMusic(chapter);
   const currentPhoto=photos[photo];
   const go=useCallback((target:number)=>{
     if(target===chapter||target<0||target>4||transition)return;
     timers.current.forEach(clearTimeout);timers.current=[];
     if(target===0)setAwake(false);
     setMenu(false);setModal(null);
-    setTransition(target<chapter?"return":["book","sand","wind","star"][chapter]||"book");
-    const duration=reducedMotion?100:1800;
+    const kind:TransitionKind=target<chapter?"return":(["book","sand","wind","star"] as const)[chapter]||"book";
+    setTransition(kind);
+    const duration=reducedMotion?100:transitionDuration(kind);
     timers.current.push(window.setTimeout(()=>{
       setChapter(target);window.history.pushState(null,"","#"+ids[target]);
       window.scrollTo({top:0,behavior:"instant"});
-    },duration*.48),window.setTimeout(()=>setTransition(""),duration));
+    },duration*.5),window.setTimeout(()=>setTransition(""),duration));
   },[chapter,reducedMotion,transition]);
+  useEffect(()=>{
+    let idle=0;
+    const schedule=()=>{clearTimeout(idle);if(!menu&&!modal)idle=window.setTimeout(()=>setChromeVisible(false),4800);};
+    const reveal=()=>{setChromeVisible(true);schedule();};
+    schedule();
+    window.addEventListener("pointermove",reveal,{passive:true});
+    window.addEventListener("pointerdown",reveal,{passive:true});
+    window.addEventListener("keydown",reveal);window.addEventListener("focusin",reveal);
+    return()=>{clearTimeout(idle);window.removeEventListener("pointermove",reveal);window.removeEventListener("pointerdown",reveal);window.removeEventListener("keydown",reveal);window.removeEventListener("focusin",reveal);};
+  },[chapter,menu,modal]);
   useEffect(()=>{
     const onHash=()=>{
       timers.current.forEach(clearTimeout);timers.current=[];
@@ -116,10 +87,10 @@ export default function MemoryGift(){
     if(wish==="lit"){setWish("making");return;}
     setWish("blown");setCelebrate(n=>n+1);
   };
-  return <main className={"memory-gift scene-"+chapter+(reducedMotion?" reduce-motion":"")+(hidden?" is-hidden":"")+(transition?" is-transitioning":"")}>
+  return <main className={"memory-gift scene-"+chapter+(reducedMotion?" reduce-motion":"")+(hidden?" is-hidden":"")+(transition?" is-transitioning":"")+(!chromeVisible&&!menu&&!modal?" chrome-resting":"")}>
     <style>{'@font-face{font-family:GiftSerif;src:url("'+assetUrl("memory-book/serif.woff")+'") format("woff");font-display:swap}'}</style>
     <header className="gift-header">
-      <button className="gift-brand" onClick={()=>go(0)} aria-label="回到古书封面"><span className="brand-star">✧</span><span>写给师宝宝的一场梦<small>A LITTLE MAGIC, JUST FOR YOU</small></span></button>
+      <button className="gift-brand" onClick={()=>go(0)} aria-label="回到古书封面"><span className="brand-star">✧</span><span>写给师宝宝的一场梦</span></button>
       <div className="gift-tools">
         <button className={"sound-switch "+(music.playing?"is-on":"")} onClick={music.toggle} aria-label={music.playing?"关闭音乐":"开启音乐"} aria-pressed={music.playing}><span className="sound-bars"><i/><i/><i/><i/></span><span>{music.playing?"音乐已开启":"开启音乐"}</span></button>
         <button className="chapter-menu-toggle" onClick={()=>setMenu(!menu)} aria-expanded={menu} aria-label="章节目录">目录 <span>☰</span></button>
@@ -129,9 +100,9 @@ export default function MemoryGift(){
     <div className="chapter-stage" aria-busy={!!transition} inert={!!transition}>
       <div className="chapter-content" key={chapter}>
       {chapter===0&&<section className={"invitation "+(awake?"is-awake":"")} aria-label="第一章 这本书只认识你">
-        <div className="library-backdrop" aria-hidden="true"><img src={assetUrl("memory-book/library-cinema.webp")} alt="" fetchPriority="high"/><div className="library-window-light"/></div>
+        <div className="library-backdrop" aria-hidden="true"><picture><source media="(max-width: 680px)" srcSet={assetUrl("memory-book/library-cinema-portrait.webp")}/><img src={assetUrl("memory-book/library-cinema.webp")} alt="" fetchPriority="high"/></picture><div className="library-window-light"/></div>
         <MagicObject kind="book" open={awake} reducedMotion={reducedMotion} onOpen={()=>setAwake(value=>!value)}/>
-        <div className="invitation-copy"><p className="eyebrow">THE FIRST PAGE OF OUR STORY</p><div className="tiny-rule"/><h1>今晚，<br/>故事只认识<span>你。</span></h1><p className="intro-lines">有一本书，等了很久。<br/>直到你来，它才有了名字。</p><button className="gold-button" onClick={openBook}>{awake?"跟着书页出发":"打开这本书"}<span>✧</span></button><p className="quiet-note">{awake?"师宝宝，这本书终于等到了你。":"一场只为你准备的，生日奇遇"}</p></div>
+        <div className="invitation-copy"><p className="eyebrow">序 · 为你启封</p><div className="tiny-rule"/><h1>今晚，<br/>故事只认识<span>你。</span></h1><p className="intro-lines">有一本书，等了很久。<br/>直到你来，它才有了名字。</p><button className="gold-button" onClick={openBook}>{awake?"跟着书页出发":"打开这本书"}<span>✧</span></button><p className="quiet-note">{awake?"师宝宝，这本书终于等到了你。":"一场只为你准备的，生日奇遇"}</p></div>
         <div className="floating-dust" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:(9+i*5)%95+"%",top:(i*17)%92+"%",animationDelay:-(i*.7)+"s"}}/>)}</div>
       </section>}
       {chapter===1&&<section className="journey-chapter" aria-label="第二章 两条路终于同向"><Suspense fallback={<p className="chapter-loading">沙粒正在汇集成故事…</p>}><Journey onComplete={()=>go(2)} reducedMotion={reducedMotion} active={!modal&&!menu&&!transition&&!hidden}/></Suspense></section>}
@@ -143,7 +114,7 @@ export default function MemoryGift(){
         </div>
         <div className="chapter-bottom"><span>把平凡的一天，也过成值得收藏的一页。</span><button className="text-button" onClick={()=>setModal("letter")}>打开给你的信 <b>↗</b></button><button className="text-button" onClick={()=>go(3)}>下一章 <b>→</b></button></div>
       </section>}
-      {chapter===3&&<Suspense fallback={<p className="chapter-loading">风正把这一页轻轻吹开…</p>}><Cinema reducedMotion={reducedMotion} muted={!music.playing} active={!modal&&!transition} onComplete={()=>go(4)}/></Suspense>}
+      {chapter===3&&<Suspense fallback={<p className="chapter-loading">风正把这一页轻轻吹开…</p>}><Cinema reducedMotion={reducedMotion} muted={!music.playing} active={!modal&&!menu&&!transition&&!hidden} onComplete={()=>go(4)}/></Suspense>}
       {chapter===4&&<section className={"wish-chapter wish-"+wish} aria-label="第五章 魔法星空蛋糕">
         <div className="wish-room" aria-hidden="true"><img src={assetUrl("memory-book/library-cinema.webp")} alt=""/></div>
         <div className="wish-heading"><p className="eyebrow">CHAPTER V · MAKE A LITTLE WISH</p><h1>{wish==="blown"?"师宝宝，生日快乐。":wish==="making"?"这一刻，把愿望留给你。":"今晚的星光，都为你亮起。"}</h1><p>{wish==="blown"?"愿你一直勇敢，也一直被爱。":wish==="making"?"不用说出来，也不必着急。许好了，就轻轻吹灭蜡烛。":"先别急着吹灭蜡烛，把最想实现的愿望，悄悄放在心里。"}</p></div>
@@ -151,15 +122,15 @@ export default function MemoryGift(){
         <div className="wish-actions">{wish!=="blown"?<button className="gold-button" onClick={blow}>{wish==="lit"?"许个愿吧":"轻轻吹灭蜡烛"}<span>✧</span></button>:<><p className="after-wish">书里还留着一些空白，想和你一页一页地写。</p><div><button className="text-button" onClick={()=>setModal("letter")}>重读给你的信 ↗</button><button className="text-button" onClick={()=>go(2)}>回看照片 ↗</button><button className="text-button" onClick={()=>setWish("lit")}>再点亮一次 ✧</button></div></>}</div>
       </section>}
       </div>
-      <Pets scene={chapter} quiet={modal!==null||chapter===3} reducedMotion={reducedMotion} celebrate={celebrate}/>
+      <Pets scene={chapter} quiet={modal!==null||chapter===3} transitioning={!!transition} reducedMotion={reducedMotion} celebrate={celebrate}/>
     </div>
-    <footer className="gift-footer"><span className="footer-dedication">FOR YOU, AND ONLY YOU.</span><nav aria-label="故事章节">{chapters.map((c,i)=><button key={c} onClick={()=>go(i)} aria-current={i===chapter?"step":undefined} aria-label={"第"+(i+1)+"章 "+c}><span>{String(i+1).padStart(2,"0")}</span><i/>{c}</button>)}</nav><button className="footer-about" onClick={()=>setModal("credits")} aria-label="关于这份礼物">✧</button></footer>
-    {!!transition&&<ChapterTransition kind={transition} reducedMotion={reducedMotion}/>}
+    <footer className="gift-footer"><span className="footer-dedication">只为你，慢慢展开。</span><nav aria-label="故事章节">{chapters.map((c,i)=><button key={c} onClick={()=>go(i)} aria-current={i===chapter?"step":undefined} aria-label={"第"+(i+1)+"章 "+c}><span>{String(i+1).padStart(2,"0")}</span><i/>{c}</button>)}</nav><button className="footer-about" onClick={()=>setModal("credits")} aria-label="关于这份礼物">✧</button></footer>
+    {!!transition&&<ChapterTransition kind={transition} reducedMotion={reducedMotion} photo={media(currentPhoto.src)}/>}
     <dialog ref={dialog} className={"gift-dialog modal-"+modal} onCancel={()=>setModal(null)} onClose={()=>setModal(null)} onClick={event=>{if(event.target===event.currentTarget)setModal(null);}}>
       <div className="dialog-content"><button className="dialog-close" onClick={()=>setModal(null)} aria-label="关闭">×</button>
         {modal==="letter"&&<article className="letter-paper"><p className="eyebrow">SOME WORDS, JUST FOR YOU</p><span className="letter-stamp">✧</span><h2>亲爱的师宝宝：</h2>{letter.map(p=><p key={p}>{p}</p>)}<p>愿你一直勇敢，也一直被爱。</p><p className="letter-signature">生日快乐呀 ♡</p><small className="draft-note">书信暂拟，之后可以换成我想亲口对你说的话。</small><button className="letter-continue" onClick={()=>{setModal(null);go(3);}}>把这封信收好，去看看风与星光 →</button></article>}
         {modal==="photo"&&<figure className="full-photo"><img src={media(currentPhoto.src)} alt={currentPhoto.title}/><figcaption>{currentPhoto.title}<small>示意照片 · {currentPhoto.credit}</small></figcaption></figure>}
-        {modal==="credits"&&<article className="credits-paper"><p className="eyebrow">ABOUT THIS LITTLE GIFT</p><h2>为你，留一点魔法。</h2><p>一本只认识你的书，两条在深圳汇合的路，一封慢慢读的信，还有今晚的星空。</p><p>相册暂用5张风景网图，之后可以换成我们的照片。书信是暂拟文字；旅程只记录已经知道的地点，没有补写年份和往事。</p><h3>画面与声音</h3><p>古书和星空蛋糕由 Blender 建模，支持实时转动、翻页与烛火；二维泰迪拥有分层连续动作。沙画使用开源 SandKit，地图轮廓来自 Natural Earth。音乐为本项目合成的轻柔钟琴旋律。</p><p>电影章将《小马王》《狮子王》的原版角色短动作分离后，融入新的旷野与星空，重新编排为这一页祝福。电影角色与原画版权属于各权利人，背景和场景编排为本项目制作。</p>{movies.map(m=><p key={m.id}><a href={m.sourceUrl} target="_blank" rel="noreferrer">{m.title} · {m.credit} ↗</a></p>)}<h3>示意照片</h3>{photos.map(p=><p key={p.id}><a href={p.sourceUrl} target="_blank" rel="noreferrer">{p.title} · {p.credit} ↗</a></p>)}<button className="letter-continue" onClick={()=>setReducedMotion(!reducedMotion)}>{reducedMotion?"恢复完整动态":"使用减少动态效果"}</button></article>}
+        {modal==="credits"&&<article className="credits-paper"><p className="eyebrow">ABOUT THIS LITTLE GIFT</p><h2>为你，留一点魔法。</h2><p>一本只认识你的书，两条在深圳汇合的路，一封慢慢读的信，还有今晚的星空。</p><p>相册暂用5张风景网图，之后可以换成我们的照片。书信是暂拟文字；旅程只记录已经知道的地点，没有补写年份和往事。</p><h3>画面与声音</h3><p>古书和星空蛋糕由 Blender 建模，支持实时转动、翻页与烛火；二维泰迪拥有分层连续动作。沙画使用开源 SandKit，地图轮廓来自 Natural Earth。音乐为本项目合成的钢琴泛音、轻钟与柔和和声。</p><p>电影章将《小马王》《狮子王》的原版角色短动作分离后，融入新的旷野与星空，重新编排为这一页祝福。电影角色与原画版权属于各权利人，背景和场景编排为本项目制作。</p>{movies.map(m=><p key={m.id}><a href={m.sourceUrl} target="_blank" rel="noreferrer">{m.title} · {m.credit} ↗</a></p>)}<h3>示意照片</h3>{photos.map(p=><p key={p.id}><a href={p.sourceUrl} target="_blank" rel="noreferrer">{p.title} · {p.credit} ↗</a></p>)}<button className="letter-continue" onClick={()=>setReducedMotion(!reducedMotion)}>{reducedMotion?"恢复完整动态":"使用减少动态效果"}</button></article>}
       </div>
     </dialog>
   </main>;

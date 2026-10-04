@@ -225,7 +225,7 @@ def planar_uv(obj,width,height):
 
 
 def maps_from_source():
-    image=cv2.cvtColor(cv2.imread(str(MASTERS/'book-cover-albedo-source.png')),cv2.COLOR_BGR2RGB).astype(np.float32)/255
+    image=cv2.cvtColor(cv2.imread(str(MASTERS/'book-wizard-cover-source.png')),cv2.COLOR_BGR2RGB).astype(np.float32)/255
     image=cv2.resize(image,(1152,1536),interpolation=cv2.INTER_AREA)
     red=image[:,:,0];green=image[:,:,1]
     gold=np.clip((green/(red+.01)-.45)/.23,0,1)*np.clip((red-.18)/.36,0,1)
@@ -243,9 +243,9 @@ def maps_from_source():
     plainColor=write_image('calfskin-albedo.jpg',crop,92)
     plainNormal=write_image('calfskin-normal.jpg',normal_from_height(luma-cv2.GaussianBlur(luma,(0,0),5),5),92)
     plainORM=write_image('calfskin-orm.jpg',np.dstack((np.ones_like(luma),.74+noise(512,35,33)*.10,np.zeros_like(luma))),88)
-    botanical=cv2.cvtColor(cv2.imread(str(MASTERS/'book-page-botanical-source.png')),cv2.COLOR_BGR2RGB).astype(np.float32)/255
-    botanical=cv2.resize(botanical,(768,1152),interpolation=cv2.INTER_AREA)
-    botanicalPath=write_image('botanical-page.jpg',botanical,92)
+    manuscript=cv2.cvtColor(cv2.imread(str(MASTERS/'book-spell-notes-source.png')),cv2.COLOR_BGR2RGB).astype(np.float32)/255
+    manuscript=cv2.resize(manuscript,(768,1152),interpolation=cv2.INTER_AREA)
+    manuscriptPath=write_image('wizard-manuscript.jpg',manuscript,92)
     # Handmade paper fibres, foxing, and physically parallel edge striations.
     rng=np.random.default_rng(62);s=512
     fib=noise(s,72,65)*.6+noise(s,256,71)*.4
@@ -259,19 +259,19 @@ def maps_from_source():
     edges=np.tile(edgeValues[:,None],(1,s))
     edgeRGB=np.dstack((edges*.86,edges*.74,edges*.55))
     edgeColor=write_image('page-edges.jpg',edgeRGB,95)
-    return coverColor,coverNormal,coverORM,plainColor,plainNormal,plainORM,botanicalPath,paperColor,paperNormal,edgeColor
+    return coverColor,coverNormal,coverORM,plainColor,plainNormal,plainORM,manuscriptPath,paperColor,paperNormal,edgeColor
 
 
 maps=maps_from_source()
 reset()
-coverMat=pbr('PBR | hand tooled calfskin and worn gold',*maps[:3])
-leather=pbr('PBR | worn oxblood calfskin',maps[3],maps[4],maps[5])
+coverMat=pbr('PBR | old wizard calfskin and copper tooling',*maps[:3])
+leather=pbr('PBR | worn espresso calfskin',maps[3],maps[4],maps[5])
 paper=pbr('PBR | uncoated rag paper',maps[7],maps[8],roughness=.95)
 pageEdges=pbr('PBR | deckled page edges',maps[9],maps[8],roughness=.95)
-illustration=pbr('PBR | engraved botanical leaf',maps[6],maps[8],roughness=.96)
-gold=material('Hand chased aged brass',(.46,.28,.11),.72,.49)
-brightGold=material('Gold catchlight on engraved edges',(.68,.45,.19),.77,.40)
-patina=material('Patina in chased recesses',(.105,.060,.018),.60,.62)
+illustration=pbr('PBR | handwritten spellbook paper',maps[6],maps[8],roughness=.96)
+gold=material('Dark hand chased copper',(.27,.18,.09),.72,.53)
+brightGold=material('Worn copper engraved edge',(.43,.29,.14),.74,.46)
+patina=material('Patina in copper recesses',(.069,.045,.023),.60,.65)
 linen=material('Waxed linen stitching',(.28,.16,.074),0,.94)
 edgeInk=material('Shadows between deckled folios',(.22,.15,.073),0,.98)
 silk=material('Wine red silk bookmark',(.14,.021,.029),0,.72)
@@ -319,35 +319,17 @@ for polygon in mesh.polygons:
 obj=bpy.data.objects.new('Calfskin_cover_PBR',mesh);bpy.context.collection.objects.link(obj);finish(obj,obj.name,coverMat,hinge)
 
 
-def sculpt_leaf(name,cx,cy,z,length,width,angle,mat,parent=None):
-    verts=[];faces=[];rows=13;cols=7
-    for j in range(rows):
-        t=j/(rows-1);w=width*math.sin(math.pi*t)**.72*(1+.17*math.sin(t*math.pi*6))
-        for k in range(cols):
-            side=k/(cols-1)*2-1
-            xx=side*w;yy=t*length
-            zz=z+.009*math.sin(t*math.pi)*(1-side*side)+.002*math.sin(t*math.pi*5)*abs(side)
-            verts.append((cx+xx*math.cos(angle)-yy*math.sin(angle),cy+xx*math.sin(angle)+yy*math.cos(angle),zz))
-    for j in range(rows-1):
-        for k in range(cols-1):
-            a=j*cols+k;faces.append((a,a+1,a+cols+1,a+cols))
-    data=bpy.data.meshes.new(name);data.from_pydata(verts,[],faces);data.update()
-    obj=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(obj);finish(obj,name,mat,parent)
-    for p in data.polygons:p.use_smooth=True
-    mod=obj.modifiers.new('Cast metal thickness','SOLIDIFY');mod.thickness=.003
-    bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=mod.name)
-    return obj
-
-# Small, sculpted corner guards: broad acanthus leaves with chased veins.
+# Narrow angular copper corner guards, made like practical protective book fittings.
 for sx in [-1,1]:
     for sy in [-1,1]:
         cx=1.325+sx*1.23;cy=sy*1.60
-        sphere('Flush_corner_pin',(cx,cy,.076),(.018,.018,.006),brightGold,hinge)
-        for i in range(2):
-            angle=math.atan2(-sx,-sy)+(.21+i*.24)*sx*sy
-            sculpt_leaf('Cast_acanthus_corner',cx-sx*.010,cy-sy*.012,.073,.085+i*.012,.011+i*.002,angle,gold,hinge)
-        curve('Incised_corner_edge',[(cx-sx*.25,cy,.080),(cx,cy,.080),(cx,cy-sy*.25,.080)],.004,gold,hinge)
-
+        coords=[(cx-sx*.24,cy+sy*.025,.075),(cx+sx*.025,cy+sy*.025,.075),(cx+sx*.025,cy-sy*.24,.075),(cx-sx*.025,cy-sy*.205,.075),(cx-sx*.033,cy-sy*.033,.075),(cx-sx*.205,cy-sy*.025,.075)]
+        data=bpy.data.meshes.new('Corner guard');data.from_pydata(coords,[],[tuple(range(6))]);data.update()
+        obj=bpy.data.objects.new('Hammered_copper_corner',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,gold,hinge)
+        mod=obj.modifiers.new('Fitting thickness','SOLIDIFY');mod.thickness=.008
+        bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=mod.name)
+        sphere('Flush_corner_pin',(cx-sx*.012,cy-sy*.012,.083),(.012,.012,.005),brightGold,hinge)
+        curve('Corner_incised_rule',[(cx-sx*.19,cy+.006*sy,.083),(cx+.006*sx,cy+.006*sy,.083),(cx+.006*sx,cy-sy*.19,.083)],.0016,patina,hinge)
 # Individually made clasps with an inset, patinated hinge, instead of flat gold blocks.
 for y in [-.99,.99]:
     strap=box('Leather_clasp',(2.57,y,.096),(.31,.15,.035),leather,.032,hinge)
@@ -361,15 +343,34 @@ def chinese_text(name,words,loc,size,mat,parent=None):
     obj.data.font=bpy.data.fonts.load('C:/Windows/Fonts/STKAITI.TTF')
     obj.data.extrude=0;obj.data.bevel_depth=0;obj.data.resolution_u=3
     return obj
-chinese_text('Personal_dedication','师 宝 宝',(1.325,.22,.100),.23,brightGold,hinge)
-chinese_text('Personal_subtitle','写给你的一场梦',(1.325,-.13,.102),.085,gold,hinge)
-text('Quiet_imprint','FOR YOU, AND ONLY YOU',(1.325,-.42,.105),.046,gold,hinge)
+box('Old_engraved_nameplate',(1.325,.15,.088),(1.13,.36,.011),patina,.025,hinge)
+for dx in [-.505,.505]:
+    for dy in [-.12,.12]:sphere('Nameplate_pin',(1.325+dx,.15+dy,.097),(.008,.008,.0035),gold,hinge)
+chinese_text('Personal_dedication','师 宝 宝',(1.325,.15,.101),.215,brightGold,hinge)
+chinese_text('Personal_subtitle','写给你的一场梦',(1.325,-.21,.101),.078,gold,hinge)
+text('Quiet_imprint','MEMORIA',(1.325,-.46,.102),.053,gold,hinge)
 # A silk bookmark drapes naturally from the text block.
 curve('Silk_bookmark',[(-.72,-1.42,.022),(-.72,-1.68,.02),(-.66,-1.85,-.04),(-.56,-2.00,-.09)],.019,silk)
 bpy.ops.mesh.primitive_plane_add(size=1,location=(0,0,.338))
 obj=bpy.context.object;obj.dimensions=(2.40,3.20,0)
 bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
 finish(obj,'Dedication_rag_paper',paper)
+# A small, irregular pressed-wax seal on the dedicated endpaper.
+waxSeal=material('Old oxblood sealing wax',(.16,.017,.023),.02,.45)
+waxMark=material('Wax seal recessed impression',(.077,.009,.011),.01,.57)
+verts=[];faces=[];radial=48
+for j,(radius,z) in enumerate([(.0,.359),(.05,.359),(.094,.364),(.119,.356),(.12,.341)]):
+    for i in range(radial):
+        a=i/radial*math.tau;r=radius*(1+.035*math.sin(a*7)+.018*math.sin(a*13))
+        verts.append((.82+r*math.cos(a),-1.20+r*math.sin(a),z))
+for j in range(4):
+    for i in range(radial):
+        a=j*radial+i;b=j*radial+(i+1)%radial;faces.append((a,b,b+radial,a+radial))
+data=bpy.data.meshes.new('Hand pressed wax');data.from_pydata(verts,[],faces);data.update()
+obj=bpy.data.objects.new('Private_wax_seal',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,waxSeal)
+for p in data.polygons:p.use_smooth=True
+curve('Wax_impression_key',[(.82,-1.235,.361),(.82,-1.19,.361),(.842,-1.19,.361)],.004,waxMark)
+curve('Wax_impression_bow',[(.82+.020*math.cos(i*math.tau/40),-1.17+.020*math.sin(i*math.tau/40),.361) for i in range(40)],.004,waxMark,closed=True)
 # Six independently deformable printed leaves preserve browser interaction.
 for pageIndex in range(6):
     ph=empty(f'PageHinge_{pageIndex}',(-1.20,0,.352-pageIndex*.010))
@@ -394,7 +395,16 @@ for pageIndex in range(6):
     obj['flexiblePage']=True
     mod=obj.modifiers.new('Paper edge','SOLIDIFY');mod.thickness=.0025
     bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=mod.name)
+    # A turned physical leaf shows its verso; its notes must not read backwards.
+    for polygon in obj.data.polygons:
+        if polygon.normal.z<-.25:
+            for loop in polygon.loop_indices:
+                obj.data.uv_layers.active.data[loop].uv.x=1-obj.data.uv_layers.active.data[loop].uv.x
 export('magic-book')
+
+# A book-only iteration never rewrites the approved cake or its editable master.
+if '--book-only' in sys.argv:
+    raise SystemExit(0)
 
 reset()
 # Food materials use embedded pores and softly varied roughness, with no metal sheen.

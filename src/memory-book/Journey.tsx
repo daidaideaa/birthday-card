@@ -28,16 +28,16 @@ const LAST = PLACES.length - 1;
 // Reading time is part of the film, independent of particle frame rate or WebGL.
 // Arrival → a settled landmark → a second thought → sand carries us onward.
 const SHOTS = [
-  { duration: 10400, secondLine: 5700, zoom: [1, 1.065], pan: [-7, 4] },
-  { duration: 9400, secondLine: 4900, zoom: [1.015, 1.06], pan: [8, -6] },
-  { duration: 11600, secondLine: 6100, zoom: [1, 1.07], pan: [-5, 3] },
-  { duration: 12000, secondLine: 6300, zoom: [1.065, 1.01], pan: [10, -9] },
-  { duration: 9200, secondLine: 4800, zoom: [1.01, 1.045], pan: [-6, 5] },
-  { duration: 11200, secondLine: 6100, zoom: [1, 1.07], pan: [6, -4] },
-  { duration: 11600, secondLine: 6200, zoom: [1.01, 1.06], pan: [-5, 5] },
-  { duration: 12000, secondLine: 6500, zoom: [1.06, 1.01], pan: [8, -7] },
-  { duration: 9800, secondLine: 5200, zoom: [1.015, 1.055], pan: [-6, 3] },
-  { duration: 16000, secondLine: 8900, zoom: [1, 1.025], pan: [0, 0] },
+  { duration: 8000, secondLine: 4200, zoom: [1, 1.055], pan: [-7, 4] },
+  { duration: 7200, secondLine: 3700, zoom: [1.015, 1.055], pan: [8, -6] },
+  { duration: 9000, secondLine: 4700, zoom: [1, 1.055], pan: [-5, 3] },
+  { duration: 9300, secondLine: 4900, zoom: [1.05, 1.01], pan: [10, -9] },
+  { duration: 7000, secondLine: 3600, zoom: [1.01, 1.045], pan: [-6, 5] },
+  { duration: 8600, secondLine: 4500, zoom: [1, 1.055], pan: [6, -4] },
+  { duration: 9000, secondLine: 4700, zoom: [1.01, 1.055], pan: [-5, 5] },
+  { duration: 9300, secondLine: 4900, zoom: [1.05, 1.01], pan: [8, -7] },
+  { duration: 7500, secondLine: 3900, zoom: [1.015, 1.05], pan: [-6, 3] },
+  { duration: 12000, secondLine: 7400, zoom: [1, 1.018], pan: [0, 0] },
 ];
 // Cities: Natural Earth ne_10m_populated_places_simple (public domain).
 // The user confirmed Zhoukou, Henan, as her starting city.
@@ -55,6 +55,12 @@ const mapPosition = (point: { lon: number; lat: number }) => [140 + (point.lon -
 const mapRoute = (ids: string[]) => ids.map((id, i) => `${i ? 'L' : 'M'}${mapPosition(MAP_POINTS.find((point) => point.id === id)!).join(' ')}`).join('');
 const MAP_ROUTES = [mapRoute(['zhoukou', 'tianjin', 'beijing', 'hongkong', 'shenzhen']), mapRoute(['wuhan', 'nanjing', 'shanghai', 'shenzhen'])];
 const MEETING = mapPosition(MAP_POINTS[4]);
+const HONGKONG = mapPosition(MAP_POINTS[3]);
+// Same geographic coordinates, enlarged locally. Labels are offset, the cities are not.
+// Equirectangular projection around latitude 22.5° keeps north above and east to the right.
+const deltaPosition = (point: { lon: number; lat: number }) => [118 + (point.lon - 114.02) * 260, 23 + (22.65 - point.lat) * 280];
+const DELTA_HONGKONG = deltaPosition(MAP_POINTS[3]);
+const DELTA_SHENZHEN = deltaPosition(MAP_POINTS[4]);
 type FallingGrain = { x: number; y: number; vx: number; vy: number; life: number; size: number; shade: number };
 
 // SandKit is MIT licensed, Copyright (c) 2026 Linkly AI. The original distribution
@@ -264,7 +270,7 @@ export default function Journey({ onComplete, reducedMotion, active: sceneActive
     const available = () => !disposed && !document.hidden && visible && allowedRef.current && loaded && !completedRef.current;
     const cancelFrame = () => { if (reducedMotion) clearTimeout(frame); else cancelAnimationFrame(frame); frame = 0; };
     const setPlayback = (value: boolean) => { play = value; clockRef.current.playing = value; setPlaying(value); };
-    const fitArtwork = () => index === LAST ? Math.min(width / ART_WIDTH, height / ART_HEIGHT) : Math.min(width / (width < 700 ? 680 : 1120), height / 850, Math.min(width, height) * 2 / ART_WIDTH);
+    const fitArtwork = () => index === LAST ? Math.min(width / ART_WIDTH, height / ART_HEIGHT) : Math.min(width / (width < 700 ? PLACES[index].id === 'shanghai' ? 740 : 660 : 1030), height / 805, Math.min(width, height) * 2 / ART_WIDTH);
     const showStatic = () => {
       const fit = fitArtwork(); const blend = reducedMotion || previous === index ? 1 : clamp(local / 1700);
       staticContext.clearRect(0, 0, width, height); staticContext.save();
@@ -282,7 +288,8 @@ export default function Journey({ onComplete, reducedMotion, active: sceneActive
       const shot = SHOTS[index]; const progress = clamp(local / shot.duration); const ease = progress * progress * (3 - 2 * progress);
       const motion = width < 700 ? .65 : 1;
       const zoom = reducedMotion ? 1 : 1 + ((shot.zoom[0] - 1) + (shot.zoom[1] - shot.zoom[0]) * ease) * motion;
-      const pan = reducedMotion ? 0 : (shot.pan[0] + (shot.pan[1] - shot.pan[0]) * ease) * motion;
+      const portraitFocus = width < 700 && PLACES[index].id === 'shanghai' ? -18 : 0;
+      const pan = portraitFocus + (reducedMotion ? 0 : (shot.pan[0] + (shot.pan[1] - shot.pan[0]) * ease) * motion);
       stage.style.setProperty('--journey-zoom', `${zoom}`); stage.style.setProperty('--journey-pan-x', `${pan}px`);
       stage.style.setProperty('--journey-pan-y', reducedMotion ? '0px' : `${Math.sin(progress * Math.PI) * -3 * motion}px`);
       const cue = local >= shot.secondLine ? 1 : 0;
@@ -292,6 +299,8 @@ export default function Journey({ onComplete, reducedMotion, active: sceneActive
       root.style.setProperty('--journey-title-opacity', `${titleAlpha}`);
       root.style.setProperty('--journey-caption-opacity', `${captionAlpha}`);
       root.style.setProperty('--journey-turn-veil', `${!reducedMotion && index === 5 ? .55 * (1 - clamp(local / 2100)) : 0}`);
+      root.style.setProperty('--journey-delta-opacity', `${reducedMotion ? 1 : clamp((local - 3400) / 700)}`);
+      root.style.setProperty('--journey-delta-draw', `${reducedMotion ? 0 : 1 - clamp((local - 4200) / 1300)}`);
     };
     const select = (next: number) => {
       previous = index; index = Math.max(0, Math.min(LAST, next)); local = 0; exitMs = null; spoken = 0;
@@ -328,14 +337,14 @@ export default function Journey({ onComplete, reducedMotion, active: sceneActive
       }
       clockRef.current.local = local; directShot();
       if (usingStatic && local <= 1800) showStatic();
-      if (mapKnotRef.current) mapKnotRef.current.style.opacity = `${reducedMotion ? 1 : clamp((local - 8000) / 900)}`;
+      if (mapKnotRef.current) mapKnotRef.current.style.opacity = `${reducedMotion ? 1 : clamp((local - 6500) / 700)}`;
       context.clearRect(0, 0, width, height);
       const fit = fitArtwork(); const ox = (width - ART_WIDTH * fit) / 2; const oy = (height - ART_HEIGHT * fit) / 2;
       context.save(); context.translate(ox, oy); context.scale(fit, fit);
       pathRefs.current.forEach((path, n) => {
         if (!path) return;
-        const paired = index === LAST; const offset = paired ? 1500 + n * 3100 : 900 + n * 940;
-        const p = reducedMotion ? 1 : clamp((local - offset) / (paired ? 3100 : 1500)); const length = path.getTotalLength();
+        const paired = index === LAST; const offset = paired ? (n === 0 ? 800 : 3800) : 600 + n * 780;
+        const p = reducedMotion ? 1 : clamp((local - offset) / (paired ? (n === 0 ? 3400 : 2600) : 1250)); const length = path.getTotalLength();
         path.style.strokeDasharray = `${length}`; path.style.strokeDashoffset = `${length * (1 - p)}`; path.style.opacity = `${paired ? .95 : reducedMotion ? 0 : p < 1 ? .45 : .06}`;
         if (!reducedMotion && p > 0 && p < 1 && play && dt > 0) {
           const tip = path.getPointAtLength(length * p); emit(tip.x, tip.y, Math.max(1, Math.round(dt * 140)), paired ? 1.45 : .8);
@@ -386,9 +395,9 @@ export default function Journey({ onComplete, reducedMotion, active: sceneActive
     else {
       try {
         renderer = new SandKit(sand, { shapes, worker: true, options: {
-          count: window.innerWidth < 700 ? 48000 : 72000, pointSize: 1.18, sizeVariation: 1.05, opacity: 1, color: sandColor(index), colorDark: sandColor(index),
-          introMs: 2800, moveMs: 3100, holdMs: 15000, stagger: .48, scatterPhase: .29, scatterReach: .14, scatterDepth: .48, flightFade: .05,
-          jitter: .001, sway: 0, tilt: .035, tiltEase: .13, depthRange: .1, depthContrast: .14, dustShare: .005, fillDensity: .48, interiorTone: .025, blurRadius: 1, cloudRadius: 1.15, cloudFar: -.45,
+          count: window.innerWidth < 700 ? 52000 : 78000, pointSize: 1.22, sizeVariation: 1.08, opacity: 1, color: sandColor(index), colorDark: sandColor(index),
+          introMs: 2350, moveMs: 2500, holdMs: 15000, stagger: .43, scatterPhase: .27, scatterReach: .13, scatterDepth: .48, flightFade: .05,
+          jitter: .001, sway: 0, tilt: .035, tiltEase: .13, depthRange: .12, depthContrast: .17, dustShare: .005, fillDensity: .54, interiorTone: .035, blurRadius: 1, cloudRadius: 1.15, cloudFar: -.45,
           pictureScale: fitArtwork() * ART_WIDTH / Math.max(1, Math.min(width, height)),
         }, onError: (error) => { if (error.message.includes('context')) useStatic(); } });
         renderer.pin(shapeName(index)); renderer.pause();
@@ -423,7 +432,7 @@ export default function Journey({ onComplete, reducedMotion, active: sceneActive
         <div className="journey-light-beam" aria-hidden="true" />
         <div className="journey-place" key={`place-${active}`} aria-live="polite" aria-atomic="true">
           <span className="journey-person">{place.owner === 'her' ? '你的来路' : place.owner === 'me' ? '我的来路' : '我们的这一页'}</span>
-          <div className="journey-city"><span className="journey-region">{place.region}</span><h3>{place.city}</h3></div>
+          <div className="journey-city">{(place.id === 'zhoukou' || place.id === 'wuhan') && <span className="journey-region">{place.region}</span>}<h3>{place.city}</h3></div>
           {place.school && <p className="journey-school">{place.school}</p>}
           <span className="journey-motif">{place.motif}</span>
         </div>
@@ -432,10 +441,22 @@ export default function Journey({ onComplete, reducedMotion, active: sceneActive
           <canvas ref={sandRef} className="journey-sand" aria-hidden="true" />
           <svg className="journey-drawn-lines" viewBox={`0 0 ${ART_WIDTH} ${ART_HEIGHT}`} aria-hidden="true">{(active === LAST ? MAP_ROUTES : DRAWING_PATHS[place.id]).map((d, i) => <path className={active === LAST ? `journey-map-route journey-map-route-${i}` : undefined} d={d} key={`${active}-${i}`} ref={(node) => { pathRefs.current[i] = node; }} />)}
             {active === LAST && <g ref={mapKnotRef} className="journey-map-knot" transform={`translate(${MEETING[0]} ${MEETING[1]})`}><circle r="23" /><circle r="10" /><path d="M0 0C-25-20-34 13-9 9L0 0C24-21 34 12 9 9Z" /><path d="M-1 2Q-9 23-27 26M2 2Q11 24 30 27" /></g>}
+            {active === LAST && <g className="journey-delta-connector"><circle cx={(MEETING[0] + HONGKONG[0]) / 2} cy={(MEETING[1] + HONGKONG[1]) / 2} r="21" /><path className="journey-delta-leader-desktop" d={`M${HONGKONG[0] + 20} ${HONGKONG[1]}L862 664L965 584`} /><path className="journey-delta-leader-mobile" d={`M${HONGKONG[0]} ${HONGKONG[1] + 21}L${HONGKONG[0]} 731L640 765`} /></g>}
           </svg>
           {active === LAST && <div className="journey-map-labels" aria-label="中国地图上的两条城市路线，在深圳汇合">
             {MAP_POINTS.map((point) => { const [x, y] = mapPosition(point); return <span className={`journey-map-label journey-map-label-${point.id}`} key={point.id} style={{ left: `${(x + point.dx) / ART_WIDTH * 100}%`, top: `${(y + point.dy) / ART_HEIGHT * 100}%` }}>{point.label}</span>; })}
-            <div className="journey-map-meaning"><span>两条来路 · 一个此刻</span><p>你是暖金，我是月白。<br />从深圳起，想与你并肩。</p></div>
+            <figure className="journey-delta-inset" aria-label="港深局部放大：她从香港科技大学所在的香港来到深圳，两条路线在深圳相遇。城市仍按真实经纬度相对位置展示。">
+              <figcaption>最后一程 · 港深放大</figcaption>
+              <svg viewBox="0 0 320 156" aria-hidden="true">
+                <path className="journey-delta-grid" d="M31 66H289M31 110H289M77 26V136M221 26V136" />
+                <path className="journey-delta-route" pathLength="1" d={`M${DELTA_HONGKONG.join(' ')}L${DELTA_SHENZHEN.join(' ')}`} />
+                <circle className="journey-delta-city" cx={DELTA_HONGKONG[0]} cy={DELTA_HONGKONG[1]} r="5" />
+                <circle className="journey-delta-city journey-delta-meeting" cx={DELTA_SHENZHEN[0]} cy={DELTA_SHENZHEN[1]} r="7" />
+                <path className="journey-delta-arrow" d={`M${DELTA_SHENZHEN[0] - 3} ${DELTA_SHENZHEN[1] + 16}l-4-10 10 5`} />
+              </svg>
+              <span className="journey-delta-hongkong"><strong>香港</strong><small>香港科技大学</small></span>
+              <span className="journey-delta-shenzhen"><strong>深圳</strong><small>我们的相遇</small></span>
+            </figure>
           </div>}
           <canvas ref={drawingRef} className="journey-falling-sand" aria-hidden="true" /><div className="journey-photo-outline" aria-hidden="true" />
         </div>
