@@ -125,7 +125,7 @@ def star(name, x, y, z, radius, mat, parent=None, points=4):
 
 def text(name, words, loc, size, mat, parent=None):
     data=bpy.data.curves.new(name,'FONT')
-    data.body=words;data.size=size;data.align_x='CENTER';data.align_y='CENTER';data.extrude=.002
+    data.body=words;data.size=size;data.align_x='CENTER';data.align_y='CENTER';data.extrude=.0007;data.resolution_u=3
     font=Path('C:/Windows/Fonts/georgia.ttf')
     if font.exists(): data.font=bpy.data.fonts.load(str(font))
     obj=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(obj)
@@ -166,246 +166,462 @@ def export(name):
     print(f'EXPORTED {name}: {(OUT/f"{name}.glb").stat().st_size} bytes')
 
 
-reset()
-gold=material('Antique gold foil',(.62,.36,.105),.83,.26)
-lightgold=material('Champagne gold',(.82,.57,.23),.75,.22)
-leather=material('Oxblood leather',(.12,.036,.022),.03,.49)
-leatherInset=material('Leather inset',(.061,.018,.014),.02,.57)
-paper=material('Ivory handmade paper',(.41,.29,.155),0,.91)
-paperLight=material('Warm paper edges',(.59,.44,.25),0,.89)
-ink=material('Old ink',(.15,.075,.025),0,.85)
-blue=material('Deep emerald cabochon',(.012,.12,.065),.38,.13)
+# Production textures are embedded in the GLBs. No Blender-only noise nodes.
+import sys
+import numpy as np
+sys.path.insert(0, str(ROOT.parent / '.tools/rotoscope'))
+import cv2
+TEXTURES=MASTERS/'textures'
+TEXTURES.mkdir(exist_ok=True)
 
-box('Back_cover',(0,0,-.035),(2.68,3.5,.14),leather)
-box('Page_block',(0,0,.18),(2.48,3.30,.34),paper,.018)
-box('Rounded_spine',(-1.3,0,.18),(.23,3.47,.48),leather,.1)
-for y in [-1.36,-.94,.93,1.35]:
-    box('Spine_raised_band',(-1.315,y,.18),(.265,.055,.49),gold,.022)
-for y in [-1.20,-.80,.77,1.18]:
-    box('Spine_leather_rib',(-1.322,y,.18),(.25,.10,.485),leather,.039)
-hinge=empty('CoverHinge',(-1.3,0,.405))
-box('Front_cover',(1.3,0,0),(2.7,3.52,.13),leather,.055,hinge)
-box('Recessed_cover',(1.3,0,.069),(2.34,3.18,.012),leatherInset,.08,hinge)
-# A slightly padded and uneven calfskin panel catches light at the broad creases.
-verts=[];faces=[];nx=45;ny=61
+
+def write_image(name, data, quality=92):
+    path=TEXTURES/name
+    array=np.clip(data*255,0,255).astype(np.uint8)
+    if array.ndim==3:array=cv2.cvtColor(array,cv2.COLOR_RGB2BGR)
+    cv2.imwrite(str(path),array,[cv2.IMWRITE_JPEG_QUALITY,quality] if path.suffix=='.jpg' else [cv2.IMWRITE_PNG_COMPRESSION,6])
+    return path
+
+
+def normal_from_height(height, strength=5):
+    dx=cv2.Sobel(height,cv2.CV_32F,1,0,ksize=3)/8
+    dy=cv2.Sobel(height,cv2.CV_32F,0,1,ksize=3)/8
+    n=np.dstack((-dx*strength,dy*strength,np.ones_like(height)))
+    n/=np.linalg.norm(n,axis=2,keepdims=True)
+    return (n+1)/2
+
+
+def noise(size,scale,seed):
+    rng=np.random.default_rng(seed)
+    field=rng.random((scale,scale)).astype(np.float32)
+    return cv2.resize(field,(size,size),interpolation=cv2.INTER_CUBIC)
+
+
+def pbr(name,color,normal=None,orm=None,roughness=.75,metallic=0):
+    mat=material(name,(1,1,1),metallic,roughness)
+    nodes=mat.node_tree.nodes;links=mat.node_tree.links;bsdf=nodes.get('Principled BSDF')
+    bsdf.inputs['IOR'].default_value=1.42
+    bsdf.inputs['Specular IOR Level'].default_value=.28
+    for key,path,space in [('color',color,'sRGB'),('normal',normal,'Non-Color'),('orm',orm,'Non-Color')]:
+        if not path:continue
+        image=bpy.data.images.load(str(path),check_existing=True);image.colorspace_settings.name=space;image.pack()
+        node=nodes.new('ShaderNodeTexImage');node.image=image
+        if key=='color':links.new(node.outputs['Color'],bsdf.inputs['Base Color'])
+        elif key=='normal':
+            n=nodes.new('ShaderNodeNormalMap');n.inputs['Strength'].default_value=.8
+            links.new(node.outputs['Color'],n.inputs['Color']);links.new(n.outputs['Normal'],bsdf.inputs['Normal'])
+        else:
+            separate=nodes.new('ShaderNodeSeparateColor');separate.mode='RGB';links.new(node.outputs['Color'],separate.inputs['Color'])
+            links.new(separate.outputs['Green'],bsdf.inputs['Roughness']);links.new(separate.outputs['Blue'],bsdf.inputs['Metallic'])
+    return mat
+
+
+def planar_uv(obj,width,height):
+    uv=obj.data.uv_layers.active or obj.data.uv_layers.new(name='UVMap')
+    for polygon in obj.data.polygons:
+        for loop in polygon.loop_indices:
+            co=obj.data.vertices[obj.data.loops[loop].vertex_index].co
+            uv.data[loop].uv=(co.x/width+.5,co.y/height+.5)
+
+
+def maps_from_source():
+    image=cv2.cvtColor(cv2.imread(str(MASTERS/'book-cover-albedo-source.png')),cv2.COLOR_BGR2RGB).astype(np.float32)/255
+    image=cv2.resize(image,(1152,1536),interpolation=cv2.INTER_AREA)
+    red=image[:,:,0];green=image[:,:,1]
+    gold=np.clip((green/(red+.01)-.45)/.23,0,1)*np.clip((red-.18)/.36,0,1)
+    gold=cv2.GaussianBlur(gold,(0,0),.6)
+    gray=cv2.cvtColor(image,cv2.COLOR_RGB2GRAY)
+    height=(gray-cv2.GaussianBlur(gray,(0,0),4))*.65+gold*.12
+    rough=np.clip(.83-gold*.4+(gray-cv2.GaussianBlur(gray,(0,0),3))*.13,.35,.9)
+    coverColor=write_image('cover-albedo.jpg',image,94)
+    coverNormal=write_image('cover-normal.jpg',normal_from_height(height,6),94)
+    coverORM=write_image('cover-orm.jpg',np.dstack((np.ones_like(gray),rough,gold*.87)),94)
+    # Quiet leather for spine and the back, with the same calfskin grain.
+    h,w=image.shape[:2];crop=image[int(h*.35):int(h*.68),int(w*.37):int(w*.62)]
+    crop=cv2.resize(crop,(512,512),interpolation=cv2.INTER_AREA)
+    luma=cv2.cvtColor(crop,cv2.COLOR_RGB2GRAY)
+    plainColor=write_image('calfskin-albedo.jpg',crop,92)
+    plainNormal=write_image('calfskin-normal.jpg',normal_from_height(luma-cv2.GaussianBlur(luma,(0,0),5),5),92)
+    plainORM=write_image('calfskin-orm.jpg',np.dstack((np.ones_like(luma),.74+noise(512,35,33)*.10,np.zeros_like(luma))),88)
+    botanical=cv2.cvtColor(cv2.imread(str(MASTERS/'book-page-botanical-source.png')),cv2.COLOR_BGR2RGB).astype(np.float32)/255
+    botanical=cv2.resize(botanical,(768,1152),interpolation=cv2.INTER_AREA)
+    botanicalPath=write_image('botanical-page.jpg',botanical,92)
+    # Handmade paper fibres, foxing, and physically parallel edge striations.
+    rng=np.random.default_rng(62);s=512
+    fib=noise(s,72,65)*.6+noise(s,256,71)*.4
+    paperRGB=np.dstack((.80+fib*.10,.71+fib*.10,.52+fib*.13))
+    paperColor=write_image('rag-paper.jpg',paperRGB,91)
+    paperNormal=write_image('paper-fibres.jpg',normal_from_height(fib*.07,3),89)
+    rows=np.arange(s)
+    edgeValues=.88+np.sin(rows*.19)*.025+rng.random(s)*.014
+    edgeValues-=(rows%17<2)*.12
+    edgeValues-=(rows%47==0)*.06
+    edges=np.tile(edgeValues[:,None],(1,s))
+    edgeRGB=np.dstack((edges*.86,edges*.74,edges*.55))
+    edgeColor=write_image('page-edges.jpg',edgeRGB,95)
+    return coverColor,coverNormal,coverORM,plainColor,plainNormal,plainORM,botanicalPath,paperColor,paperNormal,edgeColor
+
+
+maps=maps_from_source()
+reset()
+coverMat=pbr('PBR | hand tooled calfskin and worn gold',*maps[:3])
+leather=pbr('PBR | worn oxblood calfskin',maps[3],maps[4],maps[5])
+paper=pbr('PBR | uncoated rag paper',maps[7],maps[8],roughness=.95)
+pageEdges=pbr('PBR | deckled page edges',maps[9],maps[8],roughness=.95)
+illustration=pbr('PBR | engraved botanical leaf',maps[6],maps[8],roughness=.96)
+gold=material('Hand chased aged brass',(.46,.28,.11),.72,.49)
+brightGold=material('Gold catchlight on engraved edges',(.68,.45,.19),.77,.40)
+patina=material('Patina in chased recesses',(.105,.060,.018),.60,.62)
+linen=material('Waxed linen stitching',(.28,.16,.074),0,.94)
+edgeInk=material('Shadows between deckled folios',(.22,.15,.073),0,.98)
+silk=material('Wine red silk bookmark',(.14,.021,.029),0,.72)
+
+# Genuine thick boards, rounded corners and a softly padded calfskin face.
+box('Back_cover',(0,0,-.045),(2.72,3.58,.13),leather,.065)
+block=box('Bound_page_block',(0,0,.172),(2.48,3.30,.32),pageEdges,.036)
+uv=block.data.uv_layers.active
+for polygon in block.data.polygons:
+    for loop in polygon.loop_indices:
+        co=block.data.vertices[block.data.loops[loop].vertex_index].co
+        uv.data[loop].uv=((co.x+co.y+3)/6,(co.z+.16)/.32)
+for i,z in enumerate([.04,.079,.107,.151,.194,.225,.267,.309]):
+    curve('Uneven_folio_foreedge',[(-1.19,-1.654,z),(0,-1.657,z+.0007*math.sin(i)),(1.18,-1.653,z)],.0016,edgeInk)
+    curve('Uneven_folio_side',[(1.244,-1.58,z),(1.247,0,z+.001),(1.244,1.58,z)],.0014,edgeInk)
+box('Rounded_spine',(-1.32,0,.172),(.27,3.55,.47),leather,.125)
+for y in [-1.31,-.79,0,.79,1.31]:
+    box('Raised_binding_cord',(-1.342,y,.172),(.28,.095,.475),leather,.035)
+    for off in [-.046,.046]:
+        curve('Worn_spine_rule',[(-1.473,y+off,-.015),(-1.481,y+off,.33)],.003,brightGold)
+for i in range(35):
+    y=-1.55+i*.088
+    curve('Hand_stitched_spine',[(-1.178,y,.372),(-1.133,y+.028,.376)],.0033,linen)
+
+hinge=empty('CoverHinge',(-1.325,0,.404))
+box('Front_cover_board',(1.325,0,-.006),(2.74,3.60,.125),leather,.065,hinge)
+# One UV-mapped relief surface, with the albedo/roughness/normal/metalness embedded.
+verts=[];faces=[];nx=65;ny=87
 for iy in range(ny):
-    y=-1.50+iy/(ny-1)*3
+    v=iy/(ny-1);y=(v-.5)*3.49
     for ix in range(nx):
-        x=.20+ix/(nx-1)*2.20
-        envelope=math.sin(ix/(nx-1)*math.pi)*math.sin(iy/(ny-1)*math.pi)
-        wrinkle=(math.sin(x*31+math.sin(y*12)*2)+math.sin(y*39+x*7)*.45)*.0018
-        z=.078+envelope*(.009+wrinkle+math.sin(x*8+y*5)*.0019)
+        u=ix/(nx-1);x=.027+u*2.596
+        pad=(math.sin(u*math.pi)*math.sin(v*math.pi))**.55
+        z=.065+pad*.018+pad*math.sin(x*9+y*5)*.0016
         verts.append((x,y,z))
 for iy in range(ny-1):
     for ix in range(nx-1):
-        a=iy*nx+ix;faces.append((a,a+1,a+1+nx,a+nx))
-mesh=bpy.data.meshes.new('Padded calfskin');mesh.from_pydata(verts,[],faces);mesh.update()
-uv=mesh.uv_layers.new(name='Leather grain')
+        a=iy*nx+ix;faces.append((a,a+1,a+nx+1,a+nx))
+mesh=bpy.data.meshes.new('Hand tooled cover surface');mesh.from_pydata(verts,[],faces);mesh.update()
+uv=mesh.uv_layers.new(name='UVMap')
 for polygon in mesh.polygons:
     polygon.use_smooth=True
     for loop in polygon.loop_indices:
         vi=mesh.loops[loop].vertex_index;uv.data[loop].uv=((vi%nx)/(nx-1),(vi//nx)/(ny-1))
-obj=bpy.data.objects.new('Padded_leather',mesh);bpy.context.collection.objects.link(obj);finish(obj,obj.name,leatherInset,hinge)
-# Worn brass corners are sculpted bindings, with inset studs and leaf etching.
+obj=bpy.data.objects.new('Calfskin_cover_PBR',mesh);bpy.context.collection.objects.link(obj);finish(obj,obj.name,coverMat,hinge)
+
+
+def sculpt_leaf(name,cx,cy,z,length,width,angle,mat,parent=None):
+    verts=[];faces=[];rows=13;cols=7
+    for j in range(rows):
+        t=j/(rows-1);w=width*math.sin(math.pi*t)**.72*(1+.17*math.sin(t*math.pi*6))
+        for k in range(cols):
+            side=k/(cols-1)*2-1
+            xx=side*w;yy=t*length
+            zz=z+.009*math.sin(t*math.pi)*(1-side*side)+.002*math.sin(t*math.pi*5)*abs(side)
+            verts.append((cx+xx*math.cos(angle)-yy*math.sin(angle),cy+xx*math.sin(angle)+yy*math.cos(angle),zz))
+    for j in range(rows-1):
+        for k in range(cols-1):
+            a=j*cols+k;faces.append((a,a+1,a+cols+1,a+cols))
+    data=bpy.data.meshes.new(name);data.from_pydata(verts,[],faces);data.update()
+    obj=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(obj);finish(obj,name,mat,parent)
+    for p in data.polygons:p.use_smooth=True
+    mod=obj.modifiers.new('Cast metal thickness','SOLIDIFY');mod.thickness=.003
+    bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=mod.name)
+    return obj
+
+# Small, sculpted corner guards: broad acanthus leaves with chased veins.
 for sx in [-1,1]:
     for sy in [-1,1]:
-        x=1.3+sx*1.23;y=sy*1.61
-        box('Brass_corner_binding',(x-sx*.15,y,.088),(.39,.11,.034),gold,.032,hinge)
-        box('Brass_corner_binding',(x,y-sy*.15,.088),(.11,.40,.034),gold,.032,hinge)
-        sphere('Corner_rivet',(x,y,.113),(.027,.027,.014),lightgold,hinge)
-        star('Corner_fleur',x-sx*.22,y-sy*.22,.102,.078,gold,hinge)
-for inset,radius in [(.06,.016),(.15,.008),(.235,.006)]:
-    x0=.03+inset;x1=2.57-inset;y0=-1.7+inset;y1=1.7-inset
-    curve('Tooled_border',[(x0,y0,.086),(x1,y0,.086),(x1,y1,.086),(x0,y1,.086)],radius,gold,hinge,True)
-# Symmetrical, physically raised foliate scrolls in the four cover corners.
-for sx in [-1,1]:
-    for sy in [-1,1]:
-        for stem in range(3):
-            cx=1.3+sx*(.81-stem*.16);cy=sy*(1.32-stem*.1)
-            pts=[]
-            for i in range(65):
-                t=i/64*math.pi*2.5;r=.24*(1-i/76)
-                pts.append((cx+sx*math.cos(t)*r,cy+sy*math.sin(t)*r,.099))
-            curve('Gold_filigree',pts,.007,gold,hinge)
-        for i in range(8):
-            t=i/7
-            x=1.3+sx*(1.02-.48*t);y=sy*(1.43-.50*t)
-            leaf=sphere('Embossed_leaf',(x,y,.09),(.025,.064,.008),gold,hinge)
-            leaf.rotation_euler.z=-sx*sy*.65
-# An old foliate crest; the book is a leather-bound fairy tale, not a star HUD.
-for radius in [.36,.42]:
-    curve('Foliate_crest',[(1.3+radius*.82*math.cos(i*math.tau/120),.55+radius*1.25*math.sin(i*math.tau/120),.098) for i in range(120)],.011,gold,hinge,True)
-curve('Crest_stem',[(1.3,.13,.102),(1.3,.91,.102)],.012,lightgold,hinge)
-for side in [-1,1]:
-    for i in range(5):
-        y=.28+i*.125
-        pts=[(1.3,y,.10),(1.3+side*.09,y+.035,.10),(1.3+side*(.17 if i<4 else .10),y+.14,.10)]
-        curve('Crest_branches',pts,.009,gold,hinge)
-        leaf=sphere('Crest_leaf',(pts[-1][0],pts[-1][1],.104),(.038,.075,.011),lightgold,hinge)
-        leaf.rotation_euler.z=side*-.6
-sphere('Emerald',(1.3,.55,.139),(.075,.108,.037),blue,hinge)
-for y in [-.94,.94]:
-    box('Leather_book_clasp',(2.57,y,.108),(.31,.20,.055),leather,.025,hinge)
-    box('Brass_clasp',(2.67,y,.136),(.14,.23,.04),gold,.018,hinge)
-    sphere('Clasp_stud',(2.65,y,.164),(.025,.025,.012),lightgold,hinge)
-text('Book_title','THE BOOK\nOF YOU',(1.3,-.43,.09),.185,gold,hinge)
-text('Book_subtitle','A STORY ONLY YOU CAN OPEN',(1.3,-.93,.09),.054,gold,hinge)
-curve('Bottom_swirl',[(.94+ i*.012,-1.11+.015*math.sin(i*.35),.1) for i in range(61)],.008,gold,hinge)
-# Individual flexible page surfaces; the browser bends and turns each leaf.
+        cx=1.325+sx*1.23;cy=sy*1.60
+        sphere('Flush_corner_pin',(cx,cy,.076),(.018,.018,.006),brightGold,hinge)
+        for i in range(2):
+            angle=math.atan2(-sx,-sy)+(.21+i*.24)*sx*sy
+            sculpt_leaf('Cast_acanthus_corner',cx-sx*.010,cy-sy*.012,.073,.085+i*.012,.011+i*.002,angle,gold,hinge)
+        curve('Incised_corner_edge',[(cx-sx*.25,cy,.080),(cx,cy,.080),(cx,cy-sy*.25,.080)],.004,gold,hinge)
+
+# Individually made clasps with an inset, patinated hinge, instead of flat gold blocks.
+for y in [-.99,.99]:
+    strap=box('Leather_clasp',(2.57,y,.096),(.31,.15,.035),leather,.032,hinge)
+    clasp=box('Engraved_clasp',(2.679,y,.112),(.10,.185,.027),gold,.025,hinge)
+    sphere('Clasp_rivet',(2.682,y,.130),(.016,.020,.005),brightGold,hinge)
+    for dy in [-.055,.055]:curve('Clasp_engraving',[(2.65,y+dy,.128),(2.71,y+dy,.128)],.0016,patina,hinge)
+
+# Small fine typography sits inside the quiet cartouche of the printed cover.
+def chinese_text(name,words,loc,size,mat,parent=None):
+    obj=text(name,words,loc,size,mat,parent)
+    obj.data.font=bpy.data.fonts.load('C:/Windows/Fonts/STKAITI.TTF')
+    obj.data.extrude=0;obj.data.bevel_depth=0;obj.data.resolution_u=3
+    return obj
+chinese_text('Personal_dedication','师 宝 宝',(1.325,.22,.100),.23,brightGold,hinge)
+chinese_text('Personal_subtitle','写给你的一场梦',(1.325,-.13,.102),.085,gold,hinge)
+text('Quiet_imprint','FOR YOU, AND ONLY YOU',(1.325,-.42,.105),.046,gold,hinge)
+# A silk bookmark drapes naturally from the text block.
+curve('Silk_bookmark',[(-.72,-1.42,.022),(-.72,-1.68,.02),(-.66,-1.85,-.04),(-.56,-2.00,-.09)],.019,silk)
+bpy.ops.mesh.primitive_plane_add(size=1,location=(0,0,.338))
+obj=bpy.context.object;obj.dimensions=(2.40,3.20,0)
+bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
+finish(obj,'Dedication_rag_paper',paper)
+# Six independently deformable printed leaves preserve browser interaction.
 for pageIndex in range(6):
-    pageHinge=empty(f'PageHinge_{pageIndex}',(-1.20,0,.354-pageIndex*.011))
-    vertices=[];faces=[]
-    for ix in range(25):
-        x=ix/24*2.40
-        for iy in range(3):vertices.append((x,-1.6+iy*1.6,.005*math.sin(ix/24*math.pi)))
-    for ix in range(24):
-        for iy in range(2):
-            a=ix*3+iy;faces.append((a,a+3,a+4,a+1))
-    mesh=bpy.data.meshes.new('Flexible paper');mesh.from_pydata(vertices,[],faces);mesh.update()
-    obj=bpy.data.objects.new(f'Paper_{pageIndex}',mesh);bpy.context.collection.objects.link(obj);finish(obj,obj.name,paperLight,pageHinge)
+    ph=empty(f'PageHinge_{pageIndex}',(-1.20,0,.352-pageIndex*.010))
+    verts=[];faces=[];nx=33;ny=9
+    for ix in range(nx):
+        x=ix/(nx-1)*2.4
+        for iy in range(ny):
+            yy=-1.60+iy/(ny-1)*3.20
+            zz=.004+math.sin(ix/(nx-1)*math.pi)*.012+math.sin(iy/(ny-1)*math.pi)*.004
+            verts.append((x,yy,zz))
+    for ix in range(nx-1):
+        for iy in range(ny-1):
+            a=ix*ny+iy;faces.append((a,a+ny,a+ny+1,a+1))
+    data=bpy.data.meshes.new('Flexible printed rag paper');data.from_pydata(verts,[],faces);data.update()
+    uv=data.uv_layers.new(name='UVMap')
+    for polygon in data.polygons:
+        polygon.use_smooth=True
+        for loop in polygon.loop_indices:
+            vi=data.loops[loop].vertex_index
+            uv.data[loop].uv=((vi//ny)/(nx-1),(vi%ny)/(ny-1))
+    obj=bpy.data.objects.new(f'Paper_{pageIndex}',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,illustration,ph)
     obj['flexiblePage']=True
-    solid=obj.modifiers.new('Paper thickness','SOLIDIFY');solid.thickness=.005
-    bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=solid.name)
-    for j in range(10):
-        length=1.68 if j%3 else 1.33
-        curve('Manuscript_line',[(.3,1.16-j*.16,.012),(.3+length,1.16-j*.16,.012)],.004,ink,pageHinge)
-    star('Page_star',1.20,-.88,.014,.14,gold,pageHinge)
+    mod=obj.modifiers.new('Paper edge','SOLIDIFY');mod.thickness=.0025
+    bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=mod.name)
 export('magic-book')
 
 reset()
-gold=material('Edible gold leaf',(.83,.57,.23),.78,.25)
-darkGold=material('Brushed brass',(.38,.22,.065),.76,.31)
-frosting=material('Midnight blue buttercream',(.010,.030,.078),0,.65)
-piping=material('Blue buttercream piping',(.038,.080,.145),0,.59)
-cream=material('Vanilla cream',(.71,.61,.44),0,.62)
-chocolate=material('White chocolate',(.86,.76,.58),0,.34)
-berry=material('Blueberry velvet',(.032,.037,.079),0,.42)
-wax=material('Champagne candle wax',(.82,.66,.38),.09,.34)
-ivory=material('Porcelain',(.52,.46,.34),.12,.29)
-black=material('Cotton wick',(.012,.007,.005),0,1)
-cylinder('Cake_stand_foot',(0,0,-.19),.57,.1,darkGold)
-cylinder('Cake_stand_stem',(0,0,-.07),.15,.24,darkGold,48)
-cylinder('Porcelain_plate',(0,0,.09),1.38,.09,ivory)
-ring('Plate_gold_rim',1.35,.147,.018,gold)
-ring('Plate_lower_rim',1.31,.045,.012,darkGold)
-for radius in [1.21,1.25,1.28]: ring('Plate_engraving',radius,.14,.0025,gold)
+# Food materials use embedded pores and softly varied roughness, with no metal sheen.
+def food_maps(prefix,base,rough=.83,seed=44):
+    s=512
+    broad=noise(s,12,seed);mid=noise(s,64,seed+1);fine=noise(s,240,seed+2)
+    grain=(mid-.5)*.018+(fine-.5)*.022+(broad-.5)*.025
+    color=np.array(base,dtype=np.float32)[None,None,:]+grain[:,:,None]
+    height=(mid-.5)*.04+(fine-.5)*.075
+    albedo=write_image(prefix+'-albedo.jpg',color,92)
+    normal=write_image(prefix+'-normal.jpg',normal_from_height(height,4.5),92)
+    orm=write_image(prefix+'-orm.jpg',np.dstack((np.ones((s,s)),np.clip(rough+(broad-.5)*.06,0,1),np.zeros((s,s)))),87)
+    return pbr('PBR | '+prefix,albedo,normal,orm)
+
+frosting=food_maps('midnight-velvet-buttercream',(.115,.190,.305),.87,41)
+piping=food_maps('blue-piped-buttercream',(.205,.292,.413),.86,50)
+cream=food_maps('vanilla-chocolate-cream',(.86,.80,.68),.82,61)
+berry=food_maps('natural-blueberry-bloom',(.30,.32,.40),.79,80)
+berryDark=food_maps('natural-blueberry-skin',(.18,.205,.29),.64,90)
+# Real edible gold has small crumples, a subdued warm tone, and occasional highlights.
+s=256;foil=noise(s,29,12)*.6+noise(s,95,15)*.4
+foilC=write_image('gold-leaf-albedo.jpg',np.dstack((.70+foil*.12,.56+foil*.12,.27+foil*.09)),90)
+foilN=write_image('gold-leaf-normal.jpg',normal_from_height(foil*.10,3),91)
+foilORM=write_image('gold-leaf-orm.jpg',np.dstack((np.ones((s,s)),.43+foil*.10,np.full((s,s),.83))),89)
+gold=pbr('PBR | edible crumpled gold leaf',foilC,foilN,foilORM)
+brass=material('Antique brushed cake stand',(.22,.135,.056),.68,.54)
+ivory=material('Warm glazed porcelain',(.35,.30,.23),0,.46)
+wax=material('Beeswax candles',(.57,.43,.24),0,.73)
+wick=material('Charred linen wick',(.008,.006,.004),0,.98)
+# Low footed porcelain, rolled rim and subtle engraved gold edge.
+cylinder('Stand_foot',(0,0,-.16),.46,.075,brass,64,.025)
+cylinder('Stand_stem',(0,0,-.065),.105,.18,brass,48,.016)
+plate=cylinder('Porcelain_salver',(0,0,.055),1.285,.075,ivory,128,.025)
+ring('Porcelain_rolled_lip',1.254,.108,.018,ivory)
+ring('Handpainted_gold_rim',1.267,.113,.006,gold)
+ring('Fine_gold_rule',1.204,.101,.0025,gold)
+for i in range(64):
+    a=i/64*math.tau
+    sphere('Pressed_porcelain_rim',(1.226*math.cos(a),1.226*math.sin(a),.098),(.013,.013,.004),ivory)
 
 
-def iced_tier(name, radius, bottom, height, mat):
-    verts=[];faces=[];radial=128;levels=32
+def iced_tier(name,R,bottom,H,mat,seed):
+    # Broad, gently imperfect spatula shapes and rounded shoulders, no perfect cylinder.
+    radial=144;levels=38;verts=[];faces=[]
     for j in range(levels+1):
-        z=bottom+j/levels*height
+        t=j/levels;z=bottom+t*H
+        shoulder=.036*(math.exp(-t*24)+math.exp(-(1-t)*26))
         for i in range(radial):
             a=i/radial*math.tau
-            r=radius+.0008*math.sin(a*13+j*.21)+.00035*math.sin(a*29-j*.41)
-            if j in [0,levels]:r-=.029
-            elif j in [1,levels-1]:r-=.008
-            verts.append((r*math.cos(a),r*math.sin(a),z))
+            uneven=.0058*math.sin(a*5+seed)+.0035*math.sin(a*9+t*3.4)+.002*math.sin(a*21-t*7)
+            r=R-shoulder+.012*math.sin(t*math.pi)+uneven
+            zz=z+(math.sin(a*4+seed)*.004+math.sin(a*11)*.0015)*math.sin(t*math.pi/2)
+            verts.append((r*math.cos(a),r*math.sin(a),zz))
     for j in range(levels):
         for i in range(radial):
-            n=(i+1)%radial;a=j*radial+i;b=j*radial+n;faces.append((a,b,b+radial,a+radial))
-    faces.extend([tuple(reversed(range(radial))),tuple(levels*radial+i for i in range(radial))])
-    mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],faces);mesh.update()
-    uv=mesh.uv_layers.new(name='Buttercream grain')
-    for polygon in mesh.polygons:
-        seam=any(mesh.loops[loop].vertex_index%radial==radial-1 for loop in polygon.loop_indices)
-        for loop in polygon.loop_indices:
-            vi=mesh.loops[loop].vertex_index
-            if len(polygon.vertices)==4:
+            a=j*radial+i;b=j*radial+(i+1)%radial;faces.append((a,b,b+radial,a+radial))
+    # Domed top, gently tapering through three concentric rings.
+    previous=levels*radial
+    for ringIndex,radius in enumerate([R*.72,R*.38,.002]):
+        start=len(verts)
+        for i in range(radial):
+            a=i/radial*math.tau;verts.append((radius*math.cos(a),radius*math.sin(a),bottom+H+.005+ringIndex*.002))
+        for i in range(radial):faces.append((previous+i,previous+(i+1)%radial,start+(i+1)%radial,start+i))
+        previous=start
+    faces.append(tuple(reversed(range(radial))))
+    data=bpy.data.meshes.new(name);data.from_pydata(verts,[],faces);data.update()
+    uv=data.uv_layers.new(name='Buttercream UV')
+    for p in data.polygons:
+        p.use_smooth=True
+        seam=any(data.loops[loop].vertex_index%radial==radial-1 for loop in p.loop_indices)
+        for loop in p.loop_indices:
+            vi=data.loops[loop].vertex_index;co=data.vertices[vi].co
+            if vi<(levels+1)*radial:
                 u=(vi%radial)/radial
                 if seam and u==0:u=1
-                uv.data[loop].uv=(u*3,(vi//radial)/levels)
-            else:uv.data[loop].uv=((verts[vi][0]/radius+1)/2,(verts[vi][1]/radius+1)/2)
-    obj=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(obj);finish(obj,name,mat)
-    for p in mesh.polygons:p.use_smooth=len(p.vertices)==4
+                uv.data[loop].uv=(u*3.5,(co.z-bottom)/H*1.2)
+            else:uv.data[loop].uv=(co.x/R+.5,co.y/R+.5)
+    obj=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(obj);finish(obj,name,mat)
+
+iced_tier('Hand_spatula_lower_tier',.99,.123,.72,frosting,2)
+iced_tier('Hand_spatula_upper_tier',.67,.829,.55,frosting,4)
+# Fine and slightly wavering piping at the base; gold is laid by hand.
+for R,z in [(.989,.175),(.672,.867)]:
+    points=[]
+    for i in range(180):
+        a=i/180*math.tau
+        points.append(((R+.002*math.sin(a*9))*math.cos(a),(R+.002*math.sin(a*9))*math.sin(a),z+.002*math.sin(a*7)))
+    curve('Fine_edible_gold_line',points,.0035,gold,closed=True)
 
 
-def rosette(x,y,z,radius,mat,angle=0):
-    coords=[];polys=[];segments=24;levels=10
-    for k in range(levels):
-        h=k/(levels-1); r=radius*(1-h)**.68
-        for q in range(segments):
-            a=q/segments*math.tau+h*1.9+angle
-            rr=r*(1+.20*math.cos(q/segments*math.tau*8))
-            coords.append((x+math.cos(a)*rr+h*h*radius*.24,y+math.sin(a)*rr,z+h*radius*1.25))
-    for k in range(levels-1):
-        for q in range(segments):polys.append((k*segments+q,k*segments+(q+1)%segments,(k+1)*segments+(q+1)%segments,(k+1)*segments+q))
-    data=bpy.data.meshes.new('Hand piped cream');data.from_pydata(coords,[],polys);data.update()
-    uv=data.uv_layers.new(name='Cream grain')
-    for polygon in data.polygons:
-        for loop in polygon.loop_indices:
-            vi=data.loops[loop].vertex_index
-            uv.data[loop].uv=((vi%segments)/segments,(vi//segments)/(levels-1))
-    obj=bpy.data.objects.new('Piped_cream_rosette',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,mat)
-    for p in data.polygons:p.use_smooth=True
+def pipe_swirling_cream(cx,cy,z,R,H,mat,phase=0,shell=False):
+    # A real fluted extrusion follows the pastry bag's spiral, not a pointed cone.
+    samples=34 if not shell else 17;sides=10;verts=[];faces=[]
+    def center(t):
+        if shell:
+            return Vector((cx+(t-.5)*R*2,cy+math.sin(t*math.pi)*R*.20,z+math.sin(t*math.pi)*H))
+        a=phase+t*math.tau*1.8;r=R*(1-t)**.75
+        return Vector((cx+math.cos(a)*r,cy+math.sin(a)*r,z+t*H))
+    for j in range(samples):
+        t=j/(samples-1);p=center(t)
+        tangent=(center(min(.9999,t+.002))-center(max(0,t-.002))).normalized()
+        side=tangent.cross(Vector((0,0,1))).normalized()
+        if side.length<.1:side=Vector((1,0,0))
+        up=tangent.cross(side).normalized()
+        rad=R*.48*(1-t)**.55+.0018
+        if shell:rad=R*.54*math.sin(math.pi*(t*.91+.045))**.65
+        for k in range(sides):
+            a=k/sides*math.tau;rr=rad*(1+.20*math.cos(a*5))
+            v=p+(side*math.cos(a)+up*math.sin(a))*rr
+            verts.append(tuple(v))
+    for j in range(samples-1):
+        for k in range(sides):
+            a=j*sides+k;b=j*sides+(k+1)%sides;faces.append((a,b,b+sides,a+sides))
+    data=bpy.data.meshes.new('Continuous piped cream');data.from_pydata(verts,[],faces);data.update()
+    uv=data.uv_layers.new(name='Cream UV')
+    for p in data.polygons:
+        p.use_smooth=True
+        for loop in p.loop_indices:
+            vi=data.loops[loop].vertex_index;uv.data[loop].uv=((vi%sides)/sides,(vi//sides)/(samples-1))
+    obj=bpy.data.objects.new('Hand_piped_cream',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,mat)
+
+for i in range(44):
+    a=i/44*math.tau
+    pipe_swirling_cream(.985*math.cos(a),.985*math.sin(a),.136,.031,.025,piping,a,True)
+# Asymmetric patisserie clusters, a lighter touch than uniform rows of spiky kisses.
+for a,R,z,sz in [(-2.5,.85,.844,.080),(-2.30,.84,.845,.074),(-2.10,.85,.847,.066),(.55,.84,.845,.075),(.77,.83,.846,.06),(-1.85,.56,1.385,.070),(-1.55,.56,1.385,.06),(1.0,.51,1.385,.066)]:
+    pipe_swirling_cream(R*math.cos(a),R*math.sin(a),z,sz,sz*.94,cream,a)
+# A very fine blue piped chain softens the upper shoulder.
+for i in range(27):
+    a=i/27*math.tau
+    pipe_swirling_cream(.647*math.cos(a),.647*math.sin(a),1.375,.027,.023,piping,a,True)
 
 
-iced_tier('Lower_tier',1.0,.16,.71,frosting)
-iced_tier('Upper_tier',.72,.865,.55,frosting)
-# The lower scallops and upper vanilla rosettes have visibly soft piped ridges.
-for tier,radius,z,count,sz in [(0,1.00,.175,52,.043),(1,.975,.854,38,.042),(2,.699,1.414,24,.052)]:
-    for i in range(count):
-        a=i/count*math.tau
-        rosette(radius*math.cos(a),radius*math.sin(a),z,sz,cream if tier==2 else piping,a)
-ring('Lower_gold_ribbon',1.004,.255,.008,gold)
-ring('Upper_gold_ribbon',.724,.918,.008,gold)
-# A deliberately irregular fine gold edge and flecks are edible leaf, not beads.
-for tier,rr,z0,z1 in [(0,1.006,.32,.79),(1,.727,.97,1.36)]:
-    for i in range(70 if tier==0 else 45):
-        a=random.random()*math.tau;z=random.uniform(z0,z1);r=random.uniform(.006,.022)
-        s=star('Gold_leaf_flake',0,0,0,r,gold,points=3 if i%3 else 4)
-        s.rotation_euler=(math.pi/2,0,a+math.pi/2)
-        s.location=(rr*math.cos(a),rr*math.sin(a),z)
-    for start in [-2.8,-.8,1.2]:
-        points=[]
-        for i in range(5):
-            a=start+i*.17;z=(z0+z1)/2+math.sin(i*1.45)*.12
-            points.append((rr*math.cos(a),rr*math.sin(a),z))
-            sphere('Sugar_constellation_pearl',points[-1],(.012,.012,.012),gold)
-        curve('Sugar_constellation_thread',points,.0038,gold)
-# Ganache gathers into little natural drips below the upper rim.
-for i in range(18):
-    a=i/18*math.tau
-    length=.035+random.random()*.055
-    curve('Golden_ganache_drip',[(.719*math.cos(a),.719*math.sin(a),1.41),(.724*math.cos(a),.724*math.sin(a),1.385-length*.45),(.724*math.cos(a),.724*math.sin(a),1.385-length)],.008,gold)
-# Crescent cut from two arcs of the same intersection, with a substantial chocolate edge.
-coords=[];moonFaces=[];count=57
-outerRadius=.29;innerRadius=.258;offset=.18
-intersectionX=(outerRadius**2-innerRadius**2+offset**2)/(2*offset)
-outerAngle=math.acos(intersectionX/outerRadius)
-innerAngle=math.acos((intersectionX-offset)/innerRadius)
+def chocolate_flower(cx,cy,z,radius):
+    for ringIndex,count in [(0,7),(1,5),(2,3)]:
+        for i in range(count):
+            a=i/count*math.tau+ringIndex*.47
+            length=radius*(1-ringIndex*.23);width=length*.42
+            rows=12;cols=9;verts=[];faces=[]
+            for j in range(rows):
+                t=j/(rows-1)
+                for k in range(cols):
+                    side=k/(cols-1)*2-1
+                    spread=math.sin(t*math.pi*.94)**.66*width*side
+                    dist=t*length
+                    zz=z+ringIndex*.018+length*(.21*math.sin(t*math.pi)+.20*t*t)+.009*side*side
+                    verts.append((cx+math.cos(a)*dist-math.sin(a)*spread,cy+math.sin(a)*dist+math.cos(a)*spread,zz))
+            for j in range(rows-1):
+                for k in range(cols-1):
+                    q=j*cols+k;faces.append((q,q+1,q+cols+1,q+cols))
+            data=bpy.data.meshes.new('Curled chocolate petal');data.from_pydata(verts,[],faces);data.update()
+            obj=bpy.data.objects.new('Handmade_white_chocolate_petal',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,cream)
+            for p in data.polygons:p.use_smooth=True
+            planar_uv(obj,radius*2,radius*2)
+            mod=obj.modifiers.new('Chocolate edge','SOLIDIFY');mod.thickness=.0023
+            bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=mod.name)
+    for i in range(7):
+        a=i/7*math.tau;r=.019
+        sphere('Flower_stamen',(cx+math.cos(a)*r,cy+math.sin(a)*r,z+.077),(.006,.006,.010),gold)
+
+chocolate_flower(-.24,-.40,1.389,.19)
+chocolate_flower(.72,-.31,.854,.145)
+# Natural berries have an uneven dusty bloom, a recessed crown and five small lobes.
+def blueberry(x,y,z,r,index):
+    obj=sphere('Blueberry',(x,y,z),(r,r*.94,r*.91),berry if index%3 else berryDark)
+    for vertex in obj.data.vertices:
+        co=vertex.co;theta=math.atan2(co.y,co.x)
+        co.x*=1+.022*math.sin(theta*5+index);co.y*=1+.018*math.sin(theta*7-index)
+    top=z+r*.88
+    crown=cylinder('Berry_crown',(x,y,top),r*.27,r*.04,berryDark,20,.002)
+    for i in range(5):
+        a=i/5*math.tau+index
+        obj=sphere('Blueberry_sepal',(x+math.cos(a)*r*.18,y+math.sin(a)*r*.18,top+r*.026),(r*.09,r*.18,r*.035),berryDark)
+        obj.rotation_euler.z=a
+
+berries=[(-.73,-.49,.89,.057),(-.78,-.35,.897,.062),(-.69,-.34,.922,.060),(-.63,-.49,.895,.048),(.69,.46,.895,.059),(.78,.35,.895,.051),(.77,.49,.895,.047),(-.43,-.27,1.42,.052),(-.45,-.13,1.425,.062),(-.35,-.16,1.438,.054),(.29,.34,1.418,.049)]
+for i,args in enumerate(berries):blueberry(*args,i)
+# Irregular, torn flakes of edible leaf. Sparse size variation avoids polka dots.
+for i in range(110):
+    tier=i%3!=0;R=.675 if tier else .995
+    a=random.random()*math.tau;z=random.uniform(.96,1.30) if tier else random.uniform(.30,.75)
+    sz=random.uniform(.004,.014)*(1.7 if i%19==0 else 1)
+    coords=[];count=5+int(i%3)
+    for j in range(count):
+        angle=j/count*math.tau;r=sz*random.uniform(.55,1)
+        aa=a+math.cos(angle)*r/R
+        coords.append(((R+.002)*math.cos(aa),(R+.002)*math.sin(aa),z+math.sin(angle)*r))
+    data=bpy.data.meshes.new('Torn edible gold');data.from_pydata(coords,[],[tuple(range(count))]);data.update()
+    obj=bpy.data.objects.new('Edible_gold_flake',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,gold)
+    planar_uv(obj,.09,.09)
+# Three quiet constellations, fine enough to look hand piped.
+for start,R,mid in [(-2.0,.995,.53),(.65,.995,.49),(-1.35,.675,1.13)]:
+    points=[]
+    for i in range(5):
+        a=start+i*.17;z=mid+math.sin(i*1.5)*.075
+        points.append((R*math.cos(a),R*math.sin(a),z))
+        sphere('Sugar_constellation_dot',points[-1],(.007,.007,.007),gold)
+    curve('Fine_constellation_icing',points,.0018,gold)
+# A thin curved gold-leaf chocolate crescent; explicit strip topology.
+coords=[];faces=[];count=49;R=.235;r=.214;off=.137
+ix=(R*R-r*r+off*off)/(2*off);oa=math.acos(ix/R);ia=math.acos((ix-off)/r)
 for i in range(count):
-    t=outerAngle+i/(count-1)*(math.tau-2*outerAngle)
-    coords.append((outerRadius*math.cos(t),0,outerRadius*math.sin(t)))
+    a=oa+i/(count-1)*(math.tau-2*oa);coords.append((R*math.cos(a),.012*math.sin(a)**2,R*math.sin(a)))
 for i in range(count):
-    t=innerAngle+i/(count-1)*(math.tau-2*innerAngle)
-    coords.append((offset+innerRadius*math.cos(t),0,innerRadius*math.sin(t)))
-for i in range(count-1):moonFaces.append((i,i+1,count+i+1,count+i))
-data=bpy.data.meshes.new('Crescent chocolate');data.from_pydata(coords,[],moonFaces);data.update()
-moon=bpy.data.objects.new('Golden_crescent',data);bpy.context.collection.objects.link(moon);finish(moon,moon.name,gold)
-moon.location=(-.30,.13,1.93)
-solid=moon.modifiers.new('Chocolate topper thickness','SOLIDIFY');solid.thickness=.038
-bpy.context.view_layer.objects.active=moon;bpy.ops.object.modifier_apply(modifier=solid.name)
-curve('Moon_stem',[(-.30,.13,1.40),(-.30,.13,1.80)],.009,gold)
-# Gold stars stand at varying heights behind the candles.
-for i,(x,y,z,sz) in enumerate([(.32,.30,1.85,.092),(.07,.31,2.08,.062),(-.57,.26,1.74,.048)]):
-    curve('Star_wire',[(x,y,1.39),(x,y,z)],.006,gold)
-    obj=star('Standing_sugar_star',0,0,0,sz,gold,points=5)
-    obj.rotation_euler.x=math.pi/2;obj.location=(x,y,z)
-for i,(x,y,height) in enumerate([(.34,-.25,.48),(-.02,-.10,.62),(.38,.14,.40)]):
-    cylinder(f'Candle_{i}',(x,y,1.43+height/2),.026,height,wax,32,.01)
-    curve('Candle_gold_spiral',[(x+.027*math.cos(k/28*math.tau),y+.027*math.sin(k/28*math.tau),1.44+k/28*.10) for k in range(int(height/.10*28))],.002,gold)
-    cylinder(f'Wick_{i}',(x,y,1.43+height+.016),.005,.035,black,12,.002)
-    socket=empty(f'FlameSocket_{i}',(x,y,1.43+height+.035));socket['flame']=True
-# Blueberries, fine sugar pearls and a few white-chocolate petals make it patisserie.
-for i,(x,y,z) in enumerate([(-.59,-.67,.9),(-.70,-.53,.9),(-.79,-.67,.9),(.66,.59,.90),(.78,.46,.90),(-.30,-.36,1.45),(-.42,-.26,1.45)]):
-    b=sphere('Blueberry',(x,y,z),(.063,.063,.057),berry)
-    for q in range(5):
-        a=q/5*math.tau
-        curve('Blueberry_crown',[(x,y,z+.055),(x+math.cos(a)*.016,y+math.sin(a)*.016,z+.057)],.003,piping)
-for x,y,z,r in [(-.53,-.59,.87,.10),(.67,.49,.875,.08),(-.36,-.31,1.414,.068)]:
-    rosette(x,y,z,r,cream)
-for i in range(15):
-    a=i*2.39;r=.3+.08*math.sin(i*2.1)
-    sphere('Vanilla_sugar_pearl',(r*math.cos(a),r*math.sin(a),1.431),(.012,.012,.012),cream)
+    a=ia+i/(count-1)*(math.tau-2*ia);coords.append((off+r*math.cos(a),.009*math.sin(a)**2,r*math.sin(a)))
+for i in range(count-1):faces.append((i,i+1,count+i+1,count+i))
+data=bpy.data.meshes.new('Curled chocolate crescent');data.from_pydata(coords,[],faces);data.update()
+obj=bpy.data.objects.new('Gold_leaf_chocolate_crescent',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,gold)
+obj.location=(-.29,.20,1.81)
+obj.rotation_euler.z=.34
+for p in data.polygons:p.use_smooth=True
+uv=data.uv_layers.new(name='Foil UV')
+for p in data.polygons:
+    for loop in p.loop_indices:
+        co=data.vertices[data.loops[loop].vertex_index].co;uv.data[loop].uv=(co.x/R+.5,co.z/R+.5)
+mod=obj.modifiers.new('Chocolate thickness','SOLIDIFY');mod.thickness=.010
+bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=mod.name)
+curve('Fine_moon_support',[(-.29,.20,1.38),(-.29,.20,1.65)],.006,gold)
+for x,y,z,size in [(.24,.23,1.85,.046),(.06,.24,1.99,.029)]:
+    curve('Curved_sugar_star_support',[(x+.015,y,1.39),(x+.007,y,z-.08),(x,y,z)],.0035,gold)
+    obj=star('Thin_sugar_star',0,0,0,size,gold,points=5);obj.rotation_euler.x=math.pi/2;obj.location=(x,y,z)
+# Three hand dipped beeswax candles and live fire sockets.
+for i,(x,y,H) in enumerate([(.29,-.17,.46),(.02,.025,.61),(.34,.11,.38)]):
+    cylinder(f'Candle_{i}',(x,y,1.39+H/2),.022,H,wax,32,.008)
+    for j in range(3):
+        angle=j*2.0+i;zz=1.39+H-.06-j*.025
+        sphere('Wax_drop',(x+math.cos(angle)*.021,y+math.sin(angle)*.021,zz),(.006,.006,.025),wax)
+    cylinder(f'Wick_{i}',(x,y,1.39+H+.012),.004,.028,wick,12,.001)
+    socket=empty(f'FlameSocket_{i}',(x,y,1.39+H+.030));socket['flame']=True
 export('star-cake')

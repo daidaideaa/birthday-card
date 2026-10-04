@@ -9,7 +9,8 @@
 | `memory-book/magic-book.glb`、`star-cake.glb` | 项目原创 Blender 几何、材质与结构；生成脚本 `scripts/models/build_magic_objects.py` | Three.js 真实三维古书与深蓝金色蛋糕；书封与六层纸页由浏览器实时开合、弯曲；蛋糕可观察、许愿与熄烛 |
 | `src/memory-book/vendor/sandkit/*` | [LinklyAI / SandKit](https://github.com/LinklyAI/SandKit)，MIT，Copyright © 2026 Linkly AI | WebGL2 沙粒模拟和形变；项目原创城市线稿、顺序叙事、触摸擦拭与合流构图 |
 | `Journey.tsx` 内中国轮廓与城市位置 | [Natural Earth](https://www.naturalearthdata.com/)，公共领域 | 沙画结束时展示真实地理位置上的双路线与深圳结点 |
-| `Pets.tsx` 原创 SVG | 本轮直接用源码绘制的二维泰迪，无新增外部素材或付费生成 | 杏色、奶油独立造型与分层骨骼行为，详见下节 |
+| `memory-book/teddy-apricot-painted.webp`、`teddy-cream-painted.webp` | 内置 OpenAI imagegen 生成的透明精绘部件图集 | 两只泰迪的头、耳、躯干、四肢和尾部分层动画；不是整张姿态图片平移 |
+| `memory-book/library-cinema.webp` | 内置 OpenAI imagegen 生成的克制旧书房背景；完整提示词在生成记录 | 开场环境底片，独立于可互动的三维书；不冒称实拍或原版电影画面 |
 | `memory-book/wind-and-stars.webp` | 内置 OpenAI imagegen 原创手绘旷野背景；完整提示词见下节 | 电影合成舞台的**静态后景一层**；前景草、风、星、镜头和原版角色帧独立运动 |
 | `memory-book/films/spirit-pair.*`、`lion-nuzzle.*` | 下文列出的 Tenor 社区短 GIF 中原版角色动作；DreamWorks / Disney 权利归属保留 | 透明逐帧角色图集与原帧时长元数据；重新布景编排，无原片音轨 |
 | `memory-book/photos/*.webp` | 下文五张 Unsplash 照片及作者记录 | 网图占位，不代表本人照片、出游或真实共同经历 |
@@ -18,7 +19,7 @@
 
 两件模型由 `scripts/models/build_magic_objects.py` 使用 Blender Python 创建，无第三方人物网格、电影贴图或 AI 静态图替代立体几何。古书含皮革封面、金饰、书脊、独立封面轴与纸页轴；蛋糕含深蓝奶油表面、金色星月装饰、烛身与托盘。`MagicObject.tsx` 添加实时灯光、材质细节、纸页弯曲、相机交互和烛火。
 
-可编辑 Blender 母版位于忽略目录 `.asset-build/memory-book/masters/magic-book.blend`、`star-cake.blend`；发布仅使用对应 GLB。模型是脚本创作，**没有 imagegen 提示词**；生成记录的 `prompt` 明确为 `null`，不补造提示词。浏览器中实时驱动书页与烛火，不声称 GLB 内包含已烘焙演出动画。
+可编辑 Blender 母版位于忽略目录 `.asset-build/memory-book/masters/magic-book.blend`、`star-cake.blend`；发布使用对应 GLB。几何由原创脚本制作；本轮另用内置 imagegen 制作皮革装帧和植物书页纹理，来源与提示词单独记录，贴图不取代立体书几何。浏览器中实时驱动书页与烛火，不声称 GLB 内包含已烘焙演出动画。
 
 ### 沙画引擎、技能与中国地图
 
@@ -35,7 +36,9 @@
 
 ### 原创分层二维泰迪
 
-2026-10-04 已用 `Pets.tsx` 原创 SVG 重绘两只泰迪：杏色/奶油色独立色板、头型、耳朵、口鼻和卷毛细节。四肢、头、耳、尾分别运动；四拍步态、嗅闻、坐下/卧下、眨眼、摸摸回应和错时庆祝由浏览器程序生成。本轮没有调用付费图像服务、下载新狗素材或把旧贴纸平移称为新表演。
+2026-10-04 用户再次指出 SVG 造型像羊，已撤换为内置 imagegen 制作的精绘泰迪透明部件图集，杏色与香槟奶油色分别保存。自然犬类口鼻、长垂耳、深色眼神与不规则卷毛取代规则云朵轮廓。七个部件区域由 SVG 容器裁切，四肢、头、耳、尾分别运动；四拍步态、嗅闻、坐下/卧下、眨眼、摸摸回应和错时庆祝由浏览器程序生成，图集中整犬参考格不参与动画。
+
+母版 `.asset-build/memory-book/masters/teddy-apricot-painted.png`、`teddy-cream-painted.png` 和完整提示词 `teddy-painted-prompts.md` 保留，发布仅做 WebP 编码，保留生成的 alpha。未用图像 API、未购买素材；内置生成是本项目的美术来源，不冒称手工逐帧绘制。透明原稿的机械裁切与动画变换不修改狗的美术内容。
 
 历史 `memory-book/teddy-rig.webp` 不再被运行时引用；其原始 imagegen 母版、提示词与来源记录仍保留于 `.asset-build/memory-book/masters/` 和 `assets/memory-book-artwork.json`，没有更改旧素材的制作来源。后台/离屏停止连续绘制，减少动态保留静态互动回应。
 ### 原创电影舞台背景

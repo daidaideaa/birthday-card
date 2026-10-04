@@ -15,6 +15,7 @@ const PLACES: Place[] = [
   { id: 'wuhan', city: '武汉', region: '湖北', motif: '黄鹤楼 · 长江', owner: 'me', line: '而我的故事，从湖北武汉开始。', caption: '另一页，另一条向前走的路。' },
   { id: 'nanjing', city: '南京', region: '求学的这一页', school: '东南大学', motif: '城门 · 梧桐', owner: 'me', line: '经过南京，也经过自己的春夏。', caption: '东南大学，是我来路中的一站。' },
   { id: 'shanghai', city: '上海', region: '继续向前', school: '上海交通大学', motif: '浦江 · 东方明珠', owner: 'me', line: '又从南京，走到了上海。', caption: '上海交通大学之后，这条路也写向了深圳。' },
+  { id: 'shenzhen', city: '深圳', region: '同一座城，另一条来路', motif: '城市天际线 · 海湾', owner: 'me', line: '我的路，也终于写到了深圳。', caption: '曾经各自向前的我们，来到了同一座城。' },
   { id: 'shenzhen', city: '深圳', region: '两条来路，终于同页', motif: '中国地图 · 深圳相遇', owner: 'both', line: '各自走来的路，从这里开始并肩。', caption: '后来，在深圳，我遇见了你。' },
 ];
 // Natural Earth 1:110m generalized geographic outline, public domain.
@@ -23,8 +24,21 @@ const PLACES: Place[] = [
 const CHINA_OUTLINE = 'M650.7 736.5L639.2 731.1L638.8 716.1L645.7 708.1L661 703.2L669 703.6L672.1 710.3L666 718L662.7 728.1L650.7 736.5ZM241.6 313.9L240.5 303.9L250.1 299.3L237.5 268.9L265.3 262L272.4 258.1L282.5 226.7L310.3 232.5L318.1 224.6L318.8 207L330.4 205.4L341 193.7L346.5 192.3L350.2 204.5L362 213.8L381.9 220.4L391.6 234.5L386.2 254.9L391.2 262.5L407.9 265.5L426.7 267.9L443.6 278.8L452.3 280.8L458.7 296.9L466.9 307.3L482.3 306.9L511.2 310.8L529.8 308.4L543.7 311L564.4 321.6L581.3 321.6L587.5 327L603.8 317.6L626.4 311.6L647.4 310.9L663.8 304.8L673.8 295.4L683.6 289.5L681.3 283.7L676.9 277L684.2 265.7L692.1 267.3L706.5 270.8L720.4 261.6L741.8 254.8L752.1 243.2L761.9 238.2L782.2 235.9L793.3 237.9L794.8 231.7L782.1 219.4L770.9 213.8L760.1 220.3L746.3 217.6L738.4 219.8L734.8 212.6L744.7 195.1L751.5 182L768.3 188.6L788 177.5L787.9 169.8L800.5 151.2L808.3 145.6L808.2 136L800.5 131.8L812 123.1L829.4 119.9L848 119.5L869 124.7L881.2 131.1L889.9 148.8L895.1 156.3L900 167.1L905.2 184.2L929.6 189.8L946.2 202.2L951.8 218.7L973.1 218.7L985.2 211.8L1008.4 206.6L1001 222.4L995.6 228.8L990.8 248L981.4 265L964.4 261.9L952.4 268.1L956 283L954 303.7L946.9 304.2L947 313.1L937.9 302.8L932.4 312.6L910.7 320.1L912.9 329.3L900.8 328.7L894.2 323.2L884.5 335.6L869.1 345L857.7 356.3L838.1 361.3L827.8 369.5L812.8 374.3L820.2 366.2L817.3 359.4L828.4 347.6L821 338.4L808.8 344.6L793 356.8L784.3 368.1L770.6 368.9L763.5 377.1L770.8 388.9L782.3 391.8L782.8 399.7L793.8 404.8L809.5 392.3L822 399.1L831 399.5L833.3 408.7L813.5 413.6L806.9 423L793.3 431.8L786.1 444.1L801.2 453.7L806.7 470.9L815.2 486.9L824.7 500.4L824.5 513.4L815.7 518.2L819 527.5L827.3 532.9L825.1 547.2L821.6 561.1L813.8 562.6L803.5 581.6L792.2 604.5L779.2 625.4L759.9 641.6L740.5 656.3L724.7 658.3L716.1 666.1L711.3 660.4L703.4 669.1L683.8 677.9L669 680.5L664.2 699L656.5 700.1L652.8 687.4L656.1 680.6L637.3 675L630.7 677.8L616.6 673.3L609.9 666.2L612.2 656.1L599.4 652.9L592.6 646.3L580.7 655.7L567.1 657.7L555.9 657.6L548.4 661.9L541.1 664.4L543.2 684.4L535.8 684L534.5 679.9L534.1 672.6L523.8 677.7L517.8 674.5L507.4 667.9L511.4 653.4L502.6 650L499.2 633.9L484.5 636.8L486.1 616L499.4 601.4L500 587L499.6 573.6L493.4 569.4L488.8 559.1L480.6 560.4L465.5 557.8L470.2 550.5L463.6 539.6L453.7 546.9L441.9 542.6L425.8 553.8L413 566.8L401.8 569L395.6 564.3L388.2 563.9L378.2 559.8L370.7 564.3L361.4 577.3L360.2 563.5L351.7 567.2L335.4 565.5L319.5 561.4L308.2 553.8L297.3 550.3L292.6 541.9L284.7 539.4L270.6 528L259.4 522.6L253.6 526.8L234.1 514.6L220.3 503.5L216.4 484.2L226.5 486.5L226.9 477.6L221.4 468.6L222.8 454.4L207.7 433.9L184.7 426.8L180.6 413.3L170.2 405.2L167.7 400.2L165.6 390.2L166.1 383.4L157.6 379.4L153 381.1L149.5 365L153.4 360.9L151.5 356.9L164.9 348.6L174.5 345.2L189.4 347.5L194.7 336.3L212.6 334.3L217.6 327.3L239.7 317.8L241.6 313.9ZM822.9 628.1L814.5 656.2L808.5 670.5L801.1 655.7L799.5 642.8L807.7 625.6L818.9 612.3L825.3 617.5L822.9 628.1Z';
 const ART_WIDTH = 1280;
 const ART_HEIGHT = 850;
-const BEAT_MS = 9200;
 const LAST = PLACES.length - 1;
+// Reading time is part of the film, independent of particle frame rate or WebGL.
+// Arrival → a settled landmark → a second thought → sand carries us onward.
+const SHOTS = [
+  { duration: 10400, secondLine: 5700, zoom: [1, 1.065], pan: [-7, 4] },
+  { duration: 9400, secondLine: 4900, zoom: [1.015, 1.06], pan: [8, -6] },
+  { duration: 11600, secondLine: 6100, zoom: [1, 1.07], pan: [-5, 3] },
+  { duration: 12000, secondLine: 6300, zoom: [1.065, 1.01], pan: [10, -9] },
+  { duration: 9200, secondLine: 4800, zoom: [1.01, 1.045], pan: [-6, 5] },
+  { duration: 11200, secondLine: 6100, zoom: [1, 1.07], pan: [6, -4] },
+  { duration: 11600, secondLine: 6200, zoom: [1.01, 1.06], pan: [-5, 5] },
+  { duration: 12000, secondLine: 6500, zoom: [1.06, 1.01], pan: [8, -7] },
+  { duration: 9800, secondLine: 5200, zoom: [1.015, 1.055], pan: [-6, 3] },
+  { duration: 16000, secondLine: 8900, zoom: [1, 1.025], pan: [0, 0] },
+];
 // Cities: Natural Earth ne_10m_populated_places_simple (public domain).
 // The user confirmed Zhoukou, Henan, as her starting city.
 const MAP_POINTS = [
@@ -208,93 +222,126 @@ const clamp = (n: number) => Math.min(1, Math.max(0, n));
 const shapeName = (index: number) => `${PLACES[index].owner}-${PLACES[index].id}`;
 const sandColor = (index: number) => PLACES[index].owner === 'me' ? '#eee0bf' : '#dfb775';
 
-export default function Journey({ onComplete, reducedMotion }: { onComplete: () => void; reducedMotion: boolean }) {
+export default function Journey({ onComplete, reducedMotion, active: sceneActive = true }: { onComplete: () => void; reducedMotion: boolean; active?: boolean }) {
   const [active, setActive] = useState(0);
-  const [playing, setPlaying] = useState(!reducedMotion);
+  const [playing, setPlaying] = useState(true);
+  const [narration, setNarration] = useState(0);
   const [ready, setReady] = useState(false);
   const [fallback, setFallback] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [routesOpen, setRoutesOpen] = useState(false);
+  const rootRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const sandRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef<HTMLCanvasElement>(null);
   const fallbackRef = useRef<HTMLCanvasElement>(null);
   const pathRefs = useRef<(SVGPathElement | null)[]>([]);
   const mapKnotRef = useRef<SVGGElement>(null);
-  const currentIndexRef = useRef(0);
-  const controller = useRef<{ select: (index: number, autoplay?: boolean) => void; toggle: () => void; replay: () => void } | null>(null);
+  const clockRef = useRef({ index: 0, local: 0, playing: true, exitMs: null as number | null });
+  const controller = useRef<{ select: (index: number) => void; toggle: () => void; replay: () => void; finish: () => void; sync: () => void } | null>(null);
   const pointer = useRef({ x: -9999, y: -9999, down: false });
-  const finishTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const allowedRef = useRef(sceneActive);
+  allowedRef.current = sceneActive && !routesOpen;
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
+  const completedRef = useRef(false);
   const place = PLACES[active];
-  useEffect(() => () => { if (finishTimer.current) clearTimeout(finishTimer.current); }, []);
+  useEffect(() => { controller.current?.sync(); }, [sceneActive, routesOpen]);
 
   useEffect(() => {
-    const sand = sandRef.current; const drawing = drawingRef.current; const staticCanvas = fallbackRef.current; const stage = stageRef.current;
+    const sand = sandRef.current; const drawing = drawingRef.current; const staticCanvas = fallbackRef.current; const stage = stageRef.current; const root = rootRef.current;
     const context = drawing?.getContext('2d'); const staticContext = staticCanvas?.getContext('2d');
-    if (!sand || !drawing || !staticCanvas || !stage || !context || !staticContext) return;
+    if (!sand || !drawing || !staticCanvas || !stage || !root || !context || !staticContext) return;
     let renderer: SandKit | null = null;
-    let disposed = false; let frame = 0; let last = 0; let index = currentIndexRef.current;
-    let local = reducedMotion ? BEAT_MS : 0;
-    let play = !reducedMotion; let manualDrawing = false; let loaded = false; let visible = true;
+    let disposed = false; let frame = 0; let last = 0;
+    let index = clockRef.current.index; let previous = index; let local = clockRef.current.local; let play = clockRef.current.playing; let exitMs = clockRef.current.exitMs;
+    let usingStatic = reducedMotion; let loaded = false; let visible = true; let spoken = local >= SHOTS[index].secondLine ? 1 : 0; let entrancePending = !reducedMotion && local === 0;
     let width = 0; let height = 0; let brushUntil = 0;
     const flying: FallingGrain[] = [];
     const art = PLACES.map(makeArtwork); const rng = randomGenerator(7427);
     staticCanvas.style.opacity = '1';
     const shapes: ShapeSource[] = art.map(({ line }, i) => ({ name: shapeName(i), pinOnly: true, raster: () => ({ line: { w: line.width, h: line.height, data: line.getContext('2d', { willReadFrequently: true })!.getImageData(0, 0, line.width, line.height).data } }) }));
-    const setPlayback = (value: boolean) => { play = value; setPlaying(value); };
+    const available = () => !disposed && !document.hidden && visible && allowedRef.current && loaded && !completedRef.current;
+    const cancelFrame = () => { if (reducedMotion) clearTimeout(frame); else cancelAnimationFrame(frame); frame = 0; };
+    const setPlayback = (value: boolean) => { play = value; clockRef.current.playing = value; setPlaying(value); };
     const fitArtwork = () => index === LAST ? Math.min(width / ART_WIDTH, height / ART_HEIGHT) : Math.min(width / (width < 700 ? 680 : 1120), height / 850, Math.min(width, height) * 2 / ART_WIDTH);
     const showStatic = () => {
-      const fit = fitArtwork();
+      const fit = fitArtwork(); const blend = reducedMotion || previous === index ? 1 : clamp(local / 1700);
       staticContext.clearRect(0, 0, width, height); staticContext.save();
       staticContext.translate((width - ART_WIDTH * fit) / 2, (height - ART_HEIGHT * fit) / 2); staticContext.scale(fit, fit);
-      staticContext.globalAlpha = .9; staticContext.drawImage(art[index].painting, 0, 0); staticContext.restore();
+      if (blend < 1) { staticContext.globalAlpha = .9 * (1 - blend); staticContext.drawImage(art[previous].painting, 0, 0); }
+      staticContext.globalAlpha = .9 * blend; staticContext.drawImage(art[index].painting, 0, 0); staticContext.restore();
     };
-    const select = (next: number, autoplay = false) => {
-      const changed = index !== Math.max(0, Math.min(LAST, next));
-      index = Math.max(0, Math.min(LAST, next)); local = reducedMotion ? BEAT_MS : 0;
-      currentIndexRef.current = index;
-      manualDrawing = !reducedMotion && !autoplay; setActive(index); setRoutesOpen(false); setPlayback(autoplay && !reducedMotion); flying.length = 0;
-      if (renderer) { renderer.resume(); renderer.pin(shapeName(index)); if (!changed) renderer.replay(); void renderer.setOptions({ color: sandColor(index), colorDark: sandColor(index) }); }
-      resize();
-      if (!renderer || reducedMotion) showStatic(); last = 0; wake();
+    const setComposition = () => {
+      const fit = fitArtwork();
+      void renderer?.setOptions({ pictureScale: fit * ART_WIDTH / Math.max(1, Math.min(width, height)), color: sandColor(index), colorDark: sandColor(index) });
+      stage.style.setProperty('--map-width', `${fit * ART_WIDTH}px`); stage.style.setProperty('--map-height', `${fit * ART_HEIGHT}px`);
+      showStatic();
     };
-    const toggle = () => {
-      if (reducedMotion || !loaded) return;
-      if (index === LAST && local >= BEAT_MS && !play) { select(0, true); return; }
-      manualDrawing = false; setPlayback(!play); if (play) renderer?.resume(); else renderer?.pause(); last = 0; wake();
+    const directShot = () => {
+      const shot = SHOTS[index]; const progress = clamp(local / shot.duration); const ease = progress * progress * (3 - 2 * progress);
+      const motion = width < 700 ? .65 : 1;
+      const zoom = reducedMotion ? 1 : 1 + ((shot.zoom[0] - 1) + (shot.zoom[1] - shot.zoom[0]) * ease) * motion;
+      const pan = reducedMotion ? 0 : (shot.pan[0] + (shot.pan[1] - shot.pan[0]) * ease) * motion;
+      stage.style.setProperty('--journey-zoom', `${zoom}`); stage.style.setProperty('--journey-pan-x', `${pan}px`);
+      stage.style.setProperty('--journey-pan-y', reducedMotion ? '0px' : `${Math.sin(progress * Math.PI) * -3 * motion}px`);
+      const cue = local >= shot.secondLine ? 1 : 0;
+      if (cue !== spoken) { spoken = cue; setNarration(cue); }
+      const titleAlpha = reducedMotion ? 1 : clamp((local - 350) / 1000) * clamp((shot.duration - local) / 800);
+      const captionAlpha = reducedMotion ? 1 : cue === 0 ? clamp((local - 1200) / 700) * clamp((shot.secondLine - local) / 500) : clamp((local - shot.secondLine) / 700) * clamp((shot.duration - local) / 850);
+      root.style.setProperty('--journey-title-opacity', `${titleAlpha}`);
+      root.style.setProperty('--journey-caption-opacity', `${captionAlpha}`);
+      root.style.setProperty('--journey-turn-veil', `${!reducedMotion && index === 5 ? .55 * (1 - clamp(local / 2100)) : 0}`);
     };
-    controller.current = { select, toggle, replay: () => select(0, !reducedMotion) };
+    const select = (next: number) => {
+      previous = index; index = Math.max(0, Math.min(LAST, next)); local = 0; exitMs = null; spoken = 0;
+      clockRef.current = { index, local, playing: true, exitMs }; completedRef.current = false;
+      setActive(index); setNarration(0); setLeaving(false); setRoutesOpen(false); setPlayback(true); flying.length = 0;
+      if (renderer) { renderer.pin(shapeName(index)); if (previous === index) renderer.replay(); }
+      setComposition(); directShot(); last = 0; sync();
+    };
+    const toggle = () => { if (!loaded || exitMs !== null) return; setPlayback(!play); last = 0; sync(); };
+    const finish = () => {
+      if (!loaded || exitMs !== null || completedRef.current) return;
+      exitMs = 0; clockRef.current.exitMs = 0; setLeaving(true); setRoutesOpen(false); setPlayback(true); renderer?.pause(); last = 0; wake();
+    };
+    controller.current = { select, toggle, replay: () => select(0), finish, sync };
     const emit = (x: number, y: number, amount: number, force = 1) => {
       for (let i = 0; i < amount; i += 1) flying.push({ x: x + (rng() - .5) * 20, y: y - rng() * 24, vx: (rng() - .5) * 105 * force, vy: -25 - rng() * 65, life: .5 + rng() * .8, size: .6 + rng() * 1.9, shade: rng() });
       if (flying.length > 1100) flying.splice(0, flying.length - 1100);
     };
     const paintFrame = (stamp: number) => {
       frame = 0;
-      if (disposed || document.hidden || !visible || !loaded) { last = 0; return; }
-      const dt = last ? Math.min(.045, (stamp - last) / 1000) : 0; last = stamp;
-      if ((play || manualDrawing) && !reducedMotion) local += dt * 1000;
-      if (play && local >= BEAT_MS) {
-        if (index < LAST) { index += 1; currentIndexRef.current = index; local = 0; setActive(index); renderer?.pin(shapeName(index)); void renderer?.setOptions({ color: sandColor(index), colorDark: sandColor(index) }); resize(); }
-        else { setPlayback(false); renderer?.pause(); }
+      if (!available()) { last = 0; return; }
+      // The story uses actual foreground time. A slow GPU must not turn one shot into a minute.
+      const elapsed = last ? Math.max(0, Math.min(1000, stamp - last)) : 0; last = stamp;
+      const dt = play ? Math.min(.045, elapsed / 1000) : 0;
+      if (exitMs !== null) {
+        exitMs += play ? elapsed : 0; clockRef.current.exitMs = exitMs;
+        if (exitMs >= (reducedMotion ? 120 : 1100)) { completedRef.current = true; cancelFrame(); onCompleteRef.current(); return; }
+        if (play) wake(); return;
       }
-      if (manualDrawing && local > (index === LAST ? 7300 : 4800)) { manualDrawing = false; renderer?.pause(); }
-      if (mapKnotRef.current) mapKnotRef.current.style.opacity = `${reducedMotion ? 1 : clamp((local - 6300) / 700)}`;
+      if (play) local += elapsed;
+      if (local >= SHOTS[index].duration) {
+        if (index < LAST) { select(index + 1); return; }
+        finish(); return;
+      }
+      clockRef.current.local = local; directShot();
+      if (usingStatic && local <= 1800) showStatic();
+      if (mapKnotRef.current) mapKnotRef.current.style.opacity = `${reducedMotion ? 1 : clamp((local - 8000) / 900)}`;
       context.clearRect(0, 0, width, height);
       const fit = fitArtwork(); const ox = (width - ART_WIDTH * fit) / 2; const oy = (height - ART_HEIGHT * fit) / 2;
       context.save(); context.translate(ox, oy); context.scale(fit, fit);
       pathRefs.current.forEach((path, n) => {
         if (!path) return;
-        const paired = index === LAST; const offset = paired ? 1100 + n * 2600 : 350 + n * 870;
-        const p = reducedMotion ? 1 : clamp((local - offset) / (paired ? 2600 : 1250)); const length = path.getTotalLength();
+        const paired = index === LAST; const offset = paired ? 1500 + n * 3100 : 900 + n * 940;
+        const p = reducedMotion ? 1 : clamp((local - offset) / (paired ? 3100 : 1500)); const length = path.getTotalLength();
         path.style.strokeDasharray = `${length}`; path.style.strokeDashoffset = `${length * (1 - p)}`; path.style.opacity = `${paired ? .95 : reducedMotion ? 0 : p < 1 ? .45 : .06}`;
-        if (p > 0 && p < 1 && (play || manualDrawing) && dt > 0) {
+        if (!reducedMotion && p > 0 && p < 1 && play && dt > 0) {
           const tip = path.getPointAtLength(length * p); emit(tip.x, tip.y, Math.max(1, Math.round(dt * 140)), paired ? 1.45 : .8);
-          context.fillStyle = '#69402518'; context.beginPath(); context.ellipse(tip.x + 5, tip.y - 8, 26, 9, -.35, 0, Math.PI * 2); context.fill();
         }
       });
-      if (!reducedMotion && pointer.current.down) {
+      if (!reducedMotion && pointer.current.down && play) {
         const p = pointer.current; emit((p.x - ox) / fit, (p.y - oy) / fit, Math.max(3, Math.round(dt * 240)), 1.8); brushUntil = stamp + 550;
         const mask = `radial-gradient(circle 32px at ${p.x}px ${p.y}px, transparent 28%, #000 100%)`; sand.style.maskImage = mask; staticCanvas.style.maskImage = mask;
       } else if (stamp > brushUntil) { sand.style.maskImage = ''; staticCanvas.style.maskImage = ''; }
@@ -305,65 +352,70 @@ export default function Journey({ onComplete, reducedMotion }: { onComplete: () 
         context.globalAlpha = Math.min(1, grain.life * 2) * (.4 + grain.shade * .45); context.fillStyle = grain.shade > .6 ? '#fff2d9' : sandColor(index); context.fillRect(grain.x, grain.y, grain.size, grain.size);
       }
       context.restore();
-      if (!frame && (play || manualDrawing || flying.length || pointer.current.down || stamp < brushUntil)) frame = requestAnimationFrame(paintFrame);
+      if (play) wake();
     };
-    function wake() { if (!frame && !disposed && !document.hidden && visible && loaded) frame = requestAnimationFrame(paintFrame); }
+    function wake() {
+      if (!frame && available()) frame = reducedMotion ? window.setTimeout(() => paintFrame(performance.now()), 125) : requestAnimationFrame(paintFrame);
+    }
+    function sync() {
+      last = 0;
+      root!.dataset.sceneSuspended = available() ? 'false' : 'true';
+      if (!available()) { renderer?.pause(); cancelFrame(); pointer.current.down = false; }
+      else {
+        if (play && exitMs === null) { renderer?.resume(); if (renderer && entrancePending) { entrancePending = false; renderer.replay(); } }
+        else renderer?.pause();
+        wake();
+      }
+    }
     const resize = () => {
-      const rect = stage.getBoundingClientRect(); width = rect.width; height = rect.height; const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const rect = stage.getBoundingClientRect(); const scale = Number(stage.style.getPropertyValue('--journey-zoom')) || 1;
+      width = rect.width / scale; height = rect.height / scale; const dpr = Math.min(window.devicePixelRatio || 1, 2);
       [drawing, staticCanvas].forEach((canvas) => { canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr); });
       context.setTransform(dpr, 0, 0, dpr, 0, 0); staticContext.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const fit = fitArtwork(); void renderer?.setOptions({ pictureScale: fit * ART_WIDTH / Math.max(1, Math.min(width, height)) }); showStatic(); wake();
-      stage.style.setProperty('--map-width', `${fit * ART_WIDTH}px`); stage.style.setProperty('--map-height', `${fit * ART_HEIGHT}px`);
+      setComposition(); directShot(); wake();
     };
-    const availability = () => {
-      last = 0;
-      if (document.hidden || !visible) { renderer?.pause(); cancelAnimationFrame(frame); frame = 0; pointer.current.down = false; }
-      else { if (play || manualDrawing) renderer?.resume(); wake(); }
+    const useStatic = () => {
+      if (disposed) return;
+      renderer?.dispose(); renderer = null; usingStatic = true; loaded = true; setReady(true); setFallback(true); staticCanvas.style.opacity = '1'; showStatic(); sync();
     };
     const resizer = new ResizeObserver(resize); resizer.observe(stage);
-    const observer = new IntersectionObserver((entries) => { visible = entries.some((entry) => entry.isIntersecting); availability(); }, { threshold: .12 }); observer.observe(stage);
-    document.addEventListener('visibilitychange', availability);
+    const observer = new IntersectionObserver((entries) => { visible = entries.some((entry) => entry.isIntersecting); sync(); }, { threshold: .12 }); observer.observe(stage);
+    document.addEventListener('visibilitychange', sync);
     const pointerWake = () => wake(); stage.addEventListener('pointerdown', pointerWake); stage.addEventListener('pointermove', pointerWake); resize();
-    if (reducedMotion) { loaded = true; setReady(true); setFallback(true); setPlayback(false); showStatic(); wake(); }
+    if (reducedMotion) useStatic();
     else {
       try {
         renderer = new SandKit(sand, { shapes, worker: true, options: {
           count: window.innerWidth < 700 ? 48000 : 72000, pointSize: 1.18, sizeVariation: 1.05, opacity: 1, color: sandColor(index), colorDark: sandColor(index),
-          introMs: 2800, moveMs: 2900, holdMs: 15000, stagger: .48, scatterPhase: .29, scatterReach: .14, scatterDepth: .48, flightFade: .05,
+          introMs: 2800, moveMs: 3100, holdMs: 15000, stagger: .48, scatterPhase: .29, scatterReach: .14, scatterDepth: .48, flightFade: .05,
           jitter: .001, sway: 0, tilt: .035, tiltEase: .13, depthRange: .1, depthContrast: .14, dustShare: .005, fillDensity: .48, interiorTone: .025, blurRadius: 1, cloudRadius: 1.15, cloudFar: -.45,
           pictureScale: fitArtwork() * ART_WIDTH / Math.max(1, Math.min(width, height)),
-        }, onError: (error) => { if (!disposed && error.message.includes('context')) { renderer?.pause(); staticCanvas.style.opacity = '1'; setFallback(true); setPlayback(false); showStatic(); } } });
-        renderer.pin(shapeName(index));
+        }, onError: (error) => { if (error.message.includes('context')) useStatic(); } });
+        renderer.pin(shapeName(index)); renderer.pause();
         renderer.ready.then(() => {
-          if (disposed) return; loaded = true; setReady(true); setFallback(false); staticCanvas.style.opacity = '0'; availability(); wake();
-        }).catch(() => {
-          if (disposed) return; renderer?.dispose(); renderer = null; loaded = true; setReady(true); setFallback(true); setPlayback(false); local = BEAT_MS; showStatic(); wake();
-        });
-      } catch { loaded = true; setReady(true); setFallback(true); setPlayback(false); local = BEAT_MS; showStatic(); wake(); }
+          if (disposed || usingStatic) return; loaded = true; setReady(true); setFallback(false); staticCanvas.style.opacity = '0'; sync();
+        }).catch(useStatic);
+      } catch { useStatic(); }
     }
-    return () => { disposed = true; cancelAnimationFrame(frame); renderer?.dispose(); resizer.disconnect(); observer.disconnect(); document.removeEventListener('visibilitychange', availability); stage.removeEventListener('pointerdown', pointerWake); stage.removeEventListener('pointermove', pointerWake); controller.current = null; };
+    return () => { disposed = true; cancelFrame(); renderer?.dispose(); resizer.disconnect(); observer.disconnect(); document.removeEventListener('visibilitychange', sync); stage.removeEventListener('pointerdown', pointerWake); stage.removeEventListener('pointermove', pointerWake); controller.current = null; };
   }, [reducedMotion]);
 
   const handlePointer = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect(); pointer.current.x = event.clientX - rect.left; pointer.current.y = event.clientY - rect.top;
+    const rect = event.currentTarget.getBoundingClientRect(); const scale = rect.width / event.currentTarget.clientWidth;
+    pointer.current.x = (event.clientX - rect.left) / scale; pointer.current.y = (event.clientY - rect.top) / scale;
     if (event.type === 'pointerdown') { pointer.current.down = true; event.currentTarget.setPointerCapture(event.pointerId); }
   };
   const releasePointer = () => { pointer.current.down = false; };
-  const complete = () => {
-    if (leaving) return;
-    if (reducedMotion) { onCompleteRef.current(); return; }
-    setLeaving(true); finishTimer.current = setTimeout(() => onCompleteRef.current(), 1100);
-  };
-  const next = () => { if (active === LAST) complete(); else controller.current?.select(active + 1, playing); };
+  const next = () => { if (active === LAST) controller.current?.finish(); else controller.current?.select(active + 1); };
   return (
-    <section className={`journey-stage journey-film journey-owner-${place.owner}${active === LAST ? ' journey-map-finale' : ''}${leaving ? ' journey-leaving' : ''}${reducedMotion ? ' journey-still' : ''}`} aria-label="第二章，流沙绘成的两条人生路线">
+    <section ref={rootRef} className={`journey-stage journey-film journey-owner-${place.owner}${active === LAST ? ' journey-map-finale' : ''}${leaving ? ' journey-leaving' : ''}${reducedMotion ? ' journey-still' : ''}${!playing || !sceneActive || routesOpen ? ' journey-paused' : ''}`} data-scene={`${place.owner}-${place.id}`} aria-label="第二章，自动讲述的两条人生路线">
       <header className="journey-heading"><span className="journey-eyebrow">第二章 · 两条来路</span><span className="journey-chapter-poem">走过山海，与你同页。</span></header>
       <div className="journey-route-menu">
         <button type="button" className="journey-route-toggle" aria-expanded={routesOpen} aria-controls="journey-routes" onClick={() => setRoutesOpen(!routesOpen)}>翻阅来路 <span aria-hidden="true">{routesOpen ? '−' : '+'}</span></button>
         <div id="journey-routes" className={`journey-routes${routesOpen ? ' is-open' : ''}`} hidden={!routesOpen} aria-label="两条真实来路，可以点选回看">
           {(['her', 'me'] as const).map((owner) => <div className={`journey-route journey-route-${owner}`} key={owner}>
             <span className="journey-route-label">{owner === 'her' ? '你的来路' : '我的来路'}</span>
-            <div className="journey-stops">{PLACES.map((item, i) => ((item.owner === owner || (owner === 'me' && item.owner === 'both')) && <button type="button" key={`${owner}-${i}`} onClick={() => controller.current?.select(i)} disabled={!ready || leaving} className={active === i ? 'is-current' : ''} aria-current={active === i ? 'step' : undefined}><strong>{item.city}{item.id === 'zhoukou' || item.id === 'wuhan' ? ` · ${item.region}` : ''}</strong>{item.school && <span>{item.school}</span>}</button>))}</div>
+            <div className="journey-stops">{PLACES.map((item, i) => (item.owner === owner && <button type="button" key={`${owner}-${i}`} onClick={() => controller.current?.select(i)} disabled={!ready || leaving} className={active === i ? 'is-current' : ''} aria-current={active === i ? 'step' : undefined}><strong>{item.city}{item.id === 'zhoukou' || item.id === 'wuhan' ? ` · ${item.region}` : ''}</strong>{item.school && <span>{item.school}</span>}</button>))}</div>
           </div>)}
         </div>
       </div>
@@ -387,15 +439,15 @@ export default function Journey({ onComplete, reducedMotion }: { onComplete: () 
           </div>}
           <canvas ref={drawingRef} className="journey-falling-sand" aria-hidden="true" /><div className="journey-photo-outline" aria-hidden="true" />
         </div>
-        <div className="journey-caption" key={`caption-${active}`}><p>{place.line}</p><span>{place.caption}</span></div>
+        <div className="journey-caption" aria-live="polite" aria-atomic="true"><p>{narration === 0 ? place.line : place.caption}</p><span>{place.owner === 'her' ? '你走过的每一程，都值得被认真记下。' : place.owner === 'me' ? '书的另一页，是我走向你的来路。' : '从此，未来有了可以并肩写下的一页。'}</span></div>
       </div>
       <footer className="journey-footer">
-        <button type="button" className="journey-back" onClick={() => controller.current?.select(active - 1)} disabled={active === 0 || !ready || leaving}>回到上一页</button>
-        <div className="journey-playback">{active === LAST ? <button type="button" onClick={() => controller.current?.replay()} disabled={!ready || leaving}>再读一次来路</button> : !reducedMotion && !fallback && <button type="button" onClick={() => controller.current?.toggle()} disabled={!ready || leaving} aria-label={playing ? '暂停沙画动画' : '继续沙画动画'}>{playing ? '在这一页停留' : '让故事继续'}</button>}
+        <button type="button" className="journey-back" onClick={() => active === LAST ? controller.current?.replay() : controller.current?.select(active - 1)} disabled={active === 0 || !ready || leaving}>{active === LAST ? '再读一次来路' : '回望上一程'}</button>
+        <div className="journey-playback"><button type="button" onClick={() => controller.current?.toggle()} disabled={!ready || leaving} aria-label={playing ? '暂停自动讲述' : '继续自动讲述'}>{playing ? '让这一刻停留' : '让故事继续'}</button>
           {!ready && <span className="journey-brush-hint">沙粒正在汇聚…</span>}
-          {fallback && !reducedMotion && <span className="journey-brush-hint">此设备显示沙画静帧，可逐页阅读</span>}
+          {fallback && !reducedMotion && <span className="journey-brush-hint">此设备以沙画叠映，自动讲述来路</span>}
         </div>
-        <button type="button" className="journey-next" onClick={next} disabled={!ready || leaving}>{active === LAST ? '把回忆放进书里' : '再向前一页'}<span aria-hidden="true">↗</span></button>
+        <button type="button" className="journey-next" onClick={next} disabled={!ready || leaving}>{active === LAST ? '把回忆放进书里' : '略过这一程'}<span aria-hidden="true">↗</span></button>
       </footer>
     </section>
   );

@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
+import { assetUrl } from '../utils/assetUrl';
 import './pets.css';
 
 type PetsProps = { scene: number; quiet: boolean; reducedMotion: boolean; celebrate: number; onPet?: () => void };
@@ -17,90 +18,38 @@ const damp = (a: number, b: number, dt: number, speed = 6) => mix(a, b, 1 - Math
 const f = (n: number) => n.toFixed(2);
 const seeded = (seed: number) => () => { seed = Math.imul(seed, 1664525) + 1013904223 | 0; return (seed >>> 0) / 4294967296; };
 
-// Complete overlapping fur volumes keep the joints inside the coat. Small curls
-// follow the silhouette; there is no portrait atlas stretched across a skeleton.
-function coatOutline(cx: number, cy: number, rx: number, ry: number, seed: number) {
-  const random = seeded(seed);
-  const count = Math.round((rx + ry) / 3.4);
-  const points = Array.from({ length: count }, (_, i) => {
-    const a = i / count * Math.PI * 2, puff = .97 + random() * .055;
-    return [cx + Math.cos(a) * rx * puff, cy + Math.sin(a) * ry * puff];
-  });
-  let d = `M${points[0].map(f).join(' ')}`;
-  points.forEach((_, i) => {
-    const next = points[(i + 1) % count], a = (i + .5) / count * Math.PI * 2, loft = 1.02 + random() * .065;
-    d += `Q${f(cx + Math.cos(a) * rx * loft)} ${f(cy + Math.sin(a) * ry * loft)} ${f(next[0])} ${f(next[1])}`;
-  });
-  return `${d}Z`;
+// ImageGen-painted RGBA layers. Each cutout is an anatomical volume with generous
+// overlap at its joint; the reference dog in the atlas is never used as a sprite.
+const PAINTED_CROPS = {
+  body: '26 94 507 313', head: '572 36 314 292', ear: '980 88 221 353',
+  tail: '1269 103 220 298', front: '64 508 180 421', back: '323 513 206 415',
+  blink: '572 539 314 293', paw: '65 831 180 100',
+};
+function PaintedPart({ color, crop, x, y, width, height }: { color: DogColor; crop: keyof typeof PAINTED_CROPS; x: number; y: number; width: number; height: number }) {
+  return <svg x={x} y={y} width={width} height={height} viewBox={PAINTED_CROPS[crop]} overflow="hidden" aria-hidden="true">
+    <image href={assetUrl(`memory-book/teddy-${color}-painted.webp`)} width="1536" height="1024" />
+  </svg>;
 }
-function Coat({ cx, cy, rx, ry, seed, fill, pale = false }: { cx: number; cy: number; rx: number; ry: number; seed: number; fill: string; pale?: boolean }) {
-  const random = seeded(seed * 57);
-  return <g>
-    <path d={coatOutline(cx, cy, rx, ry, seed)} fill={fill} stroke={pale ? '#baa48b' : '#aa754a'} strokeWidth=".45" strokeOpacity=".4" />
-    {Array.from({ length: Math.round(rx * ry / 17) }, (_, i) => {
-      const angle = random() * Math.PI * 2, radius = Math.sqrt(random()) * .88;
-      const x = cx + Math.cos(angle) * radius * rx, y = cy + Math.sin(angle) * radius * ry, s = 1.7 + random() * 2.4;
-      return <g key={i} transform={`translate(${f(x)} ${f(y)}) rotate(${f(random() * 150 - 75)})`}>
-        <path d={`M${f(-s)} .8 C${f(-s * 1.3)} ${f(-s * 1.05)} ${f(s * .5)} ${f(-s * 1.5)} ${f(s)} ${f(-s * .15)} C${f(s * 1.5)} ${f(s * .8)} ${f(s * .1)} ${f(s * 1.2)} ${f(-s * .25)} ${f(s * .55)}`} fill="none" stroke={pale ? '#907b65' : '#795036'} strokeWidth="1.35" opacity=".22" strokeLinecap="round" />
-        <path d={`M${f(-s * .9)} 0 Q${f(-s * .75)} ${f(-s * 1.3)} ${f(s * .55)} ${f(-s * .62)}`} fill="none" stroke="#fff2d9" strokeWidth="1.1" opacity={pale ? '.47' : '.43'} strokeLinecap="round" />
-      </g>;
-    })}
-  </g>;
-}
-
 const Teddy = memo(function Teddy({ color }: { color: DogColor }) {
-  const pale = color === 'cream', id = `teddy-${color}`;
-  const fur = `url(#${id}-fur)`, light = `url(#${id}-light)`, ear = `url(#${id}-ear)`;
-  const limb = (name: string, x: number, y: number, far = false, rear = false) => <g data-part={name} opacity={far ? '.91' : '1'}>
-    <Coat cx={x} cy={y + 14} rx={rear ? 18 : 13} ry={24} seed={rear ? 23 : 81} fill={far ? ear : fur} pale={pale} />
-    <Coat cx={x + 2} cy={y + 39} rx={13} ry={20} seed={rear ? 11 : 97} fill={far ? ear : fur} pale={pale} />
-    <Coat cx={x + 6} cy={y + 52} rx={18} ry={10} seed={12} fill={far ? fur : light} pale={pale} />
-    {!far && <path d={`M${x + 9} ${y + 52}q-2 3-1 6m-7-6q-2 3-1 5`} fill="none" stroke={pale ? '#897263' : '#845335'} strokeWidth=".8" opacity=".45" strokeLinecap="round" />}
-  </g>;
   return <svg className={`memory-pet-drawing memory-pet-fur-${color}`} viewBox="0 0 280 240" aria-hidden="true">
-    <defs>
-      <radialGradient id={`${id}-fur`} cx="37%" cy="20%" r="85%">
-        <stop stopColor={pale ? '#fff3db' : '#eac08a'} /><stop offset=".43" stopColor={pale ? '#e9d9bd' : '#cf995f'} /><stop offset=".8" stopColor={pale ? '#c7b194' : '#b77d48'} /><stop offset="1" stopColor={pale ? '#aa9179' : '#92613e'} />
-      </radialGradient>
-      <radialGradient id={`${id}-light`} cx="40%" cy="20%" r="85%">
-        <stop stopColor={pale ? '#fff9e9' : '#f7dcb2'} /><stop offset=".58" stopColor={pale ? '#f1e5d0' : '#e6bc8b'} /><stop offset="1" stopColor={pale ? '#cbb69a' : '#b9885c'} />
-      </radialGradient>
-      <radialGradient id={`${id}-ear`} cx="33%" cy="18%" r="83%">
-        <stop stopColor={pale ? '#dfcdb1' : '#c58a51'} /><stop offset=".6" stopColor={pale ? '#b8a085' : '#a77043'} /><stop offset="1" stopColor={pale ? '#92745c' : '#785037'} />
-      </radialGradient>
-      <radialGradient id={`${id}-eye`} cx="35%" cy="32%" r="70%"><stop stopColor="#705346" /><stop offset=".5" stopColor="#302820" /><stop offset="1" stopColor="#171c1b" /></radialGradient>
-      <linearGradient id={`${id}-nose`} x2=".2" y2="1"><stop stopColor="#645046" /><stop offset=".5" stopColor="#362925" /><stop offset="1" stopColor="#261e1c" /></linearGradient>
-    </defs>
     <g data-part="facing"><g data-part="bounce">
-      {limb('far-back', 100, 145, true, true)}{limb('far-front', 183, 146, true)}
-      <g data-part="tail"><path d="M73 152Q48 143 49 127" fill="none" stroke={pale ? '#bca486' : '#a36d42'} strokeWidth="20" strokeLinecap="round" /><Coat cx={49} cy={126} rx={17} ry={18} seed={88} fill={fur} pale={pale} /></g>
-      <g data-part="body"><Coat cx={131} cy={149} rx={61} ry={39} seed={41} fill={fur} pale={pale} /><Coat cx={171} cy={144} rx={30} ry={38} seed={43} fill={light} pale={pale} /></g>
-      {limb('near-back', 83, 148, false, true)}{limb('near-front', 161, 148)}
-      <g data-part="chest"><Coat cx={160} cy={151} rx={25} ry={25} seed={53} fill={fur} pale={pale} /></g>
+      <g data-part="far-back" opacity=".86"><PaintedPart color={color} crop="back" x={88} y={132} width={36} height={77}/></g>
+      <g data-part="far-front" opacity=".86"><PaintedPart color={color} crop="front" x={176} y={131} width={32} height={77}/></g>
+      <g data-part="tail"><PaintedPart color={color} crop="tail" x={38} y={97} width={44} height={60}/></g>
+      <g data-part="body"><PaintedPart color={color} crop="body" x={64} y={110} width={138} height={85}/></g>
+      <g data-part="near-back"><PaintedPart color={color} crop="back" x={66} y={132} width={39} height={79}/></g>
+      <g data-part="near-front"><PaintedPart color={color} crop="front" x={149} y={132} width={34} height={79}/></g>
+      <g data-part="rest-far-paw" opacity="0"><PaintedPart color={color} crop="paw" x={225} y={188} width={38} height={21}/></g>
       <g data-part="head">
-        <g data-part="far-ear"><Coat cx={214} cy={110} rx={18} ry={29} seed={27} fill={ear} pale={pale} /></g>
-        <Coat cx={177} cy={98} rx={pale ? 46 : 44} ry={43} seed={pale ? 13 : 7} fill={fur} pale={pale} />
-        <Coat cx={183} cy={115} rx={34} ry={25} seed={18} fill={light} pale={pale} />
-        <g data-part="features">
-          <g data-part="eyes-open">
-            <ellipse cx="167" cy="102" rx="7" ry="7.8" fill={pale ? '#b69c7d' : '#a4754f'} opacity=".5" /><ellipse cx="201" cy="101" rx="5.9" ry="7.3" fill={pale ? '#b69c7d' : '#a4754f'} opacity=".5" />
-            <g data-part="pupils"><ellipse cx="167.6" cy="102.8" rx="5.25" ry="6.6" fill={`url(#${id}-eye)`} /><ellipse cx="201.2" cy="102.3" rx="4.55" ry="6.05" fill={`url(#${id}-eye)`} /><ellipse cx="166" cy="100.2" rx="1.55" ry="1.8" fill="#fffaf0" opacity=".94" /><ellipse cx="199.8" cy="100.1" rx="1.25" ry="1.6" fill="#fffaf0" opacity=".92" /><circle cx="169.1" cy="106.3" r=".65" fill="#cfac75" /><circle cx="202.5" cy="105.4" r=".55" fill="#cfac75" /></g>
-          </g>
-          <g data-part="eyes-closed" opacity="0" fill="none" stroke="#503b2d" strokeWidth="1.7" strokeLinecap="round"><path d="M161 104q6-4.2 12-.3M196 103q5-3.7 10-.6" /></g>
-          <path d="M158 94q7-4 13-1m24-.4q5-3.3 10-.8" fill="none" stroke={pale ? '#fff7e3' : '#efcca0'} strokeWidth="2.5" opacity=".75" strokeLinecap="round" />
-          <Coat cx={177} cy={119} rx={14} ry={11} seed={95} fill={light} pale={pale} /><Coat cx={199} cy={118} rx={13} ry={10} seed={96} fill={light} pale={pale} />
-          <path d="M178.8 113.5c.6-5.1 18.2-6 19.2-.2.5 4.1-6.2 9.4-9.4 9.1-3.4-.2-10.2-5.1-9.8-8.9Z" fill={`url(#${id}-nose)`} />
-          <path d="M182.2 112.4q4.9-2 10.8-.3" fill="none" stroke="#cfafa0" strokeWidth="1.3" opacity=".62" strokeLinecap="round" /><ellipse cx="182" cy="115.6" rx="1.6" ry="1" fill="#211d1b" /><ellipse cx="195.3" cy="115.1" rx="1.5" ry="1" fill="#211d1b" />
-          <path d="M188.6 122.3v4m0 0q-4.5 4.5-9.2.1m9.2-.1q5.1 3.2 9.2-.8" fill="none" stroke="#6c4a36" strokeWidth="1.15" strokeLinecap="round" />
-          <g data-part="tongue" opacity="0"><path d="M183.5 127q5.5-1.5 11-.8l-1 6.8c-.5 5.7-8.9 5.7-9.5.2Z" fill="#d48e82" stroke="#b7736d" strokeWidth=".6" /><path d="M189 129v4" stroke="#af6d68" strokeWidth=".65" strokeLinecap="round" /></g>
-        </g>
-        <g data-part="near-ear"><Coat cx={143} cy={112} rx={18} ry={29} seed={67} fill={ear} pale={pale} /><path d="M139 89q-10 17-4 32" fill="none" stroke={pale ? '#f0dfbe' : '#d7a36d'} strokeWidth="2.5" strokeLinecap="round" opacity=".32" /></g>
-        <path d="M153 76q4-7 12-7m3-4q7-4 12-1m4 0q6-1 10 4" fill="none" stroke={pale ? '#fff8e5' : '#f1c994'} strokeWidth="2.1" opacity=".6" strokeLinecap="round" />
+        <g data-part="far-ear"><PaintedPart color={color} crop="ear" x={208} y={77} width={31} height={74}/></g>
+        <g data-part="eyes-open"><PaintedPart color={color} crop="head" x={126} y={33} width={107} height={99.5}/></g>
+        <g data-part="eyes-closed" opacity="0"><PaintedPart color={color} crop="blink" x={126} y={33} width={107} height={99.5}/></g>
+        <g data-part="near-ear"><PaintedPart color={color} crop="ear" x={132} y={77} width={44} height={84}/></g>
       </g>
+      <g data-part="rest-near-paw" opacity="0"><PaintedPart color={color} crop="paw" x={207} y={196} width={40} height={22}/></g>
     </g></g>
   </svg>;
 });
-
 function PetDrawing({ color, reply, onPet, elementRef }: { color: DogColor; reply: string; onPet: () => void; elementRef: (element: HTMLDivElement | null) => void }) {
   return <div ref={elementRef} className={`memory-pet memory-pet-${color}`}>
     <span className="memory-pet-shadow" aria-hidden="true" /><span className="memory-pet-heart" aria-hidden="true">♡</span>
@@ -131,7 +80,11 @@ export default function Pets(props: PetsProps) {
     let width = stage.clientWidth, visible = true, raf = 0, last = 0, elapsed = 0;
     let previousScene = current.current.scene, previousCelebrate = current.current.celebrate;
     const pointer = { x: width / 2, until: 0 };
-    const park = (index: number) => width * (current.current.scene === 3 ? index ? .88 : .12 : index ? .85 : .15);
+    const keepOnStage = (position: number, element: HTMLDivElement | null) => {
+      const inset = (element?.clientWidth ?? 0) / 2 + 8;
+      return clamp(position, Math.min(inset, width / 2), Math.max(width - inset, width / 2));
+    };
+    const park = (index: number) => keepOnStage(width * (current.current.scene >= 3 ? index ? .88 : .12 : index ? .85 : .15), dogElements.current[index]);
     actors.current = dogElements.current.filter((element): element is HTMLDivElement => Boolean(element)).map((element, index) => ({
       element, touch: element.querySelector<HTMLButtonElement>('.memory-pet-touch')!, parts: Object.fromEntries(Array.from(element.querySelectorAll<SVGElement>('[data-part]')).map((part) => [part.dataset.part!, part])),
       x: park(index), target: park(index), direction: index ? -1 : 1, facing: index ? -1 : 1, phase: index ? 2.7 : 0,
@@ -143,9 +96,10 @@ export default function Pets(props: PetsProps) {
     const schedule = () => { if (!raf && visible && !document.hidden) raf = requestAnimationFrame(frame); };
     wake.current = schedule;
     const resize = new ResizeObserver(() => {
-      const nextWidth = stage.clientWidth;
-      actors.current.forEach((actor) => { actor.x = actor.x / Math.max(1, width) * nextWidth; actor.target = actor.target / Math.max(1, width) * nextWidth; });
-      width = nextWidth; schedule();
+      const previousWidth = width;
+      width = stage.clientWidth;
+      actors.current.forEach((actor) => { actor.x = keepOnStage(actor.x / Math.max(1, previousWidth) * width, actor.element); actor.target = keepOnStage(actor.target / Math.max(1, previousWidth) * width, actor.element); });
+      schedule();
     });
     resize.observe(stage);
     const visibility = new IntersectionObserver((entries) => {
@@ -172,26 +126,34 @@ export default function Pets(props: PetsProps) {
       last = now; if (motion) elapsed += dt;
       if (previousScene !== settings.scene) {
         previousScene = settings.scene;
-        actors.current.forEach((actor, index) => { actor.target = park(index); actor.mood = settings.scene === 3 ? 'walk' : index ? 'sit' : 'watch'; actor.nextMood = elapsed + (index ? 8.6 : 4.8); });
+        actors.current.forEach((actor, index) => { actor.target = park(index); actor.mood = settings.scene >= 3 ? 'walk' : index ? 'sit' : 'watch'; actor.nextMood = elapsed + (index ? 8.6 : 4.8); });
       }
       if (previousCelebrate !== settings.celebrate) {
         previousCelebrate = settings.celebrate;
         if (settings.celebrate) actors.current.forEach((actor, index) => { actor.jumpAt = elapsed + index * .6; });
       }
       actors.current.forEach((actor, index) => {
+        actor.x = keepOnStage(actor.x, actor.element);
+        actor.target = keepOnStage(actor.target, actor.element);
         const beingPetted = actor.petUntil > now, nearPointer = pointer.until > now && Math.abs(pointer.x - actor.x) < 125, quiet = settings.quiet;
         // Clear the cinema's controls before settling, even when quiet mode is
         // already on. The passing dog must not intercept a pause-button click.
-        const parking = settings.scene === 3 && Math.abs(park(index) - actor.x) > 2;
+        const petWidth = actor.element.clientWidth;
+        const safeLeftMin = width * (width < 600 ? .08 : .1);
+        const safeLeftMax = width < 600 ? width * .16 : Math.max(safeLeftMin, Math.min(width * .24, width / 2 - 120 - petWidth / 2 - 18));
+        const safeMin = keepOnStage(index ? width - safeLeftMax : safeLeftMin, actor.element);
+        const safeMax = keepOnStage(index ? width - safeLeftMin : safeLeftMax, actor.element);
+        const outsideCakeZone = settings.scene === 4 && (actor.x < safeMin || actor.x > safeMax);
+        const parking = (settings.scene === 3 || outsideCakeZone) && Math.abs(park(index) - actor.x) > 2;
         if (parking) { actor.target = park(index); actor.mood = 'walk'; }
         actor.touch.style.pointerEvents = parking ? 'none' : '';
-        if (motion && !quiet && !beingPetted && elapsed > actor.nextMood) {
+        if (motion && !quiet && !beingPetted && !parking && elapsed > actor.nextMood) {
           const choice = actor.random();
           if (actor.mood === 'sleep') actor.mood = 'stretch';
           else if (actor.mood === 'stretch') actor.mood = 'watch';
           else if (choice < (index ? .2 : .34)) {
             actor.mood = 'walk';
-            actor.target = width * mix(index ? .65 : .13, index ? .87 : width < 600 ? .36 : .43, actor.random());
+            actor.target = keepOnStage(settings.scene === 4 ? mix(safeMin, safeMax, actor.random()) : width * mix(index ? .65 : .13, index ? .87 : width < 600 ? .36 : .43, actor.random()), actor.element);
           } else if (choice < .52) actor.mood = 'sniff';
           else if (choice < .76) actor.mood = 'sit';
           else if (choice < (index ? .94 : .87)) actor.mood = 'sleep';
@@ -227,7 +189,7 @@ export default function Pets(props: PetsProps) {
           else anticipation = Math.sin((jumpTime - .9) / .65 * Math.PI) * 2.4;
         }
         const follow = nearPointer ? clamp((pointer.x - actor.x) * actor.direction / 50, -1.7, 1.7) : Math.sin(t * .28) * .45;
-        const headTilt = sniff * 22 + sleep * 10 + stretch * 10 - love * 8 + follow * 1.9;
+        const headTilt = sniff * 22 + sleep * 30 + stretch * 10 - love * 8 + follow * 1.9;
         const headX = sniff * 13 + sleep * 10 + stretch * 15 + love * 1.5;
         const headY = sniff * 27 + sleep * 54 + stretch * 32 - sit * 4 - love * 4 + breath * .25 + sniff * Math.sin(t * 7.7) * .9;
         const earLag = motion ? Math.sin(t * 2.1 - .6) * .6 + Math.sin(actor.phase - .65) * actor.gait * 3 + love * Math.sin(t * 4.1) : 0;
@@ -237,11 +199,13 @@ export default function Pets(props: PetsProps) {
         actor.element.style.transform = `translate3d(${f(actor.x)}px,0,0)`;
         actor.element.dataset.mood = beingPetted ? 'loved' : celebrating ? 'celebrating' : sleep > .55 ? 'sleeping' : actor.gait > .1 ? 'walking' : actor.mood;
         actor.element.style.setProperty('--pet-shadow-scale', f(1 - jump / 80 + sleep * .14));
-        transform(actor, 'facing', `translate(140 0) scale(${f(actor.facing)} 1) translate(-140 0)`);
+        // A painted profile changes direction with a small squash, never a
+        // paper-thin 3D-card flip that makes the puppy disappear mid-turn.
+        const facingScale = (actor.facing < 0 ? -1 : 1) * (.84 + .16 * Math.abs(actor.facing));
+        transform(actor, 'facing', `translate(140 0) scale(${f(facingScale)} 1) translate(-140 0)`);
         transform(actor, 'bounce', `translate(0 ${f(bodyBob - jump + anticipation)})`);
-        transform(actor, 'body', `translate(${f(-sit * 3)} ${f(sleep * 35 + stretch * 8)}) translate(166 149) rotate(${f(-sit * 13 + stretch * 6)}) scale(1 ${f(1 - sleep * .29 + breath * .008)}) translate(-166 -149)`);
-        transform(actor, 'chest', `translate(${f(sleep * 14 + stretch * 13)} ${f(sleep * 31 + stretch * 11 - sit * 4)}) scale(1 ${f(1 - sleep * .12)})`);
-        transform(actor, 'tail', `translate(0 ${f(sit * 18 + sleep * 25)}) rotate(${f(wag + sleep * -24 - sit * 6)} 67 149)`);
+        transform(actor, 'body', `translate(${f(-sit * 3)} ${f(sleep * 23 + stretch * 8)}) translate(166 149) rotate(${f(-sit * 13 + stretch * 6)}) scale(${f(1 - sleep * .1)} ${f(1 - sleep * .13 + breath * .008)}) translate(-166 -149)`);
+        transform(actor, 'tail', `translate(0 ${f(sit * 18 + sleep * 25)}) rotate(${f(wag + sleep * -24 - sit * 6)} 82 151)`);
         // Four-beat walk: longer planted stance, shorter lifted return. Phase is
         // advanced by distance travelled so feet don't cycle while standing still.
         const limbs: [string, number, number, number, boolean][] = [['near-back', 83, 148, .75, true], ['far-back', 100, 145, .25, true], ['near-front', 161, 148, 0, false], ['far-front', 183, 146, .5, false]];
@@ -255,9 +219,14 @@ export default function Pets(props: PetsProps) {
           transform(actor, name, `translate(0 ${f(lower - lift)}) translate(${px} ${py}) rotate(${f(angle)}) scale(1 ${f(compress)}) translate(${-px} ${-py})`);
         });
         transform(actor, 'head', `translate(${f(headX)} ${f(headY)}) rotate(${f(headTilt)} 174 137)`);
-        transform(actor, 'features', `translate(${f(follow * .75 + actor.gait * 3)} 0) translate(188 116) scale(${f(1 - actor.gait * .08)} 1) translate(-188 -116)`); transform(actor, 'pupils', `translate(${f(follow * .32)} ${f(-love * .2)})`);
-        transform(actor, 'near-ear', `rotate(${f(earLag - sniff * 4 + sleep * 5)} 145 86)`); transform(actor, 'far-ear', `rotate(${f(-earLag * .6 - sniff * 3)} 209 87)`);
-        opacity(actor, 'eyes-open', closed ? 0 : 1); opacity(actor, 'eyes-closed', closed ? 1 : 0); opacity(actor, 'tongue', love * .92 + (celebrating ? .5 : 0));
+        // The curled front limbs retain their full joints underneath; their paw
+        // tips are composited over the chin so the sleeping pose visibly bears weight.
+        const restingPaws = clamp((sleep - .45) / .5, 0, 1);
+        transform(actor, 'rest-near-paw', `translate(${f(-42 * (1 - sleep))} ${f(3 * (1 - sleep))})`);
+        transform(actor, 'rest-far-paw', `translate(${f(-42 * (1 - sleep))} ${f(15 * (1 - sleep))})`);
+        opacity(actor, 'rest-near-paw', restingPaws); opacity(actor, 'rest-far-paw', restingPaws * .88);
+        transform(actor, 'near-ear', `rotate(${f(earLag - sniff * 4 + sleep * 5)} 152 82)`); transform(actor, 'far-ear', `rotate(${f(-earLag * .6 - sniff * 3)} 220 82)`);
+        opacity(actor, 'eyes-open', closed ? 0 : 1); opacity(actor, 'eyes-closed', closed ? 1 : 0);
       });
       if (motion) schedule();
     }
@@ -266,7 +235,7 @@ export default function Pets(props: PetsProps) {
     return () => { wake.current = () => {}; cancelAnimationFrame(raf); resize.disconnect(); visibility.disconnect(); document.removeEventListener('visibilitychange', documentVisibility); window.removeEventListener('pointermove', point); timers.forEach(clearTimeout); };
   }, []);
   useEffect(() => { wake.current(); }, [props.scene, props.quiet, props.reducedMotion, props.celebrate]);
-  return <div ref={container} className={`memory-pets${props.quiet ? ' memory-pets-reading' : ''}${props.reducedMotion ? ' memory-pets-still' : ''}`} aria-label="两只会散步、嗅闻和打盹的泰迪">
+  return <div ref={container} className={`memory-pets${props.scene === 4 ? ' memory-pets-cake' : ''}${props.quiet ? ' memory-pets-reading' : ''}${props.reducedMotion ? ' memory-pets-still' : ''}`} aria-label="两只会散步、嗅闻和打盹的泰迪">
     <PetDrawing color="apricot" reply={replies[0]} onPet={() => pet(0)} elementRef={(element) => { dogElements.current[0] = element; }} />
     <PetDrawing color="cream" reply={replies[1]} onPet={() => pet(1)} elementRef={(element) => { dogElements.current[1] = element; }} />
   </div>;

@@ -129,11 +129,12 @@ export default function MemoryGift(){
     <div className="chapter-stage" aria-busy={!!transition} inert={!!transition}>
       <div className="chapter-content" key={chapter}>
       {chapter===0&&<section className={"invitation "+(awake?"is-awake":"")} aria-label="第一章 这本书只认识你">
+        <div className="library-backdrop" aria-hidden="true"><img src={assetUrl("memory-book/library-cinema.webp")} alt="" fetchPriority="high"/><div className="library-window-light"/></div>
         <MagicObject kind="book" open={awake} reducedMotion={reducedMotion} onOpen={()=>setAwake(value=>!value)}/>
         <div className="invitation-copy"><p className="eyebrow">THE FIRST PAGE OF OUR STORY</p><div className="tiny-rule"/><h1>今晚，<br/>故事只认识<span>你。</span></h1><p className="intro-lines">有一本书，等了很久。<br/>直到你来，它才有了名字。</p><button className="gold-button" onClick={openBook}>{awake?"跟着书页出发":"打开这本书"}<span>✧</span></button><p className="quiet-note">{awake?"师宝宝，这本书终于等到了你。":"一场只为你准备的，生日奇遇"}</p></div>
         <div className="floating-dust" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:(9+i*5)%95+"%",top:(i*17)%92+"%",animationDelay:-(i*.7)+"s"}}/>)}</div>
       </section>}
-      {chapter===1&&<section className="journey-chapter" aria-label="第二章 两条路终于同向"><Suspense fallback={<p className="chapter-loading">沙粒正在汇集成故事…</p>}><Journey onComplete={()=>go(2)} reducedMotion={reducedMotion}/></Suspense></section>}
+      {chapter===1&&<section className="journey-chapter" aria-label="第二章 两条路终于同向"><Suspense fallback={<p className="chapter-loading">沙粒正在汇集成故事…</p>}><Journey onComplete={()=>go(2)} reducedMotion={reducedMotion} active={!modal&&!menu&&!transition&&!hidden}/></Suspense></section>}
       {chapter===2&&<section className="photos-chapter" aria-label="第三章 照片与书信">
         <div className="section-heading"><p className="eyebrow">CHAPTER III · LITTLE MOMENTS</p><h1>把喜欢的时刻，<em>藏进书里。</em></h1><p>有些风景，想和你慢慢看。</p></div>
         <div className="album">
@@ -144,6 +145,7 @@ export default function MemoryGift(){
       </section>}
       {chapter===3&&<Suspense fallback={<p className="chapter-loading">风正把这一页轻轻吹开…</p>}><Cinema reducedMotion={reducedMotion} muted={!music.playing} active={!modal&&!transition} onComplete={()=>go(4)}/></Suspense>}
       {chapter===4&&<section className={"wish-chapter wish-"+wish} aria-label="第五章 魔法星空蛋糕">
+        <div className="wish-room" aria-hidden="true"><img src={assetUrl("memory-book/library-cinema.webp")} alt=""/></div>
         <div className="wish-heading"><p className="eyebrow">CHAPTER V · MAKE A LITTLE WISH</p><h1>{wish==="blown"?"师宝宝，生日快乐。":wish==="making"?"这一刻，把愿望留给你。":"今晚的星光，都为你亮起。"}</h1><p>{wish==="blown"?"愿你一直勇敢，也一直被爱。":wish==="making"?"不用说出来，也不必着急。许好了，就轻轻吹灭蜡烛。":"先别急着吹灭蜡烛，把最想实现的愿望，悄悄放在心里。"}</p></div>
         <MagicObject kind="cake" extinguished={wish==="blown"} reducedMotion={reducedMotion}/>
         <div className="wish-actions">{wish!=="blown"?<button className="gold-button" onClick={blow}>{wish==="lit"?"许个愿吧":"轻轻吹灭蜡烛"}<span>✧</span></button>:<><p className="after-wish">书里还留着一些空白，想和你一页一页地写。</p><div><button className="text-button" onClick={()=>setModal("letter")}>重读给你的信 ↗</button><button className="text-button" onClick={()=>go(2)}>回看照片 ↗</button><button className="text-button" onClick={()=>setWish("lit")}>再点亮一次 ✧</button></div></>}</div>

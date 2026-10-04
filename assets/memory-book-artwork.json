@@ -1,5 +1,16 @@
 [
   {
+    "id": "library-cinema",
+    "status": "active",
+    "date": "2026-10-04",
+    "generator": "built-in image_gen",
+    "source": "exec-8aa29f35-0806-4fdf-ac6b-9812482f1f07.png",
+    "master": ".asset-build/memory-book/masters/library-cinema.png",
+    "runtime": "public/memory-book/library-cinema.webp",
+    "runtimeUsage": "静态旧书房背景层，原图仅WebP编码；CSS轻微镜头推近和明暗层，前景是独立可互动三维书。不是摄影素材，不冒称真实电影截图。弃用第一张装饰过密的奇幻背景。",
+    "prompt": "Use case: photorealistic-natural. Asset type: restrained LIVE ACTION FILM SET background plate, wide 16:9 landscape 1536x1024. A quiet old private reading room in an English country house at dusk, cinematic 35mm film still photographed with a real anamorphic lens, no people. This must feel physically buildable and photographed, not a fantasy illustration or AI wallpaper. There are ONLY a few readable elements: worn dark walnut bookshelves with naturally uneven old books at far left and far right, a simple tall stone-mullioned window in the background slightly right of center looking out onto soft dark trees and hazy blue evening, a heavy muted brown curtain, a modest antique brass candle holder off to the side, and a worn oak reading desk occupying the lower quarter. The broad RIGHT half of the desk is EMPTY so a real interactive 3D book will later be composited there. Keep upper left center in gentle readable shadow for a headline. Camera at desk height, 50mm lens, natural optical depth of field, background shelves tastefully soft, desk visible but no razor sharp hyperdetail, slight film grain and soft highlight halation. Cool muted slate-blue window fill plus warm tungsten/candle motivated key from camera left; believable uneven exposure, desaturated warm browns, restrained amber highlights, rich but still visible darks. Understated romantic mystery, as a carefully art-directed intimate scene in a prestige live action magical drama. Avoid ALL visual clutter: no vines, flowers, glowing orbs, astrolabes, clocks, decorative gold patterns, floating books, floating lanterns, magical symbols, castle in window, chandeliers, grand cathedral, symmetrical composition, neon, giant blue moon, impossible light shafts, glitter, excessive orange-and-teal grading. No dog, no cake, no main book, no foreground candles, no text, no lettering, no UI. Restrained authentic cinematography and age-worn practical materials, not digital fantasy concept art."
+  },
+  {
     "id": "book",
     "generator": "built-in image_gen",
     "date": "2026-10-03",
@@ -42,7 +53,7 @@
   {
     "id": "magic-book-3d",
     "status": "active",
-    "date": "2026-10-03",
+    "date": "2026-10-04",
     "generator": "Project-authored Blender Python geometry + Three.js runtime",
     "source": "scripts/models/build_magic_objects.py",
     "runtime": "public/memory-book/magic-book.glb",
@@ -50,17 +61,22 @@
     "implementation": "src/memory-book/MagicObject.tsx",
     "provenance": "本项目原创几何、材质与交互；不是静图转动或第三方电影模型。",
     "changes": [
-      "独立书封和六页翻页铰链",
-      "实时页片弯曲、封面翻开和绕物体查看",
-      "浏览器程序生成皮革纹理、纸面题字和环境烛光"
+      "完整皮革烫金封面与植物铜版画书页，材质来源单独记录",
+      "真实albedo/normal/roughness/metallic贴图嵌入GLB，纸张纤维与页边错层",
+      "独立封面和六页铰链，真实翻页变形、中文烫金题字和装订细节",
+      "实时透明场景、书下柔软阴影与克制灯光"
     ],
     "prompt": null,
-    "promptNote": "由可编辑脚本建模，未使用图像生成提示词。"
+    "promptNote": "几何由原创脚本建模；封面和植物页纹理由内置imagegen生成，其完整提示词记录在对应材料条目中。",
+    "materialSources": [
+      "magic-book-cover-material",
+      "magic-book-botanical-page-material"
+    ]
   },
   {
     "id": "star-cake-3d",
     "status": "active",
-    "date": "2026-10-03",
+    "date": "2026-10-04",
     "generator": "Project-authored Blender Python geometry + Three.js runtime",
     "source": "scripts/models/build_magic_objects.py",
     "runtime": "public/memory-book/star-cake.glb",
@@ -68,16 +84,17 @@
     "implementation": "src/memory-book/MagicObject.tsx",
     "provenance": "本项目原创深蓝金色星空蛋糕网格、奶油表面、装饰、盘架与烛台。",
     "changes": [
-      "实时三维旋转查看",
-      "独立烛火精灵和局部光，响应许愿熄灭",
-      "保留奶油细节、金饰与可编辑 Blender 母版"
+      "不规则奶油抹面、卷曲巧克力花瓣、螺旋裱花、带果脐与果霜的蓝莓",
+      "真实albedo/normal/ORM贴图嵌入GLB，降低塑料高光",
+      "柔软接触阴影、暖釉盘、正面附近缓慢摆动，支持拖动查看",
+      "保留独立烛火、许愿熄灭与可编辑母版"
     ],
     "prompt": null,
     "promptNote": "由可编辑脚本建模，未使用图像生成提示词。"
   },
   {
     "id": "teddy-rig",
-    "status": "active",
+    "status": "retired",
     "date": "2026-10-03",
     "generator": "built-in image_gen",
     "source": ".asset-build/memory-book/masters/teddy-rig.png",
@@ -97,7 +114,11 @@
     "processing": "保留原始 alpha，仅使用 sharp 编码 WebP（quality 88、alphaQuality 100）；没有绘画修改。",
     "animation": "SVG viewBox 读取分离部件；躯干、四肢、头、耳、尾分别进行关节变换，眨眼、行走、嗅闻、碰鼻与触摸回应按实时状态驱动。奶油角色使用 CSS saturate(.42) brightness(1.17)、镜像及独立节奏；不再切换八张完整狗姿态。",
     "implementation": "src/memory-book/Pets.tsx",
-    "promptRecord": ".asset-build/memory-book/masters/teddy-rig.prompt.txt"
+    "promptRecord": ".asset-build/memory-book/masters/teddy-rig.prompt.txt",
+    "replacedBy": [
+      "teddy-apricot-painted",
+      "teddy-cream-painted"
+    ]
   },
   {
     "id": "wind-and-stars",
@@ -120,5 +141,69 @@
     "runtimeBytes": 287242,
     "processing": "仅等比例缩放并编码 WebP（quality 93）；保留原始母版。",
     "role": "原创静态后景：金色夕照旷野过渡到暮蓝星空，不含电影角色、标志或文字。它不是动画或电影原景；角色动作、草、风和星光由其它素材与独立运行图层承担。"
+  },
+  {
+    "id": "teddy-apricot-painted",
+    "status": "active",
+    "date": "2026-10-04",
+    "generator": "built-in image_gen",
+    "source": "exec-bcb96c8e-9e94-4883-b2b8-d78efbdc6b31.png",
+    "master": ".asset-build/memory-book/masters/teddy-apricot-painted.png",
+    "runtime": "public/memory-book/teddy-apricot-painted.webp",
+    "prompt": "Use case: illustration-story.\nAsset type: high-end transparent layered character rig atlas for a hand-painted animated birthday storybook website.\nCreate ONE production-quality warm APRICOT TEDDY POODLE puppy rig sheet, with 8 clearly separated cutout parts in a perfectly regular 4-column by 2-row layout on genuine transparency, wide landscape canvas at the highest available detail. Leave at least 35 pixels transparent space between every cell and keep every part fully inside its own cell. NO labels, NO writing, NO borders, NO contact sheet background.\n\nThe dog must read unmistakably as a beautiful small toy poodle in a teddy haircut: naturally proportioned canine face, short but visibly projecting muzzle, shiny small black nose, almond-round deep chocolate eyes with subtle living highlights, floppy long furry drop ears, delicate paws, compact real canine torso. Extremely appealing, gentle and soulful, professionally painted gouache and fine colored pencil finish. Luxurious warm cinnamon/apricot wavy curls with fine irregular wisps and believable soft volume, rich painterly shading and glints, not uniform curly symbols. It should feel like a lovingly illustrated REAL PET, not a stuffed lamb or plastic toy, not a vector icon, not a human-faced mascot. Closed mouth with a tiny natural canine smile, no huge cartoon grin, no blush, no clothes or collar, no accessories.\n\nPrecise cell contents, all belonging to this SAME single dog and with consistent soft upper-left lighting:\nTOP ROW from left to right:\n1. ONLY the compact side-view furry TORSO, shoulder/chest at the RIGHT and rump at LEFT. Soft integrated chest, natural waist. No head, no ears, no legs, no tail. Beautiful organically painted continuous fur across body; no dismemberment or exposed anatomy.\n2. ONLY the full furry HEAD with open expressive eyes, facing slightly to the RIGHT in a gentle three-quarter portrait. Omit the external hanging ears entirely because the ears are separate animation layers. Rounded poodle topknot, not circular sheep face; obvious 3D canine muzzle. Include short furry neck base for overlap.\n3. ONLY ONE separate long soft DROP EAR with its narrow hidden root at TOP and a wider rounded furry tip below, side/front three-quarter view. This will be mirrored for the far ear. Same apricot fur, slightly deeper warm brown inside.\n4. ONLY the short fluffy curved upward TAIL, root at lower RIGHT and fluffy curl curving to upper LEFT. Painted natural wavy fur, not a ball on a stick.\nBOTTOM ROW from left to right:\n5. ONLY ONE front LEG in neutral standing pose, broad hidden furry shoulder root at TOP, tapered short foreleg and beautifully drawn compact PAW at BOTTOM, toes toward RIGHT. Complete limb; no torso.\n6. ONLY ONE rear LEG in neutral standing pose, furry upper haunch at TOP, natural curved canine hock and compact PAW at BOTTOM, toes toward RIGHT. Complete limb; no torso.\n7. EXACTLY the SAME isolated earless HEAD as top-row cell 2, same angle, scale, outline, muzzle and location within its cell, but with both EYES GENTLY CLOSED in a relaxed blink. Mouth stays closed. Include same neck base.\n8. ONE whole assembled reference dog standing naturally on four paws, body side-on facing RIGHT and head gently turned three-quarter toward us, showing how those same parts naturally belong together. No ground shadow or floor.\n\nMaintain accurate dog anatomy, distinctive poodle drop ears, rich natural fur and a tender eye expression. This is a polished professional character art asset, avoid simplistic scalloped clouds or repeated decorative circles. ALL cells truly transparent behind the artwork.",
+    "actualDimensions": [
+      1536,
+      1024
+    ],
+    "transparentBackground": true,
+    "processing": "仅WebP编码并保留生成alpha；运行时按部件区域裁切和关节变换，整犬参考格不参与动画。",
+    "implementation": "src/memory-book/Pets.tsx"
+  },
+  {
+    "id": "teddy-cream-painted",
+    "status": "active",
+    "date": "2026-10-04",
+    "generator": "built-in image_gen",
+    "source": "exec-40c1b8a3-c94c-4f50-9259-145c512c8d4e.png",
+    "master": ".asset-build/memory-book/masters/teddy-cream-painted.png",
+    "runtime": "public/memory-book/teddy-cream-painted.webp",
+    "prompt": "Use case: identity-preserve.\nAsset type: transparent layered hand-painted storybook teddy-poodle character rig atlas.\nReference/edit target: the attached APRICOT poodle rig sheet. Preserve its professional painterly quality, eight-part atlas layout, every cell's placement, the individual anatomical part boundaries, the neutral standing limb angles, the matching open and closed eye heads, and true transparent alpha.\n\nCreate the companion dog: a beautiful CHAMPAGNE / CREAM TEDDY POODLE puppy with honey-beige roots, rich warm biscuit drop ears, slightly darker cocoa muzzle shadows and deep expressive dark brown eyes. Do NOT make it white or pale woolly like a sheep. It remains unmistakably a real small POODLE in a teddy haircut: a clearly projecting canine muzzle, shiny black nose, dog proportions, natural fine waved curls, not scalloped clouds. This companion has a slightly smaller, gentler face and soft unassuming expression, while its body and parts remain mechanically compatible with this layout.\nPreserve the same soft upper-left lighting and richly painted gouache / colored pencil fur. No collar, accessories, captions, floor or shadow.\n\nThe eight isolated cells must remain: TOP torso / open earless head / separate hanging ear / curled fluffy tail; BOTTOM front leg / rear leg / matching closed-eye earless head / assembled dog reference. All backgrounds and gaps genuinely transparent; retain fine fur alpha and don't add a colored backdrop. Change only the dog's identity/palette and very subtle face character; retain the anatomical forms and polished painting.",
+    "actualDimensions": [
+      1536,
+      1024
+    ],
+    "transparentBackground": true,
+    "processing": "仅WebP编码并保留生成alpha；运行时按部件区域裁切和关节变换，整犬参考格不参与动画。",
+    "implementation": "src/memory-book/Pets.tsx"
+  },
+  {
+    "id": "magic-book-cover-material",
+    "status": "active-texture",
+    "date": "2026-10-04",
+    "generator": "built-in image_gen",
+    "source": "C:/Users/luomin/.codex/generated_images/01a10549-1ae1-7150-9513-2c0d601aaf23/exec-cfb1ae22-1931-4406-a040-df2aa85766b7.png",
+    "master": ".asset-build/memory-book/masters/book-cover-albedo-source.png",
+    "prompt": "Use case: stylized-concept. Asset type: physically based 3D material, complete front-cover base-color/albedo texture for a real interactive antique leather grimoire. Create a flat rectangular portrait surface texture, 1536x2048 composition, edge to edge, absolutely straight-on orthographic, no perspective, no background, no book thickness or pages, no cast shadow, no artificial light source, no text or letters. This is a luxurious old hand-bound magical storybook with dark oxblood and espresso calfskin, extremely tactile irregular fine leather pores, naturally polished worn edges, subtle leather wrinkles and real accumulated patina. Exquisite, incredibly fine antique tarnished champagne-gold blind tooling: a narrow double rectangular perimeter border, richly engraved acanthus leaves and tiny ivy/floral scrollwork in all four corners, intricate tiny curls and branching tendrils woven along the borders, small gilded florets. Think museum-quality 18th-century fine bookbinding, heirloom romance, old magical library, precision craftsmanship, organic restrained detail, not a modern fantasy game HUD. Preserve a quiet, slightly recessed central oval rectangular leather panel covering the central 42% of width and 38% of height, with absolutely NO lettering, crest, medallion, star, gemstone or central symbol; this clear area will receive real 3D lettering later. Gold is irregularly worn, with tiny engraved scratches, dark recesses, warm copper at worn tips, not a uniform neon yellow line. Fine tactile surface detail should be visible at close distance and clearly refined from far away. Lighting neutral and perfectly diffuse for an albedo map, no baked specular shine, no vignette, no strong shading. The entire rectangular picture must be the textured decorated surface with square corners, filled completely to all image borders. No watermark, no hands, no props, no frame outside the surface.",
+    "exportedResolution": [
+      1152,
+      1536
+    ],
+    "embedding": "Albedo, tangent-space normal, roughness and metallic mask are embedded in magic-book.glb. Normals and ORM are derived deterministically from the source texture; the runtime preserves these maps.",
+    "runtime": "public/memory-book/magic-book.glb"
+  },
+  {
+    "id": "magic-book-botanical-page-material",
+    "status": "active-texture",
+    "date": "2026-10-04",
+    "generator": "built-in image_gen",
+    "source": "C:/Users/luomin/.codex/generated_images/01a10549-1ae1-7150-9513-2c0d601aaf23/exec-29002359-51c9-4a50-8c3d-89b03f8ad02a.png",
+    "master": ".asset-build/memory-book/masters/book-page-botanical-source.png",
+    "prompt": "Use case: illustration-story. Asset type: UV texture for one page inside an antique romantic magic storybook, flat portrait rectangle 1024x1536, straight-on orthographic and edge to edge, no perspective, no book or table around it. An exquisitely preserved antique botanical copperplate engraving on warm pale ivory handmade rag paper, very fine real paper fibers, small subtle irregular foxing at the edges, aged but clean and readable. A delicate branching wild rose and wildflower botanical study in the centre, drawn by hand in warm sepia ink with fine crosshatching and translucent watercolor washes: tender faded rose petals, muted sage leaves, pale honey stamens. Elegant asymmetrical natural composition with several smaller finely detailed botanical studies and seed sketches around the main branch, tiny faded handwritten scientific marginalia illegible enough to avoid specific claims, thin restrained hand-ruled double border. A tiny decorated gold initial-like flower at the upper centre and a small antique ornamental flourish near the bottom. Fine intimate old book illustration, cinematic prop department quality, emotionally tender, completely believable as an old illustrated book page, restrained and refined, no fantasy icon clutter or cosmic HUD, no bright digital gradients, no glossy surface, no legible title or personal name or modern text. Natural unlit diffuse albedo texture with no cast shadows, no vignette, no folded page corner, no watermark.",
+    "exportedResolution": [
+      768,
+      1152
+    ],
+    "embedding": "Embedded in all six independently deformable paper leaves. Paper normal map and physical paper thickness remain separate.",
+    "runtime": "public/memory-book/magic-book.glb"
   }
 ]

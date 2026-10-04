@@ -22,5 +22,7 @@
   .memory-pet-reply { font-size: 9px; padding: 6px 8px; max-width: 142px; white-space: normal; text-align: center; }
   .memory-pets-reading { --pet-size: 126px; }
   .memory-pets-reading .memory-pet-cream { --pet-size: 119px; }
+  .memory-pets-cake { --pet-size: 124px; }
+  .memory-pets-cake .memory-pet-cream { --pet-size: 120px; }
 }
 @media (prefers-reduced-motion: reduce) { .memory-pet * { transition: none !important; animation: none !important; } }
