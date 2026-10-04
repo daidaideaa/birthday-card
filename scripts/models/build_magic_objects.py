@@ -269,6 +269,14 @@ leather=pbr('PBR | worn espresso calfskin',maps[3],maps[4],maps[5])
 paper=pbr('PBR | uncoated rag paper',maps[7],maps[8],roughness=.95)
 pageEdges=pbr('PBR | deckled page edges',maps[9],maps[8],roughness=.95)
 illustration=pbr('PBR | handwritten spellbook paper',maps[6],maps[8],roughness=.96)
+storyPages=[]
+for index in range(12):
+    artwork=TEXTURES/f'story-page-{index:02d}.jpg'
+    if not artwork.exists():
+        raise FileNotFoundError(f'{artwork}: run scripts/models/build_story_pages.ps1 first')
+    pageMat=pbr(f'PBR | story leaf {index//2+1} {"recto" if index%2==0 else "verso"}',artwork,maps[8],roughness=.97)
+    pageMat.use_backface_culling=True
+    storyPages.append(pageMat)
 gold=material('Dark hand chased copper',(.27,.18,.09),.72,.53)
 brightGold=material('Worn copper engraved edge',(.43,.29,.14),.74,.46)
 patina=material('Patina in copper recesses',(.069,.045,.023),.60,.65)
@@ -296,8 +304,17 @@ for i in range(35):
     y=-1.55+i*.088
     curve('Hand_stitched_spine',[(-1.178,y,.372),(-1.133,y+.028,.376)],.0033,linen)
 
-hinge=empty('CoverHinge',(-1.325,0,.404))
+hinge=empty('CoverHinge',(-1.325,0,.478))
 box('Front_cover_board',(1.325,0,-.006),(2.74,3.60,.125),leather,.065,hinge)
+# The cover's inside remains a separate manuscript endpaper, visible at spread zero.
+data=bpy.data.meshes.new('Inside cover manuscript')
+data.from_pydata([(.125,-1.60,-.072),(2.525,-1.60,-.072),(2.525,1.60,-.072),(.125,1.60,-.072)],[],[(3,2,1,0)])
+data.update();uv=data.uv_layers.new(name='UVMap')
+for polygon in data.polygons:
+    for loop in polygon.loop_indices:
+        co=data.vertices[data.loops[loop].vertex_index].co
+        uv.data[loop].uv=(1-(co.x-.125)/2.4,(co.y+1.6)/3.2)
+obj=bpy.data.objects.new('Inside_cover_manuscript',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,illustration,hinge)
 # One UV-mapped relief surface, with the albedo/roughness/normal/metalness embedded.
 verts=[];faces=[];nx=65;ny=87
 for iy in range(ny):
@@ -362,18 +379,18 @@ verts=[];faces=[];radial=48
 for j,(radius,z) in enumerate([(.0,.359),(.05,.359),(.094,.364),(.119,.356),(.12,.341)]):
     for i in range(radial):
         a=i/radial*math.tau;r=radius*(1+.035*math.sin(a*7)+.018*math.sin(a*13))
-        verts.append((.82+r*math.cos(a),-1.20+r*math.sin(a),z))
+        verts.append((.82+r*math.cos(a),-1.20+r*math.sin(a),z-.017))
 for j in range(4):
     for i in range(radial):
         a=j*radial+i;b=j*radial+(i+1)%radial;faces.append((a,b,b+radial,a+radial))
 data=bpy.data.meshes.new('Hand pressed wax');data.from_pydata(verts,[],faces);data.update()
 obj=bpy.data.objects.new('Private_wax_seal',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,waxSeal)
 for p in data.polygons:p.use_smooth=True
-curve('Wax_impression_key',[(.82,-1.235,.361),(.82,-1.19,.361),(.842,-1.19,.361)],.004,waxMark)
-curve('Wax_impression_bow',[(.82+.020*math.cos(i*math.tau/40),-1.17+.020*math.sin(i*math.tau/40),.361) for i in range(40)],.004,waxMark,closed=True)
+curve('Wax_impression_key',[(.82,-1.235,.345),(.82,-1.19,.345),(.842,-1.19,.345)],.004,waxMark)
+curve('Wax_impression_bow',[(.82+.020*math.cos(i*math.tau/40),-1.17+.020*math.sin(i*math.tau/40),.345) for i in range(40)],.004,waxMark,closed=True)
 # Six independently deformable printed leaves preserve browser interaction.
 for pageIndex in range(6):
-    ph=empty(f'PageHinge_{pageIndex}',(-1.20,0,.352-pageIndex*.010))
+    ph=empty(f'PageHinge_{pageIndex}',(-1.20,0,.390-pageIndex*.006))
     verts=[];faces=[];nx=33;ny=9
     for ix in range(nx):
         x=ix/(nx-1)*2.4
@@ -391,15 +408,23 @@ for pageIndex in range(6):
         for loop in polygon.loop_indices:
             vi=data.loops[loop].vertex_index
             uv.data[loop].uv=((vi//ny)/(nx-1),(vi%ny)/(ny-1))
-    obj=bpy.data.objects.new(f'Paper_{pageIndex}',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,illustration,ph)
+    obj=bpy.data.objects.new(f'Paper_{pageIndex}',data);bpy.context.collection.objects.link(obj);finish(obj,obj.name,storyPages[pageIndex*2],ph)
+    obj.data.materials.append(storyPages[pageIndex*2+1]);obj.data.materials.append(paper)
     obj['flexiblePage']=True
+    obj['rectoPage']=pageIndex*2;obj['versoPage']=pageIndex*2+1
     mod=obj.modifiers.new('Paper edge','SOLIDIFY');mod.thickness=.0025
+    mod.material_offset=1;mod.material_offset_rim=2
     bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=mod.name)
     # A turned physical leaf shows its verso; its notes must not read backwards.
     for polygon in obj.data.polygons:
         if polygon.normal.z<-.25:
+            polygon.material_index=1
             for loop in polygon.loop_indices:
                 obj.data.uv_layers.active.data[loop].uv.x=1-obj.data.uv_layers.active.data[loop].uv.x
+        elif polygon.normal.z>.25:
+            polygon.material_index=0
+        else:
+            polygon.material_index=2
 export('magic-book')
 
 # A book-only iteration never rewrites the approved cake or its editable master.

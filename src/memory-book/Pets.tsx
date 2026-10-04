@@ -29,22 +29,24 @@ const ROUTINES: { mood: Mood; seconds: number }[][] = [
 // ImageGen-painted RGBA layers. Each cutout is an anatomical volume with generous
 // overlap at its joint; the reference dog in the atlas is never used as a sprite.
 const PAINTED_CROPS = {
-  body: '26 94 507 313', head: '572 36 314 292', ear: '980 88 221 353',
+  body: '26 94 507 313',
   tail: '1269 103 220 298', front: '64 508 180 421', back: '323 513 206 415',
-  blink: '572 539 314 293', paw: '65 831 180 100',
+  paw: '65 831 180 100',
 };
 function PaintedPart({ color, crop, x, y, width, height }: { color: DogColor; crop: keyof typeof PAINTED_CROPS; x: number; y: number; width: number; height: number }) {
   return <svg x={x} y={y} width={width} height={height} viewBox={PAINTED_CROPS[crop]} overflow="hidden" aria-hidden="true">
     <image href={assetUrl(`memory-book/teddy-${color}-painted.webp`)} width="1536" height="1024" />
   </svg>;
 }
-const FACE_CROPS = {
-  apricot: { open: '58 71 448 448', closed: '58 548 448 448', happy: '58 1026 448 448' },
-  cream: { open: '538 72 448 448', closed: '538 550 448 448', happy: '538 1026 448 448' },
+// Each portrait is one continuous skull, muzzle, ear-root and ear silhouette.
+// Its ears belong to the same painting; older standalone ears are not layered on.
+const HEAD_CROPS = {
+  apricot: { open: '40 80 588 520', closed: '39 654 588 520' },
+  cream: { open: '640 108 582 504', closed: '639 684 582 504' },
 };
-function PuppyFace({ color, expression }: { color: DogColor; expression: keyof typeof FACE_CROPS.apricot }) {
-  return <svg x="124" y="32" width="111" height="111" viewBox={FACE_CROPS[color][expression]} overflow="hidden" aria-hidden="true">
-    <image href={assetUrl('memory-book/teddy-puppy-expressions.webp')} width="1024" height="1536" />
+function TeddyHead({ color, expression }: { color: DogColor; expression: keyof typeof HEAD_CROPS.apricot }) {
+  return <svg x="122" y="43" width="116" height="104" viewBox={HEAD_CROPS[color][expression]} overflow="hidden" aria-hidden="true">
+    <image href={assetUrl('memory-book/teddy-head-anatomy.webp')} width="1254" height="1254" />
   </svg>;
 }
 const Teddy = memo(function Teddy({ color }: { color: DogColor }) {
@@ -58,11 +60,8 @@ const Teddy = memo(function Teddy({ color }: { color: DogColor }) {
       <g data-part="near-front"><PaintedPart color={color} crop="front" x={149} y={132} width={34} height={79}/></g>
       <g data-part="rest-far-paw" opacity="0"><PaintedPart color={color} crop="paw" x={225} y={188} width={38} height={21}/></g>
       <g data-part="head">
-        <g data-part="far-ear"><PaintedPart color={color} crop="ear" x={208} y={78} width={29} height={67}/></g>
-        <g data-part="eyes-open"><PuppyFace color={color} expression="open"/></g>
-        <g data-part="eyes-closed" opacity="0"><PuppyFace color={color} expression="closed"/></g>
-        <g data-part="eyes-happy" opacity="0"><PuppyFace color={color} expression="happy"/></g>
-        <g data-part="near-ear"><PaintedPart color={color} crop="ear" x={129} y={79} width={39} height={75}/></g>
+        <g data-part="eyes-open"><TeddyHead color={color} expression="open"/></g>
+        <g data-part="eyes-closed" opacity="0"><TeddyHead color={color} expression="closed"/></g>
       </g>
       <g data-part="rest-near-paw" opacity="0"><PaintedPart color={color} crop="paw" x={207} y={196} width={40} height={22}/></g>
     </g></g>
@@ -219,11 +218,9 @@ export default function Pets(props: PetsProps) {
         const headTilt = sniff * 22 + sleep * 27 + stretch * 10 + bow * 12 - love * 3 - curiousTilt * (index ? 13 : 16) + follow * 1.4;
         const headX = sniff * 13 + sleep * 10 + stretch * 15 + bow * 12 + love * 1.5;
         const headY = sniff * 27 + sleep * 49 + stretch * 32 + bow * 28 - sit * 4 - love * 3 - curiousTilt * 2 + breath * .25 + sniff * Math.sin(t * 7.7) * .9;
-        const earLag = motion ? Math.sin(t * 2.1 - .6) * .6 + Math.sin(actor.phase - .65) * actor.gait * 3 + love * Math.sin(t * 4.1) : 0;
         const wag = motion ? Math.sin(t * (love > .2 || celebrating || greet > .1 ? 13 : 7.2)) * (love * 15 + (celebrating ? 10 : 0) + greet * 12 + curiousTilt * 5 + bow * 13 + (!calm ? Math.max(0, Math.sin(t * .43 + index) - .75) * 13 : 0) + actor.gait * 4) * (1 - sleep) : 0;
         if (motion && elapsed > actor.nextBlink) { actor.blinkUntil = elapsed + .14 + actor.random() * .08; actor.nextBlink = elapsed + 2.7 + actor.random() * 4.2; }
         const closed = sleep > .72 || (motion && elapsed < actor.blinkUntil) || (beingPetted && petTime > .18 && petTime < .65);
-        const happy = !closed && (beingPetted || greet > .2 || celebrating || bow > .25);
         actor.element.style.transform = `translate3d(${f(actor.x)}px,0,0)`;
         actor.element.dataset.mood = beingPetted ? 'loved' : celebrating ? 'celebrating' : sleep > .55 ? 'sleeping' : actor.gait > .1 ? 'walking' : actor.mood;
         actor.element.style.setProperty('--pet-shadow-scale', f(1 - jump / 80 + sleep * .14));
@@ -247,15 +244,14 @@ export default function Pets(props: PetsProps) {
           const lift = Math.sin(swing * Math.PI) * actor.gait * 7 + offering * 10;
           transform(actor, name, `translate(0 ${f(lower - lift)}) translate(${px} ${py}) rotate(${f(angle)}) scale(1 ${f(compress)}) translate(${-px} ${-py})`);
         });
-        transform(actor, 'head', `translate(${f(headX)} ${f(headY)}) rotate(${f(headTilt)} 174 137)`);
+        transform(actor, 'head', `translate(${f(headX)} ${f(headY)}) rotate(${f(headTilt)} 183 137)`);
         // The curled front limbs retain their full joints underneath; their paw
         // tips are composited over the chin so the sleeping pose visibly bears weight.
         const restingPaws = clamp((sleep - .45) / .5, 0, 1);
         transform(actor, 'rest-near-paw', `translate(${f(-42 * (1 - sleep))} ${f(3 * (1 - sleep))})`);
         transform(actor, 'rest-far-paw', `translate(${f(-42 * (1 - sleep))} ${f(15 * (1 - sleep))})`);
         opacity(actor, 'rest-near-paw', restingPaws); opacity(actor, 'rest-far-paw', restingPaws * .88);
-        transform(actor, 'near-ear', `rotate(${f(earLag - sniff * 4 + sleep * 5)} 152 82)`); transform(actor, 'far-ear', `rotate(${f(-earLag * .6 - sniff * 3)} 220 82)`);
-        opacity(actor, 'eyes-open', closed || happy ? 0 : 1); opacity(actor, 'eyes-closed', closed ? 1 : 0); opacity(actor, 'eyes-happy', happy ? 1 : 0);
+        opacity(actor, 'eyes-open', closed ? 0 : 1); opacity(actor, 'eyes-closed', closed ? 1 : 0);
       });
       if (motion) schedule();
     }

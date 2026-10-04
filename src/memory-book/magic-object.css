@@ -19,6 +19,18 @@
 .magic-object:hover .object-tools button,.magic-object:focus-within .object-tools button{opacity:1}
 .object-tools button:hover{color:#fff2d0;border-color:#e3c081}
 .object-tools span{opacity:.8}
+.book-page-controls{position:absolute;z-index:3;left:9%;right:9%;bottom:13%;color:#e3d3b3;text-align:center;text-shadow:0 1px 8px #100a05;pointer-events:none}
+.book-page-row{display:flex;align-items:center;justify-content:center;gap:14px}
+.book-page-row>span{display:flex;flex-direction:column;gap:5px;font-size:11px;letter-spacing:2px;min-width:170px}
+.book-page-row small{font:10px Georgia,serif;color:#bda984;letter-spacing:3px}
+.book-page-row>button{width:36px;height:40px;padding:0;background:transparent;border:0;color:#e7d4ae;font:30px Georgia,serif;cursor:pointer;pointer-events:auto}
+.book-page-row>button:disabled{opacity:.2;cursor:default}
+.book-page-row>button:focus-visible,.book-page-options>button:focus-visible{outline:1px solid #c8b081;outline-offset:3px}
+.book-page-options{display:flex;justify-content:center;gap:22px;margin-top:3px}
+.book-page-options>button{pointer-events:auto;background:transparent;color:#bca888;border:0;padding:5px 2px;font-size:9px;letter-spacing:2px;cursor:pointer}
+.book-page-options>button:hover{color:#f2e4c8}
+.magic-object-book.is-reading .book-page-controls{left:50%;right:auto;width:max-content;max-width:90%;transform:translateX(-50%);padding:7px 16px 6px;background:#17110de8;border:1px solid #b79a5c35;border-radius:3px;backdrop-filter:blur(8px);box-shadow:0 8px 24px #0004}
+@media(max-width:680px){.magic-object-book.is-reading .magic-object-canvas{top:-30px;bottom:100px;height:auto}.magic-object-book.is-reading .book-page-controls{bottom:13%;padding:5px 13px}.book-page-row>span{font-size:10px;min-width:165px}.book-page-row{gap:9px}}
 .chapter-loading{text-align:center;color:#cbb688;letter-spacing:2px;padding:180px 20px;min-height:550px;font-size:13px}
 @keyframes object-breathe{50%{opacity:.45}}
 @media(max-width:1000px){.magic-object-book{inset:0 -8% 0 32%}.object-tools{font-size:9px;gap:10px}.object-tools button{font-size:8px}}

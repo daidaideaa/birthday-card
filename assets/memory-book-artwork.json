@@ -58,16 +58,16 @@
     "source": "scripts/models/build_magic_objects.py",
     "runtime": "public/memory-book/magic-book.glb",
     "master": ".asset-build/memory-book/masters/magic-book.blend",
-    "implementation": "真实旧魔法书、铜护角/铭牌/封蜡、六层翻页；近黑皮革PBR与手抄魔法笔记，无花卉藤蔓。中文献词和页缘光实时显现。",
+    "implementation": "六张实体纸页各有独立正反面，共十二幅不同叙事画稿。封面打开停留；七组展开逐页阅读，支持回翻和相机近读，翻页忙碌时防连点。封底保留献词。",
     "provenance": "本项目原创几何、材质与交互；不是静图转动或第三方电影模型。",
     "changes": [
-      "V7去除花卉，采用古旧学术魔法书道具方向",
-      "旧皮细纹、铜护角、封蜡与窄压纹边",
-      "手稿内页和中文墨迹显现",
-      "--book-only单独重建书，保留V6蛋糕"
+      "V8十二幅独立正反页：飞钥、她的来路/香港、他的起点/上海、深圳并肩、书信、照片、风、星光、烛火与生日",
+      "深褐墨稿与可读正文适应真实3D灯光；各页正反面单独材质",
+      "逐页阅读与左右页近读，手机近读保留独立导航区",
+      "保留V7近黑旧皮铜件与V6蛋糕，仅重建书"
     ],
     "prompt": null,
-    "promptNote": "几何由原创脚本建模；封面和植物页纹理由内置imagegen生成，其完整提示词记录在对应材料条目中。",
+    "promptNote": "几何由原创脚本建模；封面和历史魔法手稿纹理使用内置imagegen，新十二页为原创程序线稿排版。完整来源分别记录。",
     "materialSources": {
       "cover": {
         "generatedSource": "C:/Users/luomin/.codex/generated_images/01a10549-1ae1-7150-9513-2c0d601aaf23/exec-27ec696a-4e29-48c8-b7ac-6db3c2e92c2a.png",
@@ -94,7 +94,8 @@
         "prompt": "Use case: historical-scene. Asset type: a single inside-page UV albedo texture for a three-dimensional antique wizard's school spellbook. Portrait 1024x1536, perfectly flat straight-on, full rectangular page edge to edge, no perspective, no table, no book thickness, no hand or props around it. A believable old magic textbook manuscript page as a practical film prop in a Harry Potter style library. Thin aged warm ivory rag paper, fine fibres and uneven deckled age marks, pale tea stains, tiny brown foxing and a few faded iron-gall ink blots, restrained age and lots of legible ivory negative space. Academic magical content in exceptionally fine dark sepia pen: several narrow paragraphs of old handwritten Latin-like study notes, marginal corrections, underlines, arrows and tiny hand-copied symbols; small heading 'De Lumine' near the top. Off-centre in the upper middle, one delicately hand-drawn small astronomical sketch, a few constellations, numbered stars, a crescent moon and imperfect pencil construction arcs, like a scholar's real working notebook. In the lower half, small ink studies of an old winged key, a quill, and three hand-drawn experiments with candle light and shadows, separated by handwritten annotations. One small dark red wax stain near the bottom margin, no large seal. The drawn marks look old and human, uneven and repaired; never a modern interface. Narrow simple ruled margin, no decorative picture frame, no pretty flourish, no heraldic crest, no ornamental border. Absolutely NO flowers, NO leaves, NO vines, NO plants, NO botanical illustration, NO wedding album aesthetics, NO gold illuminated manuscript ornament, NO perfect mandala, NO concentric glowing magic disc, NO science-fiction HUD, NO blue neon, NO digital UI. Cinematic and scholarly, intimate and mysterious, almost entirely ink and old paper. Unlit albedo texture, no cast shadows, no fold shading, no bright glow, no watermark. Do not add any personal name, date, specific autobiographical details or modern language.",
         "contentStatus": "Fictional film-prop scholarly magic notes, not biographical facts. Chinese personal dedication is generated as a separate live ink layer.",
         "orientation": "Verso UVs are mirrored in geometry to keep manuscript text readable after the physical page turns."
-      }
+      },
+      "storyPages": "book-story-pages-v8"
     }
   },
   {
@@ -181,7 +182,7 @@
     ],
     "transparentBackground": true,
     "processing": "仅WebP编码并保留生成alpha；运行时按部件区域裁切和关节变换，整犬参考格不参与动画。",
-    "implementation": "保留精绘耳/身体/四肢/尾/卧姿前爪；V7头部由teddy-puppy-expressions替换，整犬参考格不运行。"
+    "implementation": "V8仅保留身体、四肢、尾与卧姿前爪；旧头、旧耳全部停止引用，整犬参考格不运行。完整新头含耳使用teddy-head-anatomy。"
   },
   {
     "id": "teddy-cream-painted",
@@ -198,7 +199,7 @@
     ],
     "transparentBackground": true,
     "processing": "仅WebP编码并保留生成alpha；运行时按部件区域裁切和关节变换，整犬参考格不参与动画。",
-    "implementation": "保留精绘耳/身体/四肢/尾/卧姿前爪；V7头部由teddy-puppy-expressions替换，整犬参考格不运行。"
+    "implementation": "V8仅保留身体、四肢、尾与卧姿前爪；旧头、旧耳全部停止引用，整犬参考格不运行。完整新头含耳使用teddy-head-anatomy。"
   },
   {
     "id": "magic-book-cover-material",
@@ -264,7 +265,7 @@
   },
   {
     "id": "teddy-puppy-expressions",
-    "status": "active",
+    "status": "retired",
     "date": "2026-10-04",
     "generator": "built-in image_gen",
     "source": "exec-0e47b898-8b70-41fb-a53b-624abda0d2f1.png",
@@ -278,7 +279,9 @@
       1536
     ],
     "processing": "仅RGBA WebP编码；脸由SVG viewBox裁切，未程序修改画稿。",
-    "implementation": "两只幼犬各有睁眼/闭眼/轻吐舌三脸；头耳尾腿连续分层运动，错时歪头/招呼/鞠躬、抚摸和同伴回应。点击范围缩至犬身，绘制尺寸/安全边界保持。"
+    "implementation": "两只幼犬各有睁眼/闭眼/轻吐舌三脸；头耳尾腿连续分层运动，错时歪头/招呼/鞠躬、抚摸和同伴回应。点击范围缩至犬身，绘制尺寸/安全边界保持。",
+    "replacedBy": "teddy-head-anatomy",
+    "runtimeUsage": "V7历史脸稿已停止引用；保留原文件与提示词，不再把新表情描述成结构修复。"
   },
   {
     "id": "library-cinema-portrait",
@@ -296,5 +299,202 @@
     ],
     "processing": "Unmodified RGB master encoded as WebP with OpenCV, quality 88. No stretch, crop, or color grading.",
     "runtimeUsage": "680px以下手机专用同场景竖幅重新构图，保留书架、窗、烛台和桌面。生成画稿，不冒称实拍。"
+  },
+  {
+    "id": "teddy-head-anatomy",
+    "date": "2026-10-04",
+    "generator": "built-in image_gen",
+    "source": "C:/Users/luomin/.codex/generated_images/01a10543-a14c-7bb0-b169-8e5bf85cf246/exec-8745f054-336c-40de-982e-d5a9b3003f93.png",
+    "master": ".asset-build/memory-book/masters/teddy-head-anatomy.png",
+    "runtime": "public/memory-book/teddy-head-anatomy.webp",
+    "prompt": "Use case: illustration-story.\nCreate a new anatomical head design for two 10-week-old TOY POODLE puppies with a neat short TEDDY-BEAR GROOMING CUT. This is a character construction asset for a layered 2D animation. NO reference image; invent a fresh, beautifully proportioned puppy design.\n\nTransparent square RGBA sprite sheet, 1024 x 1024, two columns by two rows. Exactly FOUR complete heads with both ears, no torso and no long neck, centered with comfortable transparent margins in equal cells.\nLeft column: honey-apricot toy poodle. Right column: warm light champagne-cream toy poodle, a slightly softer rounder face, clearly a companion rather than an identical recolor.\nTop row: closed mouth, neutral curious gaze.\nBottom row: precisely aligned copies of the same complete head structure, ONLY the eyes gently closed for blinking.\nAll heads face right in a TRUE 45-degree side three-quarter view. Keep the entire crown, both ear tips, nose and jaw within each cell.\n\nCrucial shape design: a COMPACT rounded puppy cranium, with a very short soft rounded muzzle that is clearly a small volume protruding from the FRONT of the face. The muzzle is only about ONE THIRD of the face width, not a wide horizontal moustache. A small matte triangular black nose, clean short muzzle fur, a tiny fine canine mouth crease tucked immediately under it, no visible thick lower-lip or beard slab. A continuous curved forehead-to-cheek shape, no separate mask. Dark warm brown eyes are naturally seated in their sockets, modest in size but friendly, without human eyebrows, black eye bags or exaggerated glass highlights.\nA neat fluffy teddy cut: short small soft curls, natural fine fuzz, rounded cheek outline and an understated crown. Two SHORT round puppy drop ears with fine curls are firmly rooted behind the cheeks; their tips end near the jaw, never far below it. They should frame the round face like small soft ears, NOT tall coiffure, long cascading human hair, cocker spaniel wavy ears, sausage appendages or a theatrical wig.\nThe whole head INCLUDING ears should have a low, broad, softly rounded triangular silhouette, WIDER than tall. Clearly a baby poodle, not an adult spaniel, sheep, monkey, bear, pug or doll.\n\nArt direction: refined storybook gouache and colored-pencil animal illustration, with convincing soft volume and understated realistic canine anatomy. Matte, calm, warm, tactile, attractive at a small website scale. Simplify the fur into coherent soft masses with a few delicate curls; do not use hyper-detailed photographic ringlets. Gentle upper-left warm light with neutral soft fill. Shape and anatomy are the beauty; do not rely on smiles, huge eyes, blush or tongues.\nActual transparent background, no glow, color halo, shadows outside the head, text, labels, accessories, borders or checkerboard. This new face must look structurally different from a long-muzzled decorative spaniel puppet.",
+    "referenceImage": null,
+    "decision": "重新设计完整头骨、短口鼻、下颌、耳根与短垂耳的统一体积；弃用新脸叠旧耳结构。第一次沿用旧风格参考的稿件未采用，因为仍是长口鼻和长发耳。",
+    "processing": "Preserve generated RGBA, mechanical WebP encoding only. Full head and ears move as one coherent anatomical unit; body and limbs remain layered.",
+    "rejectedFirstDraft": {
+      "source": "exec-015a6ad7-73b6-4e7f-8584-96b813d383c1.png",
+      "reason": "Still inherited the old long muzzle and ear silhouette; not integrated.",
+      "prompt": "Use case: stylized-concept.\nAsset type: transparent anatomical character HEAD construction sheet for two animated toy-poodle puppies in a romantic illustrated book website.\nInput image 1 is ONLY a reference for the existing torso's apricot fur color, painterly finish, and soft warm lighting. The OLD head construction is specifically rejected: do not copy its eyes, muzzle, coiffure, long ears or face proportions. This request is a substantial head-shape redesign, not an expression edit.\n\nCreate one 1024x1024 RGBA square sheet, exactly two columns by two rows, four COMPLETE isolated heads on genuinely transparent background. Each full head includes the entire cranial dome, two anatomically attached ears and their tips, cheeks, compact projecting muzzle, nose and a little fur beneath the jaw. No neck, chest, body, collar, accessory, words or backdrop. Place each entire head well inside its 512x512 cell with at least 35px transparent margin. Ear tips cannot cross cell edges.\n\nALL heads view toward screen right from the SAME natural SIDE three-quarter view, head turned about 45 degrees away from frontal. Clearly defined nearer cheek, smaller perspective far eye, ears emerging from the BACK sides of the same skull, muzzle projecting toward the right. Do not make a frontal bear face pasted onto a profile dog.\n\nPrimary artistic change: build a compact, youthful, believable toy-poodle puppy head with coherent three-dimensional anatomy. Moderately rounded low cranial dome (not a huge oval wig), soft but defined cheek volume, small dark brown canine eyes physically nested in the face rather than stuck on its surface, no black mascara or sagging lower eye bags. A short compact OVAL muzzle with an actual bridge and shallow cheek transition; nose modest in size, naturally matte with one very soft highlight. Upper muzzle should NOT be a giant horizontal moustache slab. Short neat lower jaw recedes under the cheeks, thin natural mouth crease, no human smile, lips, giant double jowls, squared-off chin, long beak, snub pug nose or monkey face.\nEars are modest puppy drop ears anchored behind eye level, their compact softly curled silhouette ends just below the chin. They must feel attached to the skull with believable root volume, not long human hair curtains, separate sausages, or arms stuck to the face. The core face should occupy about 70 percent of the complete head's width; full head including ears has approximately a 1.08:1 width-to-height ratio, not a tall coiffure.\nCoat: SHORT soft fine puppy curls, naturally varied and gently grouped, finer around eyelids and the muzzle. No giant caramel ribbon ringlets or sculpted doll curls. No harsh airbrushed outlines, glossy plastic skin or toy ball eyes. The impression is a beautiful living companion dog, innocent and calm, not a caricature or figurine.\n\nColumn 1 is warm honey-APRICOT puppy, matching the reference torso. Column 2 is soft CHAMPAGNE-CREAM puppy with slightly darker biscuit ears, warm beige rather than white.\nRow 1: attentive neutral faces, mouths CLOSED, relaxed expression. The improvement must be visible from anatomy and volume alone, not from smiling or a tongue.\nRow 2: exact same aligned heads as row1, only eyelids gently closed for a blink. No extra expression changes, no tilt, no tongue.\nSame crown/eye/nose/jaw/ear-tip coordinates and scale in each column across both rows.\n\nRendering: sophisticated restrained children's storybook gouache realism with convincing volumetric modeling and subtle pencil-like fur texture, quiet warm light from upper left, gentle cool fill. Matte natural fur, clean precise feathered silhouette, not flat vector, not hyper-detailed AI glamour portrait, not photoreal taxidermy. Preserve actual alpha: no brown glow, fog, contact shadow or checkerboard painted into empty cells.\nDo not include the original reference artwork in the result. Four complete newly designed heads only.",
+      "referenceImage": ".asset-build/memory-book/masters/teddy-apricot-painted.png"
+    },
+    "status": "active",
+    "actualDimensions": [
+      1254,
+      1254
+    ],
+    "transparentBackground": true,
+    "implementation": "V8完整重画头骨、短口鼻、下颌、脸颊、耳根与短垂耳；统一侧三分之二体积，不再叠旧耳。头部116×104、颈根转轴183/137；同源闭眼画稿用于眨眼。身体、四肢与尾保留精绘分层动作。"
+  },
+  {
+    "id": "book-story-pages-v8",
+    "status": "active-texture",
+    "date": "2026-10-04",
+    "generator": "scripts/models/build_story_pages.ps1",
+    "kind": "original-code-artwork",
+    "runtime": "public/memory-book/magic-book.glb",
+    "master": ".asset-build/memory-book/masters/textures",
+    "prompt": null,
+    "promptNote": "原创代码线稿与排版，无imagegen调用。",
+    "provenance": {
+      "created": "2026-10-04",
+      "kind": "original-code-artwork",
+      "generator": "scripts/models/build_story_pages.ps1",
+      "rebuild": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/models/build_story_pages.ps1",
+      "environment": "Windows PowerShell 5.1 with System.Drawing / GDI+. Script encoded UTF-8 with BOM so literal Chinese is preserved on Windows PowerShell.",
+      "artDirection": "Twelve distinct pen-and-ink studies on warm ivory rag paper, sparse scholarly old-magic-book composition, brown ink, restrained old gold, midnight blue on the final cake. No flowers, sci-fi panels, invented memories, dates or campus buildings.",
+      "imageGeneration": "Not used. All artwork is original deterministic C# Graphics linework embedded in the PowerShell generator; paper fibres, flecks and edge wear are procedural. No external bitmap or model assets were used.",
+      "fonts": "Chinese: 华文楷体, arrows: 宋体, Latin: Georgia; rendered from local system fonts. Font files are not redistributed.",
+      "format": {
+        "width": 768,
+        "height": 1024,
+        "fileType": "JPEG",
+        "quality": 90,
+        "color": "RGB"
+      },
+      "productionDirectory": ".asset-build/memory-book/masters/textures",
+      "reviewContactSheet": ".asset-build/memory-book/masters/story-pages-contact.jpg",
+      "verified": "Generator completed successfully. Viewed all 12 pages in contact sheet, confirmed no clipping or overlapping Chinese, distinct illustration on each page, accurate route and school spellings. No repository build/lint needed for isolated raster assets.",
+      "contrastRevision": {
+        "reason": "Actual book-v8-spread2-desktop.jpg showed original print-weight marks were washed out by practical lighting and 768-to-about-200px mipmapping.",
+        "inkRGB": [
+          38,
+          25,
+          16
+        ],
+        "secondaryInkRGB": [
+          96,
+          72,
+          46
+        ],
+        "goldRGB": [
+          118,
+          79,
+          30
+        ],
+        "paperBaseRGB": [
+          210,
+          190,
+          160
+        ],
+        "lineWidth": "All stroke widths multiplied by 1.7, with minimum 1.5px.",
+        "textWeight": "Chinese heading/body and arrows use FontStyle.Bold. Latin remains regular. Original font sizes, content and placements preserved.",
+        "verification": "Regenerated all 12 JPEGs and contact sheet; visually checked stronger linework, legible Chinese, retained hierarchy and no clipping. Final scene appearance requires parent book rebuild and runtime review."
+      },
+      "pages": [
+        {
+          "file": "story-page-00.jpg",
+          "title": "只为你打开",
+          "text": [
+            "师宝宝",
+            "每一段走过的路",
+            "都值得被温柔收藏"
+          ],
+          "drawing": "Flying key and antique circular pencil construction mark"
+        },
+        {
+          "file": "story-page-01.jpg",
+          "title": "她的来路",
+          "text": [
+            "河南周口 → 天津",
+            "北京 · 中国政法大学"
+          ],
+          "drawing": "Three river stops, each with a correct label; narrative route, not geographic map"
+        },
+        {
+          "file": "story-page-02.jpg",
+          "title": "山海之间",
+          "text": [
+            "香港 · 香港科技大学",
+            "深圳"
+          ],
+          "drawing": "Harbor, hills and small sailboat; no invented university campus"
+        },
+        {
+          "file": "story-page-03.jpg",
+          "title": "他的起点",
+          "text": [
+            "湖北武汉",
+            "南京 · 东南大学"
+          ],
+          "drawing": "River and generic river-city engraving; no invented campus or identified skyline"
+        },
+        {
+          "file": "story-page-04.jpg",
+          "title": "向南而行",
+          "text": [
+            "上海 · 上海交通大学",
+            "深圳"
+          ],
+          "drawing": "Original imaginary bridge study and two-stop line; no claimed real bridge or campus"
+        },
+        {
+          "file": "story-page-05.jpg",
+          "title": "在深圳并肩",
+          "text": [
+            "深圳",
+            "两条各自走来的路",
+            "从这里开始并肩"
+          ],
+          "drawing": "Separate brown and gold lines form a soft knot"
+        },
+        {
+          "file": "story-page-06.jpg",
+          "title": "写给你",
+          "text": [
+            "你走过的每一段路，",
+            "都值得被看见。",
+            "愿往后的日子里，有热爱，",
+            "也有被偏爱的安心。"
+          ],
+          "drawing": "Quill, envelope and quiet seal"
+        },
+        {
+          "file": "story-page-07.jpg",
+          "title": "把光留住",
+          "text": [
+            "有些瞬间，",
+            "值得慢慢收藏。"
+          ],
+          "drawing": "Two empty photographic papers drying above contact-print tray; no invented personal photo"
+        },
+        {
+          "file": "story-page-08.jpg",
+          "title": "风会回答",
+          "text": [
+            "愿你保有出发的勇气，",
+            "也保有自由的方向。"
+          ],
+          "drawing": "Windswept grassland and wind pen strokes, no film character"
+        },
+        {
+          "file": "story-page-09.jpg",
+          "title": "星光作伴",
+          "text": [
+            "愿你抬头时，",
+            "总能看见属于自己的光。"
+          ],
+          "drawing": "Original imagined constellation field sketch with pencil construction circles and crescent"
+        },
+        {
+          "file": "story-page-10.jpg",
+          "title": "许一个心愿",
+          "text": [
+            "把想说的话，",
+            "轻轻交给烛光。"
+          ],
+          "drawing": "Three wax candles on an old small tray, with gold flame outlines"
+        },
+        {
+          "file": "story-page-11.jpg",
+          "title": "生日快乐",
+          "text": [
+            "师宝宝",
+            "愿这一岁，明亮、自在，",
+            "被爱包围。"
+          ],
+          "drawing": "Small midnight-blue cake study, cream edging, three candles and gold flecks"
+        }
+      ]
+    }
   }
 ]

@@ -3,6 +3,7 @@ const Journey = lazy(() => import("./Journey"));
 import Pets from "./Pets";
 const Cinema = lazy(() => import("./Cinema"));
 import MagicObject from "./MagicObject";
+import { LAST_BOOK_SPREAD } from "./bookPages";
 import useMusic from "./useMusic";
 import ChapterTransition, { transitionDuration, type TransitionKind } from "./ChapterTransition";
 import { photos, movies } from "./media";
@@ -30,6 +31,8 @@ export default function MemoryGift(){
   const [chromeVisible,setChromeVisible]=useState(true);
   const [reducedMotion,setReducedMotion]=useState(()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [awake,setAwake]=useState(false);
+  const [bookPage,setBookPage]=useState(0);
+  const [bookTurning,setBookTurning]=useState(false);
   const [photo,setPhoto]=useState(0);
   const [wish,setWish]=useState<"lit"|"making"|"blown">("lit");
   const [celebrate,setCelebrate]=useState(0);
@@ -43,7 +46,7 @@ export default function MemoryGift(){
   const go=useCallback((target:number)=>{
     if(target===chapter||target<0||target>4||transition)return;
     timers.current.forEach(clearTimeout);timers.current=[];
-    if(target===0)setAwake(false);
+    if(target===0){setAwake(false);setBookPage(0);}
     setMenu(false);setModal(null);
     const kind:TransitionKind=target<chapter?"return":(["book","sand","wind","star"] as const)[chapter]||"book";
     setTransition(kind);
@@ -66,7 +69,7 @@ export default function MemoryGift(){
   useEffect(()=>{
     const onHash=()=>{
       timers.current.forEach(clearTimeout);timers.current=[];
-      setTransition("");setMenu(false);setModal(null);setAwake(false);
+      setTransition("");setMenu(false);setModal(null);setAwake(false);setBookPage(0);
       setChapter(Math.max(0,ids.indexOf(window.location.hash.slice(1))));
     };
     const onVisibility=()=>setHidden(document.hidden);
@@ -79,8 +82,8 @@ export default function MemoryGift(){
     if(!modal&&dialog.current?.open)dialog.current?.close();
   },[modal]);
   const openBook=()=>{
-    if(transition)return;
-    if(awake){go(1);return;}
+    if(transition||bookTurning)return;
+    if(awake){if(bookPage<LAST_BOOK_SPREAD)setBookPage(value=>value+1);else go(1);return;}
     setAwake(true);
   };
   const blow=()=>{
@@ -101,8 +104,8 @@ export default function MemoryGift(){
       <div className="chapter-content" key={chapter}>
       {chapter===0&&<section className={"invitation "+(awake?"is-awake":"")} aria-label="第一章 这本书只认识你">
         <div className="library-backdrop" aria-hidden="true"><picture><source media="(max-width: 680px)" srcSet={assetUrl("memory-book/library-cinema-portrait.webp")}/><img src={assetUrl("memory-book/library-cinema.webp")} alt="" fetchPriority="high"/></picture><div className="library-window-light"/></div>
-        <MagicObject kind="book" open={awake} reducedMotion={reducedMotion} onOpen={()=>setAwake(value=>!value)}/>
-        <div className="invitation-copy"><p className="eyebrow">序 · 为你启封</p><div className="tiny-rule"/><h1>今晚，<br/>故事只认识<span>你。</span></h1><p className="intro-lines">有一本书，等了很久。<br/>直到你来，它才有了名字。</p><button className="gold-button" onClick={openBook}>{awake?"跟着书页出发":"打开这本书"}<span>✧</span></button><p className="quiet-note">{awake?"师宝宝，这本书终于等到了你。":"一场只为你准备的，生日奇遇"}</p></div>
+        <MagicObject kind="book" open={awake} pageIndex={bookPage} onPageChange={setBookPage} onTurningChange={setBookTurning} reducedMotion={reducedMotion} onOpen={()=>{setAwake(value=>!value);setBookPage(0);}}/>
+        <div className="invitation-copy"><p className="eyebrow">序 · 为你启封</p><div className="tiny-rule"/><h1>今晚，<br/>故事只认识<span>你。</span></h1><p className="intro-lines">有一本书，等了很久。<br/>直到你来，它才有了名字。</p><button className="gold-button" disabled={bookTurning} onClick={openBook}>{!awake?"打开这本书":bookPage<LAST_BOOK_SPREAD?"翻到下一页":"跟着书页出发"}<span>{awake&&bookPage<LAST_BOOK_SPREAD?"→":"✧"}</span></button><p className="quiet-note">{awake?bookPage<LAST_BOOK_SPREAD?"慢慢翻，每一页都为你留下了不同的光。":"师宝宝，接下来，让故事带你出发。":"一场只为你准备的，生日奇遇"}</p></div>
         <div className="floating-dust" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:(9+i*5)%95+"%",top:(i*17)%92+"%",animationDelay:-(i*.7)+"s"}}/>)}</div>
       </section>}
       {chapter===1&&<section className="journey-chapter" aria-label="第二章 两条路终于同向"><Suspense fallback={<p className="chapter-loading">沙粒正在汇集成故事…</p>}><Journey onComplete={()=>go(2)} reducedMotion={reducedMotion} active={!modal&&!menu&&!transition&&!hidden}/></Suspense></section>}

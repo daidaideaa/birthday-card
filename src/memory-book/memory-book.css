@@ -97,6 +97,10 @@
 .chrome-resting .memory-cinema__actions:focus-within,.chrome-resting .memory-cinema[data-cinema-state="ended"] .memory-cinema__actions,.chrome-resting .memory-cinema[data-cinema-state="error"] .memory-cinema__actions{opacity:1;pointer-events:auto}
 @keyframes room-establish{from{transform:scale(1.045);filter:saturate(.75) brightness(.85)}to{transform:scale(1);filter:saturate(.8) brightness(1.06)}}
 @media(min-width:1700px){.invitation-copy{padding-top:29svh}}
+@media(min-width:681px) and (max-height:800px){
+ .invitation-copy{padding-top:23svh}
+ .invitation-copy .quiet-note{display:none}
+}
 @media(min-width:681px) and (max-width:1000px){.invitation-copy{padding-left:5%;width:43%}.invitation-copy h1{font-size:35px}.invitation>.magic-object-book{inset:26% -7% 12% 34%}}
 @media(max-width:680px){
  .invitation{height:max(870px,100svh);min-height:870px}

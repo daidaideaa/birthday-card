@@ -70,6 +70,14 @@ memory-book/teddy-puppy-expressions.webp 是内置imagegen参考已有泰迪风�
 
 useMusic.ts 为本项目原创WebAudio声景，由用户主动开启。本地合成钢琴泛音、轻钟音、柔和低音/和弦及立体声混响，不含电影原声或第三方录音。背景、角色和声音都不冒称人工逐帧绘制或实拍录制。
 
+### V8 · 独立书页与头部结构（2026-10-04）
+
+六張实体纸的十二个正反面，使用 scripts/models/build_story_pages.ps1 原创线稿、程序纸纹和准确中文排版生成，分别嵌入GLB。没有调用图像生成、使用电影道具扫描或套用同一页。系统华文楷体、宋体和Georgia仅用于本机渲染文字，不分发字体文件。内容、制作方式及页列表见统一生成记录 book-story-pages-v8；本地画稿在 masters/textures/story-page-00.jpg 至11.jpg。
+
+memory-book/teddy-head-anatomy.webp 来自内置imagegen新制的1254×1254透明完整头部图集。完整头骨、短口鼻、颊部、耳根与短垂耳统一绘制，替代V7脸片与旧耳的组合。两色各有同结构睁眼/闭眼版本，身体沿用分层原稿；只有机械WebP编码和SVG区域裁切，无程序修改画面内容。首稿因结构仍不理想弃用，两个完整提示词、参考关系与选择理由均记录在 assets/memory-book-artwork.json。原稿和编码入口 scripts/pets/prepare-head-anatomy.py 保留，无付费API或素材购买。
+
+V7 teddy-puppy-expressions.webp 已停止运行时引用；历史来源仍保留。
+
 ## 五张预览照片（2026-10-03）
 
 以下为用户授权的新五章制作资源。五张照片均为网图示意，**不代表本人照片、共同出游或真实往事**；图注是面向未来的祝福。运行配置集中在 `src/memory-book/media.ts`，本地图片使用项目基础路径，适用于 GitHub Pages 的 `/birthday-card/` 子路径。
