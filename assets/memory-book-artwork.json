@@ -124,7 +124,6 @@
     "generator": "built-in image_gen",
     "source": ".asset-build/memory-book/masters/teddy-rig.png",
     "master": ".asset-build/memory-book/masters/teddy-rig.png",
-    "runtime": "public/memory-book/teddy-rig.webp",
     "referenceImage": "public/memory-book/puppy-apricot.webp",
     "prompt": "Use case: illustration-story. Production asset for a real-time 2D cutout animated Teddy poodle puppy, using reference only for the adorable fluffy golden-apricot curly fur style and expressive eyes. Create an EXACT 4-column by 2-row equal-cell sprite parts atlas, 2048x1024, genuinely transparent background. Each component centered in its 512x512 cell, generous empty margins, no component crosses cells. These are DETACHED anatomical parts for one consistent puppy rig, not complete dogs. The body will face three-quarter RIGHT. Top row cells left-to-right: 1) plump horizontal curly-fur torso ONLY, no head/no legs/no tail, chest at right and rump at left, occupies 80% cell width and 50% height, clean fluffy silhouette. 2) large rounded adorable head ONLY with soft cream muzzle, brown nose and small happy open mouth with pink tongue, two glossy dark puppy eyes, NO ears and no neck, head looks slightly right; head occupies 75% width and 72% height. 3) ONE long fluffy floppy ear, rounded teardrop shape, dark cinnamon inner shading, hangs downward, narrow attachment at top, occupies 36% width and 70% height. 4) ONE curled fluffy pompom tail on a curved tapered short stem, rising toward upper left, occupies 45% width and 64% height. Bottom row cells left-to-right: 5) ONE complete front leg including big soft round paw, joint at top, slight bend, thick fluffy silhouette, occupies 32% width and 65% height. 6) ONE complete rear leg including rounded thigh and soft paw, occupies 42% width and 65% height. 7) same detached head as top row cell 2, same pose/size/position/muzzle/nose/mouth, but both eyes gently CLOSED for blink, no ears. 8) same detached head as top row cell 2, same pose/size/position/muzzle/nose, eyes delighted CLOSED and mouth happy smile, no ears. Visual quality: premium traditionally painted animated feature-film development art, real tiny curls with soft watercolor/gouache fur, clear warm shading, rich appealing facial planes, hand-painted rather than 3D render. NO labels, NO text, NO backgrounds, NO shadows beyond local form shading, NO accessories. Arrange parts exact within 4x2 grid so they can be addressed independently by SVG viewBox.",
     "transparentBackground": true,
@@ -143,7 +142,10 @@
     "replacedBy": [
       "teddy-apricot-painted",
       "teddy-cream-painted"
-    ]
+    ],
+    "historicalRuntime": "public/memory-book/teddy-rig.webp",
+    "archivedExport": "https://github.com/daidaideaa/birthday-card/blob/74792f5a079d434b47910d251562f91a5fa9b6bb/public/memory-book/teddy-rig.webp",
+    "runtimeUsage": "2026-10-04 清理：退役运行图已从当前仓库和发布目录移除；母版、完整提示词和Git历史导出仍保留。"
   },
   {
     "id": "wind-and-stars",
@@ -270,7 +272,6 @@
     "generator": "built-in image_gen",
     "source": "exec-0e47b898-8b70-41fb-a53b-624abda0d2f1.png",
     "master": ".asset-build/memory-book/masters/teddy-puppy-expressions.png",
-    "runtime": "public/memory-book/teddy-puppy-expressions.webp",
     "referenceImage": ".asset-build/memory-book/masters/teddy-apricot-painted.png",
     "prompt": "Use case: identity-preserve.\nAsset type: professional transparent HEAD EXPRESSION ATLAS for two hand-painted storybook toy-poodle puppies, to replace the heads in the attached existing layered dog rig. The attached sheet is a style and color reference only. Create a NEW 2-column by 3-row portrait sheet, ideally 1024 x 1536, containing exactly SIX isolated earless puppy heads, one centered in each equal cell, generous transparent gaps. Actual transparent background, no floor, borders, words, labels or shadows. Each head fits inside a 410 x 400 area of its 512 x 512 cell.\n\nMake a clear aesthetic improvement: more endearing, youthful real toy-poodle puppies. Soft rounded cheek volume, gently domed forehead with a compact teddy haircut, slightly shorter but still genuinely projecting canine muzzle, glossy small black nose, alert liquid chestnut eyes with restrained natural catchlights and a warm innocent expression. No sad adult dog face. No huge doll eyes, human lips, caricature smile, blush, woolly sheep scallops or vector shapes. The fine individual wavy curls must be rich, painterly, varied, feathered at the edges and softly shaded. Same sophisticated gouache and colored-pencil realism and upper-left warm light as the reference. Preserve recognizably canine anatomy.\n\nCRITICAL: Heads only, including full topknot and both cheeks but ending naturally just below the jaw. NO neck, chest, external dangling ears, body, paws, collars or accessories. The external drop ears remain separate existing rig layers. All six faces keep exactly the same gentle three-quarter viewing angle, looking slightly to the RIGHT. Same composition, identical scale and alignment across each column; nose and eye locations must match across that puppy's three expressions.\n\nLEFT column: the APRICOT puppy, warm honey-apricot fur and a lively, curious character.\nRIGHT column: its CHAMPAGNE-CREAM companion, warm buttery beige curls and deeper biscuit ear-root fur, softer round cheeks and an unassuming sweetness. Clearly distinguish the colors without pure white or sheep-like wool.\n\nROW 1: both puppies attentive and gently happy, mouth naturally closed, bright relaxed eyes looking softly up toward the viewer. Endearing companion-dog expression, not a fixed toy stare.\nROW 2: EXACT matching heads from row 1, both eyes softly closed for a contented blink, mouth still closed, muzzle and silhouette unchanged.\nROW 3: EXACT matching heads from row 1, delighted but subtle: relaxed eyes and a tiny open-mouth pant with a small pink tongue tip, an authentic puppy greeting, no human grin. Same head outline, angle, eye placement and nose position.\n\nThis is character animation production art: the three expressions per puppy must align in place without jumping. Keep natural fluffy edge alpha, no colored backdrop. Polished, tender and irresistibly puppy-like, a real charming pet illustrated by a professional artist.",
     "transparentBackground": true,
@@ -281,7 +282,9 @@
     "processing": "仅RGBA WebP编码；脸由SVG viewBox裁切，未程序修改画稿。",
     "implementation": "两只幼犬各有睁眼/闭眼/轻吐舌三脸；头耳尾腿连续分层运动，错时歪头/招呼/鞠躬、抚摸和同伴回应。点击范围缩至犬身，绘制尺寸/安全边界保持。",
     "replacedBy": "teddy-head-anatomy",
-    "runtimeUsage": "V7历史脸稿已停止引用；保留原文件与提示词，不再把新表情描述成结构修复。"
+    "runtimeUsage": "2026-10-04 清理：退役运行图已从当前仓库和发布目录移除；母版、完整提示词和Git历史导出仍保留。",
+    "historicalRuntime": "public/memory-book/teddy-puppy-expressions.webp",
+    "archivedExport": "https://github.com/daidaideaa/birthday-card/blob/74792f5a079d434b47910d251562f91a5fa9b6bb/public/memory-book/teddy-puppy-expressions.webp"
   },
   {
     "id": "library-cinema-portrait",

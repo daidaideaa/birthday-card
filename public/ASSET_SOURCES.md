@@ -66,7 +66,7 @@
 
 书封与纸页去除花卉藤蔓，改为旧皮铜件、封蜡与虚构魔法笔记。完整提示词在 assets/memory-book-artwork.json；母版 book-wizard-cover-source.png、book-spell-notes-source.png 及 wizard-book-generation.json 位于本地忽略的制作目录。memory-book/manuscript-leaf.webp 是同一手稿的机械WebP编码，用于纸页经过镜头的转场。
 
-memory-book/teddy-puppy-expressions.webp 是内置imagegen参考已有泰迪风格生成的RGBA表情图集（1024×1536）；分别为睁眼、闭眼和轻吐舌，身体与长耳仍单独运动。完整原始提示词及参考关系在生成记录；机械编码入口 scripts/pets/prepare-puppy-expressions.py。没有购买素材或调用付费API。
+memory-book/teddy-puppy-expressions.webp 是内置imagegen参考已有泰迪风格生成的RGBA表情图集（1024×1536）；分别为睁眼、闭眼和轻吐舌，身体与长耳仍单独运动。完整原始提示词及参考关系在生成记录；旧机械编码脚本已随退役导出清理，可从V8提交的Git历史恢复。没有购买素材或调用付费API。
 
 useMusic.ts 为本项目原创WebAudio声景，由用户主动开启。本地合成钢琴泛音、轻钟音、柔和低音/和弦及立体声混响，不含电影原声或第三方录音。背景、角色和声音都不冒称人工逐帧绘制或实拍录制。
 
@@ -76,7 +76,7 @@ useMusic.ts 为本项目原创WebAudio声景，由用户主动开启。本地合
 
 memory-book/teddy-head-anatomy.webp 来自内置imagegen新制的1254×1254透明完整头部图集。完整头骨、短口鼻、颊部、耳根与短垂耳统一绘制，替代V7脸片与旧耳的组合。两色各有同结构睁眼/闭眼版本，身体沿用分层原稿；只有机械WebP编码和SVG区域裁切，无程序修改画面内容。首稿因结构仍不理想弃用，两个完整提示词、参考关系与选择理由均记录在 assets/memory-book-artwork.json。原稿和编码入口 scripts/pets/prepare-head-anatomy.py 保留，无付费API或素材购买。
 
-V7 teddy-puppy-expressions.webp 已停止运行时引用；历史来源仍保留。
+V7 teddy-puppy-expressions.webp 与更早的 teddy-rig.webp 已从当前发布目录移除，二者的母版和完整来源记录仍保留；历史导出见统一记录中的 archivedExport。
 
 ## 五张预览照片（2026-10-03）
 

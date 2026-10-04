@@ -12,7 +12,7 @@
 
 ## 当前版本与下一次提交
 
-上一版电影式布局已通过[工作流 37180416149](https://github.com/daidaideaa/birthday-card/actions/runs/37180416149)发布，提交 `5027494bad7c0dfa38a9a624856bdca2dda1586f`。后续材质与自动叙事版本沿用同一发布流程，最新实际结果记录在 `.asset-build/memory-book/publish-blobs.json` 与 Pages 工作流中。
+最近的V8视觉版本已部署。最新实际提交、验证结果与工作流地址以 `.asset-build/memory-book/publish-blobs.json` 和 Pages 工作流为准。
 
 本机目录 `birthday-card-resume` 的 Git 分支仍是历史 `experience/finish-duet`，包含大量新版修改和未跟踪文件。不要直接推整个旧分支、合并旧 PR #8、强推 main 或清掉工作区。下一次发布基于届时远端 main，将核对过的当前文件和删除项纳入提交，使用非强制更新，并等待 Pages 结果。
 

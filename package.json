@@ -9,7 +9,6 @@
     "lint": "eslint .",
     "preview": "vite preview --host 0.0.0.0",
     "deploy:check": "node scripts/check-memory-book.mjs",
-    "deploy:smoke": "node scripts/check-memory-book.mjs",
     "postbuild": "node scripts/check-memory-book.mjs"
   },
   "dependencies": {
