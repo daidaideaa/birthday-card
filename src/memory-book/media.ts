@@ -6,9 +6,6 @@ export interface MemoryPhoto {
   caption: string;
   credit: string;
   sourceUrl: string;
-  placeholder: true;
-  width: number;
-  height: number;
   objectPosition: string;
 }
 
@@ -20,9 +17,6 @@ export const photos: MemoryPhoto[] = [
     caption: '希望往后的日子，有很多可以一起慢慢看的落日。',
     credit: 'Veronica MORENO-ALVAREZ / Unsplash',
     sourceUrl: 'https://unsplash.com/photos/ocean-waves-at-sunset-with-pink-sky-l_yA9G07D4A',
-    placeholder: true,
-    width: 1600,
-    height: 1067,
     objectPosition: '50% 50%',
   },
   {
@@ -32,9 +26,6 @@ export const photos: MemoryPhoto[] = [
     caption: '愿我们在普通的日子里，也能找到一点小小的魔法。',
     credit: 'Aaron Burden / Unsplash',
     sourceUrl: 'https://unsplash.com/photos/opened-book-on-brown-field-during-daytime-4uX_r8OhJ_o',
-    placeholder: true,
-    width: 1600,
-    height: 1200,
     objectPosition: '50% 62%',
   },
   {
@@ -44,9 +35,6 @@ export const photos: MemoryPhoto[] = [
     caption: '愿城市再大，也有一处温暖，可以让你安心停下来。',
     credit: 'Paolo Syiaco / Unsplash',
     sourceUrl: 'https://unsplash.com/photos/bokeh-photography-of-city-lights-during-night-time-Uc8wfh1tPUk',
-    placeholder: true,
-    width: 1600,
-    height: 1067,
     objectPosition: '50% 55%',
   },
   {
@@ -56,9 +44,6 @@ export const photos: MemoryPhoto[] = [
     caption: '还有很多风景没有看过，留给往后的我们。',
     credit: 'Stefano Pinotti / Unsplash',
     sourceUrl: 'https://unsplash.com/photos/sunlight-streams-through-a-forest-path-AqFtUA6WhTI',
-    placeholder: true,
-    width: 1067,
-    height: 1600,
     objectPosition: '50% 60%',
   },
   {
@@ -68,9 +53,6 @@ export const photos: MemoryPhoto[] = [
     caption: '今晚，所有温柔的星光，都想把祝福送给你。',
     credit: 'Nathan Anderson / Unsplash',
     sourceUrl: 'https://unsplash.com/photos/milky-way-over-mountain-landscape-at-night-L95xDkSSuWw',
-    placeholder: true,
-    width: 1600,
-    height: 1077,
     objectPosition: '50% 50%',
   },
 ];
@@ -78,7 +60,6 @@ export const photos: MemoryPhoto[] = [
 export interface MemoryFilm {
   id: string;
   title: string;
-  year: number;
   credit: string;
   sourceUrl: string;
 }
@@ -89,14 +70,12 @@ export const movies: MemoryFilm[] = [
   {
     id: 'spirit',
     title: '小马王（2002）',
-    year: 2002,
     credit: '© DreamWorks Animation · 短动作来源 MrThreat / Tenor',
     sourceUrl: 'https://tenor.com/view/horses-spirit-spirit2002-spirit-stallion-of-the-cimarron-gif-14770152',
   },
   {
     id: 'lion-king',
     title: '狮子王（1994）',
-    year: 1994,
     credit: '© Disney · 短动作来源 Sephirock38 / Tenor',
     sourceUrl: 'https://tenor.com/view/lion-king-simba-nala-in-love-gif-18769637',
   },

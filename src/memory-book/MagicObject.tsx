@@ -86,9 +86,7 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
     onPageChange?.(next);
   };
   const state = useRef({ open, extinguished, reducedMotion, onOpen, pageIndex: activePage, changePage, onTurningChange, readingSide, setReadingSide, mechanismTriggers, triggerMechanism });
-  const controlsRef = useRef<OrbitControls | null>(null);
   const resetViewRef = useRef<(() => void) | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [turning, setTurning] = useState(true);
   const [pageTurning, setPageTurning] = useState(false);
@@ -113,13 +111,11 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.domElement.setAttribute('aria-label', kind === 'book' ? '可旋转、可翻开的立体魔法书' : '可旋转欣赏的立体星空蛋糕');
     if (kind === 'book') { renderer.domElement.tabIndex = 0; renderer.domElement.setAttribute('aria-label', '立体魔法书：拖动观察，点选纸页近读，回车打开或触发本页机关'); }
-    renderer.domElement.style.touchAction = 'pan-y';
     element.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(kind === 'book' ? 36 : 32, 1, .1, 50);
-    cameraRef.current = camera;
     camera.position.set(...(kind === 'book' ? [2.65, 5.25, 6.10] : [2.45, 2.35, 5.7]) as [number, number, number]);
-    const controls = new OrbitControls(camera, renderer.domElement); controlsRef.current = controls;
+    const controls = new OrbitControls(camera, renderer.domElement);
     renderer.domElement.style.touchAction = "pan-y";
     controls.target.set(kind === 'book' ? -.12 : 0, kind === 'book' ? .23 : 1.01, 0);
     controls.enableDamping = true; controls.dampingFactor = .065; controls.enablePan = false;
@@ -401,7 +397,6 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
       renderer.domElement.removeEventListener('pointerdown', down); renderer.domElement.removeEventListener('pointerup', up); renderer.domElement.removeEventListener('pointercancel', cancel);
       renderer.domElement.removeEventListener('keydown', keydown);
       disposeObject(scene); pageTexture?.dispose(); plumeTexture.dispose(); dustMap.dispose(); contactMap.dispose(); envTarget.dispose(); renderer.dispose(); renderer.domElement.remove();
-      controlsRef.current = null; cameraRef.current = null;
       resetViewRef.current = null;
       if (kind === 'book' && reportedTurning) state.current.onTurningChange?.(false);
     };

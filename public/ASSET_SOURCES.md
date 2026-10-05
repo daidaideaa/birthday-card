@@ -74,7 +74,7 @@ useMusic.ts 为本项目原创WebAudio声景，由用户主动开启。本地合
 
 六張实体纸的十二个正反面，使用 scripts/models/build_story_pages.ps1 原创线稿、程序纸纹和准确中文排版生成，分别嵌入GLB。没有调用图像生成、使用电影道具扫描或套用同一页。系统华文楷体、宋体和Georgia仅用于本机渲染文字，不分发字体文件。内容、制作方式及页列表见统一生成记录 book-story-pages-v8；本地画稿在 masters/textures/story-page-00.jpg 至11.jpg。
 
-memory-book/teddy-head-anatomy.webp 来自内置imagegen新制的1254×1254透明完整头部图集。完整头骨、短口鼻、颊部、耳根与短垂耳统一绘制，替代V7脸片与旧耳的组合。两色各有同结构睁眼/闭眼版本，身体沿用分层原稿；只有机械WebP编码和SVG区域裁切，无程序修改画面内容。首稿因结构仍不理想弃用，两个完整提示词、参考关系与选择理由均记录在 assets/memory-book-artwork.json。原稿和编码入口 scripts/pets/prepare-head-anatomy.py 保留，无付费API或素材购买。
+memory-book/teddy-head-anatomy.webp 来自内置imagegen新制的1254×1254透明完整头部图集。完整头骨、短口鼻、颊部、耳根与短垂耳统一绘制，替代V7脸片与旧耳的组合。两色各有同结构睁眼/闭眼版本，身体沿用分层原稿；只有机械WebP编码和SVG区域裁切，无程序修改画面内容。首稿因结构仍不理想弃用，两个完整提示词、参考关系与选择理由均记录在 assets/memory-book-artwork.json。原稿和生成记录保留于本机母版目录；历史编码脚本已退役，无付费API或素材购买。
 
 V7 teddy-puppy-expressions.webp 与更早的 teddy-rig.webp 已从当前发布目录移除，二者的母版和完整来源记录仍保留；历史导出见统一记录中的 archivedExport。
 
@@ -113,6 +113,6 @@ V7 teddy-puppy-expressions.webp 与更早的 teddy-rig.webp 已从当前发布�
 - 泰迪为内置image_gen五角度独立头/躯干/四肢/尾图稿，杏色、奶油色和闭眼图分别生成；Canvas逐件关节动画与朝向插值，不是整张静姿图片移动。来源与完整提示词见统一生成记录teddy-articulated-turnaround-v9。
 - 旧手机背景与三份退役泰迪导出已移至Windows回收站；可编辑母版、历史出处和Git历史保留。
 - 双人沙画沿用SandKit许可，两个实例总预算52,000粒；手机DPR上限1.5的本地渲染调整有代码注释。
-- 电影保持已提取的原版短动作与既有来源。V9重排竖屏镜头、限制角色过度放大并改进地面衔接。尝试核实[Disney官方音乐视频](https://www.youtube.com/watch?v=25QyCxVkXwQ)与[Movieclips小马王片段](https://www.youtube.com/watch?v=QSqUVzkUvj8)的更高清源，均在格式获取阶段遇到TLS连接提前断开，未取得新源，不能声称已升级原片分辨率。检查记录保留film-source/source-check-20261005.json。
+- 电影保持已提取的原版短动作与既有来源。V9重排竖屏镜头、限制角色过度放大并改进地面衔接。尝试核实[Disney官方音乐视频](https://www.youtube.com/watch?v=25QyCxVkXwQ)与[Movieclips小马王片段](https://www.youtube.com/watch?v=QSqUVzkUvj8)的更高清源，均在格式获取阶段遇到TLS连接提前断开，未取得新源，不能声称已升级原片分辨率。未取得新的原片源；临时检查记录已清理。
 
 本轮没有购买素材、订阅或调用额外收费API。

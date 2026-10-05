@@ -21,5 +21,5 @@ export const BOOK_MECHANISMS: Partial<Record<number, { id: BookMechanism; label:
 };
 
 export function clampBookPage(index: number) {
-  return Number.isFinite(index) ? Math.max(0, Math.min(LAST_BOOK_SPREAD, Math.round(index))) : 0;
+  return Math.max(0, Math.min(LAST_BOOK_SPREAD, index));
 }

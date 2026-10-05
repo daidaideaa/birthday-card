@@ -126,7 +126,7 @@ export default function MemoryGift(){
         </div>
         <div className="chapter-bottom"><span>把平凡的一天，也过成值得收藏的一页。</span><button className="text-button" onClick={()=>setModal("letter")}>打开给你的信 <b>↗</b></button><button className="text-button" onClick={()=>go(3)}>下一章 <b>→</b></button></div>
       </section>}
-      {chapter===3&&<Suspense fallback={<p className="chapter-loading">风正把这一页轻轻吹开…</p>}><Cinema reducedMotion={reducedMotion} muted={!music.playing} active={!modal&&!menu&&!transition&&!hidden} onComplete={()=>go(4)}/></Suspense>}
+      {chapter===3&&<Suspense fallback={<p className="chapter-loading">风正把这一页轻轻吹开…</p>}><Cinema reducedMotion={reducedMotion} active={!modal&&!menu&&!transition&&!hidden} onComplete={()=>go(4)}/></Suspense>}
       {chapter===4&&<section className={"wish-chapter wish-"+wish} aria-label="第五章 魔法星空蛋糕">
         <RoomScene finale active={!hidden&&!modal&&!menu&&!transition}/>
         <div className="wish-heading" data-pet-obstacle><p className="eyebrow">终章 · 为你点亮</p><h1>{wish==="blown"?"师宝宝，生日快乐。":wish==="making"?"这一刻，把愿望留给你。":"今晚的星光，都为你亮起。"}</h1><p>{wish==="blown"?"愿你一直勇敢，也一直被爱。":wish==="making"?"不用说出来，也不必着急。许好了，就轻轻吹灭蜡烛。":"先别急着吹灭蜡烛，把最想实现的愿望，悄悄放在心里。"}</p></div>

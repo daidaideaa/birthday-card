@@ -5,10 +5,8 @@ import { paintCinema, type Atlas, type Character, type Scenery } from './cinemaS
 
 export interface CinemaProps {
   reducedMotion: boolean;
-  muted: boolean;
   active?: boolean;
   onComplete: () => void;
-  onPlaybackChange?: (playing: boolean) => void;
 }
 type Playback = 'loading' | 'ready' | 'playing' | 'paused' | 'ended' | 'error';
 const LENGTH = 20;
@@ -32,10 +30,9 @@ async function loadCharacter(name: string, signal: AbortSignal): Promise<Charact
   const response = await fetch(assetUrl(`memory-book/films/${name}.json`), { signal });
   if (!response.ok) throw new Error('Character animation is unavailable');
   const atlas = await response.json() as Atlas;
-  if (!atlas.frames || !atlas.frameWidth || !atlas.frameHeight || !atlas.columns || !Array.isArray(atlas.durations) || atlas.durations.length !== atlas.frames) throw new Error('Invalid character animation');
   return { image: await loadImage(atlas.src), atlas };
 }
-export default function Cinema({ reducedMotion, active = true, onComplete, onPlaybackChange }: CinemaProps) {
+export default function Cinema({ reducedMotion, active = true, onComplete }: CinemaProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const theater = useRef<HTMLDivElement>(null);
   const time = useRef(0);
@@ -54,7 +51,6 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
     const timer = window.setTimeout(() => completeRef.current(), 2600);
     return () => clearTimeout(timer);
   }, [state, active, reducedMotion]);
-  useEffect(() => { onPlaybackChange?.(state === 'playing' && active && !reducedMotion); return () => onPlaybackChange?.(false); }, [state, active, reducedMotion, onPlaybackChange]);
   useEffect(() => {
     const abort = new AbortController(); let cancelled = false; setState('loading');
     Promise.all([loadImage('memory-book/wind-and-stars.webp'), loadCharacter('spirit-pair', abort.signal), loadCharacter('lion-nuzzle', abort.signal)])
@@ -92,8 +88,7 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
       element.width = Math.round(element.clientWidth * ratio); element.height = Math.round(element.clientHeight * ratio);
       const bounds = element.getBoundingClientRect(), parent = theater.current?.getBoundingClientRect();
       if (parent) {
-        const width = bounds.width, height = bounds.height;
-        setFraming({width,height,x:bounds.left-parent.left+(bounds.width-width)/2,y:bounds.top-parent.top+(bounds.height-height)/2});
+        setFraming({width:bounds.width,height:bounds.height,x:bounds.left-parent.left,y:bounds.top-parent.top});
       }
       render();
     };
@@ -120,7 +115,6 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
     setState((value) => value === 'playing' ? 'paused' : 'playing');
   };
   const makeWish = () => { wishUntil.current = performance.now() + 2100; setWishCount((n) => n + 1); if (state === 'ready') start(); };
-  const finish = () => { onPlaybackChange?.(false); onComplete(); };
   const caption = position < 5 ? '愿你有奔向旷野的自由。' : position < 8 ? '风走过很远的路，终于遇见了星光。' : position < 15 ? '也有停下时，可以安心靠近的温柔。' : '今晚，把最亮的一颗，留给你。';
   const starFall = blend(position, 15, LENGTH);
   const starStyle = { left: framing.x + (.73 - starFall * .12) * framing.width, top: framing.y + (.16 + starFall * starFall * .44) * framing.height };
@@ -136,7 +130,7 @@ export default function Cinema({ reducedMotion, active = true, onComplete, onPla
     <div className="memory-cinema__caption" data-pet-obstacle aria-live="polite"><p key={caption}>{caption}</p><small>{state === 'paused' && !reducedMotion ? '停在这里，也很好。' : wishCount > 0 ? '你的祝福，星星已经听见了。' : '让风替你收藏，自由与温柔。'}</small></div>
     <div className="memory-cinema__actions" data-pet-obstacle>
       <button type="button" className="memory-cinema__quiet-button" onClick={start} disabled={loading}>{state === 'error' ? '再展开一次' : reducedMotion ? state === 'ended' ? '回到旷野' : '下一幅星光' : state === 'playing' ? '停留片刻' : state === 'ended' ? '再赴一场奇遇' : '让风继续'}</button>
-      <button type="button" className={`memory-cinema__next${state === 'ended' ? ' is-ready' : ''}`} onClick={finish}>{state === 'ended' ? '把星光，变成你的生日烛光' : '跟着星光走'} <span aria-hidden="true">→</span></button>
+      <button type="button" className={`memory-cinema__next${state === 'ended' ? ' is-ready' : ''}`} onClick={onComplete}>{state === 'ended' ? '把星光，变成你的生日烛光' : '跟着星光走'} <span aria-hidden="true">→</span></button>
     </div>
   </section>;
 }
