@@ -268,7 +268,8 @@ coverMat=pbr('PBR | old wizard calfskin and copper tooling',*maps[:3])
 leather=pbr('PBR | worn espresso calfskin',maps[3],maps[4],maps[5])
 paper=pbr('PBR | uncoated rag paper',maps[7],maps[8],roughness=.95)
 pageEdges=pbr('PBR | deckled page edges',maps[9],maps[8],roughness=.95)
-illustration=pbr('PBR | handwritten spellbook paper',maps[6],maps[8],roughness=.96)
+illustration=pbr('PBR | private invitation endpaper',TEXTURES/'story-endpaper.jpg',maps[8],roughness=.97)
+noteMessage=pbr('PBR | folded personal note paper',TEXTURES/'note-message.jpg',maps[8],roughness=.97)
 storyPages=[]
 for index in range(12):
     artwork=TEXTURES/f'story-page-{index:02d}.jpg'
@@ -425,6 +426,21 @@ for pageIndex in range(6):
             polygon.material_index=0
         else:
             polygon.material_index=2
+    if pageIndex==5:
+        # A real two-fold note sits on the final recto, with separate live hinges.
+        noteRoot=empty('FoldedNoteRoot');noteRoot.parent=ph
+        box('Note_thick_base',(1.2,0,.039),(1.86,2.30,.012),paper,.018,noteRoot)
+        bpy.ops.mesh.primitive_plane_add(size=1,location=(1.2,0,.047))
+        printed=bpy.context.object;printed.dimensions=(1.81,2.24,0)
+        bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
+        finish(printed,'Note_printed_message',noteMessage,noteRoot)
+        for name,yy,offset in [('NoteTopFold',1.14,-.57),('NoteBottomFold',-1.14,.57)]:
+            fold=empty(name,(1.2,yy,.062));fold.parent=noteRoot
+            box(name+'_paper',(0,offset,0),(1.85,1.14,.010),paper,.011,fold)
+            curve(name+'_crease',[(-.86,0,.007),(.86,0,.007)],.002,edgeInk,fold)
+        # Narrow copper tab and hand pressed seal are actual raised fittings.
+        box('Note_copper_tab',(1.2,-.11,.078),(.20,.27,.005),gold,.008,noteRoot)
+        seal=cylinder('Note_wax_dot',(1.2,-.11,.087),.055,.014,waxSeal,32,.005);seal.parent=noteRoot
 export('magic-book')
 
 # A book-only iteration never rewrites the approved cake or its editable master.

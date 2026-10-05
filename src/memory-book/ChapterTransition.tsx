@@ -78,7 +78,7 @@ export default function ChapterTransition({ kind, reducedMotion, photo }: { kind
         ctx.globalAlpha = opacity; ctx.fillStyle = kind === 'sand' ? '#141512' : '#10151c'; ctx.fillRect(0, 0, width, height);
         const grow = between(p, .3, .87);
         const w = kind === 'wind' ? width * (.45 + grow * .68) : Math.min(width * .7, 640) * (.86 + grow * .14);
-        const h = kind === 'wind' ? height * (.45 + grow * .68) : w * .64;
+        const h = kind === 'wind' ? height * (.45 + grow * .68) : w * (width < 700 ? .82 : .64);
         ctx.save(); ctx.translate(width * .5, height * .47); ctx.rotate((1 - grow) * -.045);
         ctx.globalAlpha = opacity * between(p, .18, .46);
         ctx.shadowColor = '#0008'; ctx.shadowBlur = 45; ctx.fillStyle = '#b9aa8e';
@@ -96,7 +96,7 @@ export default function ChapterTransition({ kind, reducedMotion, photo }: { kind
           const size = 1 + noise(i + 1); ctx.fillRect(x, y, size, size);
         }
       } else {
-        ctx.globalAlpha = opacity; ctx.fillStyle = '#09111e'; ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = opacity * .82; ctx.fillStyle = '#0c1624'; ctx.fillRect(0, 0, width, height);
         const fall = between(p, .04, .65), light = between(p, .44, .7);
         const sx = width * (.7 - fall * .2), sy = height * (.17 + fall * fall * .38);
         for (let i = 0; i < 64; i++) {

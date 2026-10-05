@@ -171,12 +171,11 @@
   },
   {
     "id": "teddy-apricot-painted",
-    "status": "active",
+    "status": "retired",
     "date": "2026-10-04",
     "generator": "built-in image_gen",
     "source": "exec-bcb96c8e-9e94-4883-b2b8-d78efbdc6b31.png",
     "master": ".asset-build/memory-book/masters/teddy-apricot-painted.png",
-    "runtime": "public/memory-book/teddy-apricot-painted.webp",
     "prompt": "Use case: illustration-story.\nAsset type: high-end transparent layered character rig atlas for a hand-painted animated birthday storybook website.\nCreate ONE production-quality warm APRICOT TEDDY POODLE puppy rig sheet, with 8 clearly separated cutout parts in a perfectly regular 4-column by 2-row layout on genuine transparency, wide landscape canvas at the highest available detail. Leave at least 35 pixels transparent space between every cell and keep every part fully inside its own cell. NO labels, NO writing, NO borders, NO contact sheet background.\n\nThe dog must read unmistakably as a beautiful small toy poodle in a teddy haircut: naturally proportioned canine face, short but visibly projecting muzzle, shiny small black nose, almond-round deep chocolate eyes with subtle living highlights, floppy long furry drop ears, delicate paws, compact real canine torso. Extremely appealing, gentle and soulful, professionally painted gouache and fine colored pencil finish. Luxurious warm cinnamon/apricot wavy curls with fine irregular wisps and believable soft volume, rich painterly shading and glints, not uniform curly symbols. It should feel like a lovingly illustrated REAL PET, not a stuffed lamb or plastic toy, not a vector icon, not a human-faced mascot. Closed mouth with a tiny natural canine smile, no huge cartoon grin, no blush, no clothes or collar, no accessories.\n\nPrecise cell contents, all belonging to this SAME single dog and with consistent soft upper-left lighting:\nTOP ROW from left to right:\n1. ONLY the compact side-view furry TORSO, shoulder/chest at the RIGHT and rump at LEFT. Soft integrated chest, natural waist. No head, no ears, no legs, no tail. Beautiful organically painted continuous fur across body; no dismemberment or exposed anatomy.\n2. ONLY the full furry HEAD with open expressive eyes, facing slightly to the RIGHT in a gentle three-quarter portrait. Omit the external hanging ears entirely because the ears are separate animation layers. Rounded poodle topknot, not circular sheep face; obvious 3D canine muzzle. Include short furry neck base for overlap.\n3. ONLY ONE separate long soft DROP EAR with its narrow hidden root at TOP and a wider rounded furry tip below, side/front three-quarter view. This will be mirrored for the far ear. Same apricot fur, slightly deeper warm brown inside.\n4. ONLY the short fluffy curved upward TAIL, root at lower RIGHT and fluffy curl curving to upper LEFT. Painted natural wavy fur, not a ball on a stick.\nBOTTOM ROW from left to right:\n5. ONLY ONE front LEG in neutral standing pose, broad hidden furry shoulder root at TOP, tapered short foreleg and beautifully drawn compact PAW at BOTTOM, toes toward RIGHT. Complete limb; no torso.\n6. ONLY ONE rear LEG in neutral standing pose, furry upper haunch at TOP, natural curved canine hock and compact PAW at BOTTOM, toes toward RIGHT. Complete limb; no torso.\n7. EXACTLY the SAME isolated earless HEAD as top-row cell 2, same angle, scale, outline, muzzle and location within its cell, but with both EYES GENTLY CLOSED in a relaxed blink. Mouth stays closed. Include same neck base.\n8. ONE whole assembled reference dog standing naturally on four paws, body side-on facing RIGHT and head gently turned three-quarter toward us, showing how those same parts naturally belong together. No ground shadow or floor.\n\nMaintain accurate dog anatomy, distinctive poodle drop ears, rich natural fur and a tender eye expression. This is a polished professional character art asset, avoid simplistic scalloped clouds or repeated decorative circles. ALL cells truly transparent behind the artwork.",
     "actualDimensions": [
       1536,
@@ -184,16 +183,17 @@
     ],
     "transparentBackground": true,
     "processing": "仅WebP编码并保留生成alpha；运行时按部件区域裁切和关节变换，整犬参考格不参与动画。",
-    "implementation": "V8仅保留身体、四肢、尾与卧姿前爪；旧头、旧耳全部停止引用，整犬参考格不运行。完整新头含耳使用teddy-head-anatomy。"
+    "implementation": "V8仅保留身体、四肢、尾与卧姿前爪；旧头、旧耳全部停止引用，整犬参考格不运行。完整新头含耳使用teddy-head-anatomy。",
+    "archivedExport": "public/memory-book/teddy-apricot-painted.webp",
+    "runtimeUsage": "V9由分层窗景/多角度泰迪替代；旧导出移入回收站，母版与提示词保留。"
   },
   {
     "id": "teddy-cream-painted",
-    "status": "active",
+    "status": "retired",
     "date": "2026-10-04",
     "generator": "built-in image_gen",
     "source": "exec-40c1b8a3-c94c-4f50-9259-145c512c8d4e.png",
     "master": ".asset-build/memory-book/masters/teddy-cream-painted.png",
-    "runtime": "public/memory-book/teddy-cream-painted.webp",
     "prompt": "Use case: identity-preserve.\nAsset type: transparent layered hand-painted storybook teddy-poodle character rig atlas.\nReference/edit target: the attached APRICOT poodle rig sheet. Preserve its professional painterly quality, eight-part atlas layout, every cell's placement, the individual anatomical part boundaries, the neutral standing limb angles, the matching open and closed eye heads, and true transparent alpha.\n\nCreate the companion dog: a beautiful CHAMPAGNE / CREAM TEDDY POODLE puppy with honey-beige roots, rich warm biscuit drop ears, slightly darker cocoa muzzle shadows and deep expressive dark brown eyes. Do NOT make it white or pale woolly like a sheep. It remains unmistakably a real small POODLE in a teddy haircut: a clearly projecting canine muzzle, shiny black nose, dog proportions, natural fine waved curls, not scalloped clouds. This companion has a slightly smaller, gentler face and soft unassuming expression, while its body and parts remain mechanically compatible with this layout.\nPreserve the same soft upper-left lighting and richly painted gouache / colored pencil fur. No collar, accessories, captions, floor or shadow.\n\nThe eight isolated cells must remain: TOP torso / open earless head / separate hanging ear / curled fluffy tail; BOTTOM front leg / rear leg / matching closed-eye earless head / assembled dog reference. All backgrounds and gaps genuinely transparent; retain fine fur alpha and don't add a colored backdrop. Change only the dog's identity/palette and very subtle face character; retain the anatomical forms and polished painting.",
     "actualDimensions": [
       1536,
@@ -201,7 +201,9 @@
     ],
     "transparentBackground": true,
     "processing": "仅WebP编码并保留生成alpha；运行时按部件区域裁切和关节变换，整犬参考格不参与动画。",
-    "implementation": "V8仅保留身体、四肢、尾与卧姿前爪；旧头、旧耳全部停止引用，整犬参考格不运行。完整新头含耳使用teddy-head-anatomy。"
+    "implementation": "V8仅保留身体、四肢、尾与卧姿前爪；旧头、旧耳全部停止引用，整犬参考格不运行。完整新头含耳使用teddy-head-anatomy。",
+    "archivedExport": "public/memory-book/teddy-cream-painted.webp",
+    "runtimeUsage": "V9由分层窗景/多角度泰迪替代；旧导出移入回收站，母版与提示词保留。"
   },
   {
     "id": "magic-book-cover-material",
@@ -288,20 +290,20 @@
   },
   {
     "id": "library-cinema-portrait",
-    "status": "active",
+    "status": "retired",
     "date": "2026-10-04",
     "generator": "Built-in image_gen image edit; no paid API",
     "source": "C:/Users/luomin/.codex/generated_images/01a10549-1ae1-7150-9513-2c0d601aaf23/exec-e6040b41-2239-46dc-95b0-1c0029465ce3.png",
     "referenceImage": "G:/github存储/birthday-card-resume/.asset-build/memory-book/masters/library-cinema.png",
     "master": ".asset-build/memory-book/masters/library-cinema-portrait.png",
-    "runtime": "public/memory-book/library-cinema-portrait.webp",
     "prompt": "Use case: precise-object-edit\nAsset type: portrait cinematic background for a mobile interactive scene, exact tall output 1024 x 2304 pixels (approximately 9:20), opaque.\nInput image 1 is the edit target: the existing restrained old study. Keep the SAME room's believable aged walnut shelves, weathered leather books, brown drapery, mullioned window, blue dusk outside, candle warmth, scratched oak writing desk, and unglamorous quiet photographic realism.\nPrimary request: completely RECOMPOSE this same room for a very tall narrow phone frame. Move the camera backwards and use a moderate wide-angle natural architectural lens so the portrait frame clearly includes BOTH left and right bookcases, a complete smaller tall central window, a sliver of drapery, and one small practical candle in its brass holder near the left side of the desk. This is a wider view of the room from further back, not a cropped window close-up. The window must occupy no more than about 34 percent of the frame width. Bookcases on both sides should each be recognizably several books wide, with their inner halves remaining inside the central 80 percent width. Show slight convincing perspective depth and some upper wall; avoid symmetry that looks like a generated fantasy poster.\nComposition: room environment fills upper 66 percent. An expansive EMPTY worn wooden writing desk extends across the lower 34 percent. Camera just above the desktop, natural perspective. Do not bake a hero book, open book, pet, cake, person, text, glyph, or any primary subject into the picture. Keep the central and right desktop genuinely empty for the live 3D object. Only the small brass candle at the left back corner of the desk; no foreground stack of books or ink-pot cluster. Keep the important room anchors within the central 88 percent width so a phone cover crop loses none of them.\nLighting and finish: same motivated dim blue twilight from the window and localized warm practical candle glow; subtle reflected light on worn wood and shelves, gently lifted photographic shadows that retain legibility. Believable cinema set still photographed on a large sensor, soft rolloff, restrained colors, fine natural texture. Preserve material detail without oversharpening or synthetic glossy finish. This must feel like a real quiet old academic study.\nAvoid: giant window filling the frame, heavy black empty edges, overt fantasy, gold ornament, flowers, glowing magical symbols, floating particles, light shafts, giant bloom, hallucinated architecture, excessive clutter, polished luxury, AI illustration, painted look, text, logo, watermark.",
     "actualDimensions": [
       836,
       1881
     ],
     "processing": "Unmodified RGB master encoded as WebP with OpenCV, quality 88. No stretch, crop, or color grading.",
-    "runtimeUsage": "680px以下手机专用同场景竖幅重新构图，保留书架、窗、烛台和桌面。生成画稿，不冒称实拍。"
+    "runtimeUsage": "V9由分层窗景/多角度泰迪替代；旧导出移入回收站，母版与提示词保留。",
+    "archivedExport": "public/memory-book/library-cinema-portrait.webp"
   },
   {
     "id": "teddy-head-anatomy",
@@ -309,7 +311,6 @@
     "generator": "built-in image_gen",
     "source": "C:/Users/luomin/.codex/generated_images/01a10543-a14c-7bb0-b169-8e5bf85cf246/exec-8745f054-336c-40de-982e-d5a9b3003f93.png",
     "master": ".asset-build/memory-book/masters/teddy-head-anatomy.png",
-    "runtime": "public/memory-book/teddy-head-anatomy.webp",
     "prompt": "Use case: illustration-story.\nCreate a new anatomical head design for two 10-week-old TOY POODLE puppies with a neat short TEDDY-BEAR GROOMING CUT. This is a character construction asset for a layered 2D animation. NO reference image; invent a fresh, beautifully proportioned puppy design.\n\nTransparent square RGBA sprite sheet, 1024 x 1024, two columns by two rows. Exactly FOUR complete heads with both ears, no torso and no long neck, centered with comfortable transparent margins in equal cells.\nLeft column: honey-apricot toy poodle. Right column: warm light champagne-cream toy poodle, a slightly softer rounder face, clearly a companion rather than an identical recolor.\nTop row: closed mouth, neutral curious gaze.\nBottom row: precisely aligned copies of the same complete head structure, ONLY the eyes gently closed for blinking.\nAll heads face right in a TRUE 45-degree side three-quarter view. Keep the entire crown, both ear tips, nose and jaw within each cell.\n\nCrucial shape design: a COMPACT rounded puppy cranium, with a very short soft rounded muzzle that is clearly a small volume protruding from the FRONT of the face. The muzzle is only about ONE THIRD of the face width, not a wide horizontal moustache. A small matte triangular black nose, clean short muzzle fur, a tiny fine canine mouth crease tucked immediately under it, no visible thick lower-lip or beard slab. A continuous curved forehead-to-cheek shape, no separate mask. Dark warm brown eyes are naturally seated in their sockets, modest in size but friendly, without human eyebrows, black eye bags or exaggerated glass highlights.\nA neat fluffy teddy cut: short small soft curls, natural fine fuzz, rounded cheek outline and an understated crown. Two SHORT round puppy drop ears with fine curls are firmly rooted behind the cheeks; their tips end near the jaw, never far below it. They should frame the round face like small soft ears, NOT tall coiffure, long cascading human hair, cocker spaniel wavy ears, sausage appendages or a theatrical wig.\nThe whole head INCLUDING ears should have a low, broad, softly rounded triangular silhouette, WIDER than tall. Clearly a baby poodle, not an adult spaniel, sheep, monkey, bear, pug or doll.\n\nArt direction: refined storybook gouache and colored-pencil animal illustration, with convincing soft volume and understated realistic canine anatomy. Matte, calm, warm, tactile, attractive at a small website scale. Simplify the fur into coherent soft masses with a few delicate curls; do not use hyper-detailed photographic ringlets. Gentle upper-left warm light with neutral soft fill. Shape and anatomy are the beauty; do not rely on smiles, huge eyes, blush or tongues.\nActual transparent background, no glow, color halo, shadows outside the head, text, labels, accessories, borders or checkerboard. This new face must look structurally different from a long-muzzled decorative spaniel puppet.",
     "referenceImage": null,
     "decision": "重新设计完整头骨、短口鼻、下颌、耳根与短垂耳的统一体积；弃用新脸叠旧耳结构。第一次沿用旧风格参考的稿件未采用，因为仍是长口鼻和长发耳。",
@@ -320,13 +321,15 @@
       "prompt": "Use case: stylized-concept.\nAsset type: transparent anatomical character HEAD construction sheet for two animated toy-poodle puppies in a romantic illustrated book website.\nInput image 1 is ONLY a reference for the existing torso's apricot fur color, painterly finish, and soft warm lighting. The OLD head construction is specifically rejected: do not copy its eyes, muzzle, coiffure, long ears or face proportions. This request is a substantial head-shape redesign, not an expression edit.\n\nCreate one 1024x1024 RGBA square sheet, exactly two columns by two rows, four COMPLETE isolated heads on genuinely transparent background. Each full head includes the entire cranial dome, two anatomically attached ears and their tips, cheeks, compact projecting muzzle, nose and a little fur beneath the jaw. No neck, chest, body, collar, accessory, words or backdrop. Place each entire head well inside its 512x512 cell with at least 35px transparent margin. Ear tips cannot cross cell edges.\n\nALL heads view toward screen right from the SAME natural SIDE three-quarter view, head turned about 45 degrees away from frontal. Clearly defined nearer cheek, smaller perspective far eye, ears emerging from the BACK sides of the same skull, muzzle projecting toward the right. Do not make a frontal bear face pasted onto a profile dog.\n\nPrimary artistic change: build a compact, youthful, believable toy-poodle puppy head with coherent three-dimensional anatomy. Moderately rounded low cranial dome (not a huge oval wig), soft but defined cheek volume, small dark brown canine eyes physically nested in the face rather than stuck on its surface, no black mascara or sagging lower eye bags. A short compact OVAL muzzle with an actual bridge and shallow cheek transition; nose modest in size, naturally matte with one very soft highlight. Upper muzzle should NOT be a giant horizontal moustache slab. Short neat lower jaw recedes under the cheeks, thin natural mouth crease, no human smile, lips, giant double jowls, squared-off chin, long beak, snub pug nose or monkey face.\nEars are modest puppy drop ears anchored behind eye level, their compact softly curled silhouette ends just below the chin. They must feel attached to the skull with believable root volume, not long human hair curtains, separate sausages, or arms stuck to the face. The core face should occupy about 70 percent of the complete head's width; full head including ears has approximately a 1.08:1 width-to-height ratio, not a tall coiffure.\nCoat: SHORT soft fine puppy curls, naturally varied and gently grouped, finer around eyelids and the muzzle. No giant caramel ribbon ringlets or sculpted doll curls. No harsh airbrushed outlines, glossy plastic skin or toy ball eyes. The impression is a beautiful living companion dog, innocent and calm, not a caricature or figurine.\n\nColumn 1 is warm honey-APRICOT puppy, matching the reference torso. Column 2 is soft CHAMPAGNE-CREAM puppy with slightly darker biscuit ears, warm beige rather than white.\nRow 1: attentive neutral faces, mouths CLOSED, relaxed expression. The improvement must be visible from anatomy and volume alone, not from smiling or a tongue.\nRow 2: exact same aligned heads as row1, only eyelids gently closed for a blink. No extra expression changes, no tilt, no tongue.\nSame crown/eye/nose/jaw/ear-tip coordinates and scale in each column across both rows.\n\nRendering: sophisticated restrained children's storybook gouache realism with convincing volumetric modeling and subtle pencil-like fur texture, quiet warm light from upper left, gentle cool fill. Matte natural fur, clean precise feathered silhouette, not flat vector, not hyper-detailed AI glamour portrait, not photoreal taxidermy. Preserve actual alpha: no brown glow, fog, contact shadow or checkerboard painted into empty cells.\nDo not include the original reference artwork in the result. Four complete newly designed heads only.",
       "referenceImage": ".asset-build/memory-book/masters/teddy-apricot-painted.png"
     },
-    "status": "active",
+    "status": "retired",
     "actualDimensions": [
       1254,
       1254
     ],
     "transparentBackground": true,
-    "implementation": "V8完整重画头骨、短口鼻、下颌、脸颊、耳根与短垂耳；统一侧三分之二体积，不再叠旧耳。头部116×104、颈根转轴183/137；同源闭眼画稿用于眨眼。身体、四肢与尾保留精绘分层动作。"
+    "implementation": "V8完整重画头骨、短口鼻、下颌、脸颊、耳根与短垂耳；统一侧三分之二体积，不再叠旧耳。头部116×104、颈根转轴183/137；同源闭眼画稿用于眨眼。身体、四肢与尾保留精绘分层动作。",
+    "archivedExport": "public/memory-book/teddy-head-anatomy.webp",
+    "runtimeUsage": "V9由分层窗景/多角度泰迪替代；旧导出移入回收站，母版与提示词保留。"
   },
   {
     "id": "book-story-pages-v8",
@@ -498,6 +501,217 @@
           "drawing": "Small midnight-blue cake study, cream edging, three candles and gold flecks"
         }
       ]
+    }
+  },
+  {
+    "id": "wizard-study-source-v9",
+    "status": "master-only",
+    "generator": "built-in image_gen",
+    "date": "2026-10-05",
+    "master": ".asset-build/memory-book/masters/wizard-study-source.png",
+    "prompt": "Use case: photorealistic-natural. Production scenic matte painting for an intimate magical birthday website, mobile first vertical composition, portrait 1024x1536 or higher. A believable live-action wizard's old study with the restrained tactile production design and cinematography of early Harry Potter films: a large leaded stone window centered upper half, distant blue evening outdoors, narrow dark oak bookshelves at BOTH edges, worn plaster and stone, heavy wooden writing table extending across the lower quarter. View from seated eye level, 35mm lens, deep physical space, natural perspective. Very important tabletop rear edge begins at 70% height, flat empty central tabletop for a separately rendered book. Camera level, no tilted perspective, no giant chair obstructing. Window occupies about x28%-75%, y14%-61%. A warm antique brass candlestick near extreme LEFT side at x8%, base at85% height, ONE candle; no open book, no cake, no people, no animal, no text. Room walls retain readable details in dark warm umber; soft cool moonlight from window and warm motivated candlelight, subtle fine film grain, physically credible aged wood grain, imperfect real set materials, no generic AI fantasy glow, no vines or flowers, no floating decorative objects, no stars inside the room, no excessive ornaments. Upper and central window/architecture should be interesting and clearly visible on a small screen. The final image is a clean usable background plate, not a mockup, no borders or UI. High detail and composition, understated romantic atmosphere.",
+    "processing": "Original PNGs retained in masters; runtime WebP encoded with sharp quality88/alpha100, no generative upscale. SVG composes distinct outside/architecture/table/curtain/lighting layers."
+  },
+  {
+    "id": "wizard-study-layer-v9",
+    "status": "active",
+    "generator": "built-in image_gen",
+    "date": "2026-10-05",
+    "master": ".asset-build/memory-book/masters/wizard-study-layer.png",
+    "runtime": "public/memory-book/wizard-study-layer.webp",
+    "prompt": "Use case: background-extraction. Edit the supplied wizard study background into its ARCHITECTURE LAYER for parallax composition. Preserve pixel alignment, full 1024x1536 portrait size, all stone, shelves, the leaded mullions/diagonal metal bars, brass objects, candle, desk, colors, materials, lighting and original framing EXACTLY. Remove ONLY the outdoor scene visible through the window: moon, hills, castle, trees, sky and clouds, replacing ALL glass pane interiors with genuine alpha transparency. Keep the window's dark lead lines and stone outlines opaque and sharp, including small upper gothic panes. Everything outside window panes stays unchanged and opaque. This is a production alpha layer, no checkerboard painted in, no new objects, no text, no changed perspective or repositioning.",
+    "reference": "wizard-study-source.png",
+    "transparent": true,
+    "processing": "Original PNGs retained in masters; runtime WebP encoded with sharp quality88/alpha100, no generative upscale. SVG composes distinct outside/architecture/table/curtain/lighting layers."
+  },
+  {
+    "id": "window-night-source-v9",
+    "status": "master-only",
+    "generator": "built-in image_gen",
+    "date": "2026-10-05",
+    "master": ".asset-build/memory-book/masters/window-night-source.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: clean cinematic environment plate for a mobile-first magical birthday finale. Portrait 1024x1536. Intimate window-side setting inside an old English wizard's study, like a carefully built practical film set, photographed on 35mm film. A broad leaded arched stone window centered upper half with distant moonlit blue rolling hills, a few dim stars and quiet cloud bands outside. Old deep midnight-blue velvet curtains gently hanging on both sides, realistic fabric folds, restrained worn stone and dark walnut framing. Bottom 30 percent is a wide EMPTY old polished walnut table, rear edge at68% height, with warm candlelight on the left and cool moonlight from the window. One small antique brass candle at far left, base at82% height, most of tabletop absolutely clear for adding a separately rendered birthday cake later. Atmospheric but exposure bright enough to see texture on a phone; deep space, coherent natural perspective, subtle motivated amber reflections, moonlight through glass, cinematic chiaroscuro with detail preserved. No cake, no book, no people, no animals, no text, no logos, no flowers, no ornate fantasy objects, no garish nebula, no floating particles baked into the picture. Camera at seated eye level, stable geometry, real cloth, slightly imperfect aged surfaces, low contrast film rolloff, avoid glossy AI illustration. A quiet romantic final shot that belongs to the same wizard library as the opening but has its own composition.",
+    "processing": "Original PNGs retained in masters; runtime WebP encoded with sharp quality88/alpha100, no generative upscale. SVG composes distinct outside/architecture/table/curtain/lighting layers."
+  },
+  {
+    "id": "window-night-layer-v9",
+    "status": "active",
+    "generator": "built-in image_gen",
+    "date": "2026-10-05",
+    "master": ".asset-build/memory-book/masters/window-night-layer.png",
+    "runtime": "public/memory-book/window-night-layer.webp",
+    "prompt": "Use case: background-extraction. Edit this exact portrait night window room into a parallax architecture layer. Keep full 1024x1536 canvas and exact alignment. Keep all stone window surrounds, leaded diagonal thin metal bars, curtains, bookshelves, candle, table, their colors, texture, shadows and lighting unchanged. Remove ONLY the exterior sky, moon, hills, water, village visible inside the glass panes, make all pane interiors genuinely TRANSPARENT alpha including the small arch-shaped upper panes. Preserve opaque window leads and stone. Everything else remains opaque and identical. No new objects, no text, no checkerboard fill, no perspective changes. This layer will be composited over a separate outdoor night landscape.",
+    "reference": "window-night-source.png",
+    "transparent": true,
+    "processing": "Original PNGs retained in masters; runtime WebP encoded with sharp quality88/alpha100, no generative upscale. SVG composes distinct outside/architecture/table/curtain/lighting layers."
+  },
+  {
+    "id": "window-distance-v9",
+    "status": "active",
+    "generator": "built-in image_gen",
+    "date": "2026-10-05",
+    "master": ".asset-build/memory-book/masters/window-distance.png",
+    "runtime": "public/memory-book/window-distance.webp",
+    "prompt": "Use case: photorealistic-natural. A clean cinematic OUTDOOR night landscape plate for compositing behind windows in a romantic wizard-library film set. Portrait 1024x1536. A deep blue twilight sky occupies the upper sixty percent, thin soft moonlit clouds, a small softly glowing nearly full moon in upper right third. Lower forty percent: layers of distant Scottish-like mountains, a dark still lake, a few fir treetops silhouetted at bottom edge and a tiny distant old stone castle with only two warm lit windows across the lake. Realistic muted silver-blue cinematography, gentle contrast and haze separating distant hills, detailed film matte painting, understated, credible night exposure, no saturated purple nebula or aurora. NO interior, NO window frame or glass or borders, NO furniture, NO people, NO animals, NO text. No large exaggerated celestial objects. The plate is for a slowly moving distant layer behind a stationary room frame; keep plenty of quiet sky.",
+    "processing": "Original PNGs retained in masters; runtime WebP encoded with sharp quality88/alpha100, no generative upscale. SVG composes distinct outside/architecture/table/curtain/lighting layers."
+  },
+  {
+    "id": "book-romantic-prologue-v9",
+    "status": "active",
+    "version": "V9",
+    "created": "2026-10-05",
+    "scope": "Private romantic opening book, six physical double-sided leaves and seven resting spreads; no later chapter spoilers.",
+    "source_kind": "Original deterministic System.Drawing pen artwork plus Blender geometry and live Three.js paper mechanisms; no new imagegen or paid API.",
+    "generator": "scripts/models/build_story_pages.ps1",
+    "model_generator": "scripts/models/build_magic_objects.py -- --book-only",
+    "runtime_files": [
+      "src/memory-book/MagicObject.tsx",
+      "src/memory-book/bookMechanisms.ts",
+      "src/memory-book/bookPages.ts",
+      "src/memory-book/magic-object.css"
+    ],
+    "original_cover_source": ".asset-build/memory-book/masters/book-wizard-cover-source.png (previous recorded built-in generation retained unchanged)",
+    "master": ".asset-build/memory-book/masters/magic-book.blend",
+    "runtime_model": "public/memory-book/magic-book.glb",
+    "runtime_model_bytes": 4088248,
+    "note_readability_revision": "Only the central folded-note blessing was enlarged approximately 30 percent: name 67 to 87 px, two blessing lines 47 to 61 px; ink deepened to RGB 12/8/5. Spacing, paper folds, other pages and cake retained. Refreshed note texture, master and book-only GLB export succeeded.",
+    "textures": {
+      "directory": ".asset-build/memory-book/masters/textures",
+      "leaves": "story-page-00.jpg through story-page-11.jpg",
+      "endpaper": "story-endpaper.jpg",
+      "folded_note": "note-message.jpg",
+      "dimensions": [
+        768,
+        1024
+      ],
+      "format": "JPEG quality 90",
+      "fonts": "Local 华文楷体/宋体/Georgia rasterized by GDI+; font files are not redistributed",
+      "ink": "Deep brown RGB 38/25/16; Chinese bold; minimum 1.5 px engraving strokes; warm rag paper RGB 210/190/160"
+    },
+    "spreads": [
+      {
+        "index": 0,
+        "title": "只为你打开",
+        "left": "Private title endpaper",
+        "right": "Flying key, blank name cartouche, name revealed as physical ink overlay on touch"
+      },
+      {
+        "index": 1,
+        "title": "这一页留给你",
+        "left": "书有许多页，with blind impressed empty margin",
+        "right": "这一页留给你。with an intentionally unwritten pressed-paper field"
+      },
+      {
+        "index": 2,
+        "title": "万千字句里",
+        "left": "Sparse handwritten pen exercises",
+        "right": "Thin translucent paper pivots down to combine 万千字句里，这一句偏向你。"
+      },
+      {
+        "index": 3,
+        "title": "多分给你一点",
+        "left": "总想把温柔，with antique copper bookmark study",
+        "right": "多分给你一点。with real narrow copper bookmark and raised paper slip"
+      },
+      {
+        "index": 4,
+        "title": "偏爱也有名字",
+        "left": "原来，and scattered pen marks",
+        "right": "Individual physical ink planes settle into 偏爱也有名字。"
+      },
+      {
+        "index": 5,
+        "title": "愿温柔向你走来",
+        "left": "Folded paper and wax impression",
+        "right": "Real two hinged paper flaps uncover 师宝宝，愿今晚的温柔，都向你走来。"
+      },
+      {
+        "index": 6,
+        "title": "故事从这里开始",
+        "left": "致师宝宝 / 故事从这里开始。",
+        "right": "Chinese dedication endpaper"
+      }
+    ],
+    "mechanisms": {
+      "name": "Alpha-revealed diffuse ink physically placed above recto 0",
+      "veil": "Actual 0.008-unit vellum sheet with a hinge, transparency, edge and receiving/casting shadows",
+      "note": "Blender FoldedNoteRoot with NoteTopFold and NoteBottomFold, physical thickness, crease edges and moving copper/wax closure",
+      "ink": "Separate Chinese ink meshes return to their line; automatic on this spread and replayable",
+      "interaction": "Raycast page touch and visible native buttons/keyboard Enter or Space; none block ordinary next/previous navigation; prefers-reduced-motion applies instantly"
+    },
+    "reading": "Whole-book overview is default; tap a leaf or use 44 px buttons for the physical camera to approach left/right. Controls are in a separate CSS grid row, 12 px minimum labels. onReadingChange('spread'|'left'|'right') allows chapter layout integration.",
+    "performance": "Mobile rendering DPR capped at 1.5; document hidden and offscreen animation pause retained; textures and all geometry/materials disposed on unmount.",
+    "cake": "Approved cake mesh and mother asset unchanged. Runtime cream roughness >=0.92, cream environment intensity 0.23, reduced cold rim and environment, low-opacity ground shadow plus soft contact support.",
+    "verification": "Generated and inspected one contact sheet of fourteen images. Book-only Blender export succeeded. Targeted ESLint performed; final integrated mobile and desktop interaction review belongs to root agent."
+  },
+  {
+    "id": "teddy-articulated-turnaround-v9",
+    "status": "active",
+    "version": "pets-v9-2026-10-05",
+    "creator": "OpenAI built-in image_gen",
+    "additionalPaidServices": false,
+    "purpose": "Articulated 2D teddy puppy rigs with five genuinely drawn yaw views. Heads, torsos, front/hind legs and tails remain separately animated.",
+    "generations": [
+      {
+        "key": "apricot-turnaround",
+        "source": "C:/Users/luomin/.codex/generated_images/01a10548-dc78-7630-b7e9-72306f638303/exec-0b18ef35-b334-4718-aefe-0505e2635910.png",
+        "master": ".asset-build/memory-book/masters/teddy-apricot-turnaround-v9.png",
+        "runtime": "public/memory-book/teddy-apricot-turnaround-v9.webp",
+        "references": [
+          ".asset-build/memory-book/masters/teddy-head-anatomy.png",
+          ".asset-build/memory-book/masters/teddy-apricot-painted.png"
+        ],
+        "prompt": "Use case: illustration-story.\nAsset type: production-ready 2D cutout-animation TURNAROUND RIG ATLAS for one apricot toy-poodle puppy, transparent RGBA, square 2048 x 2048 if available.\nInput 1 is the identity and face-anatomy reference: use ONLY its APRICOT puppy, with its compact round skull, genuinely short canine muzzle, full soft cheeks, black button nose, dark bright eyes and short round drop ears with natural roots. Input 2 is ONLY a reference for fine painterly fur and body-part separation. Do not inherit its older elongated face or long spaniel ears.\nMake EXACTLY 5 COLUMNS and 5 ROWS, 25 isolated anatomical cutout parts, one centered within each equal 1/5 by 1/5 square cell. Generous transparent margins and gaps, no component touches a neighbor. No grid lines, labels, numbers, frame, ground or drop shadows. All parts consistently lit softly from upper left, painted realistic storybook gouache and fine pencil, soft irregular curly fur, no vector scallops, no shiny plastic.\n\nThe FIVE COLUMNS are genuine distinct yaw views of the SAME puppy, camera level with shoulder:\ncolumn 1 FRONT facing the viewer (0 degrees);\ncolumn 2 FRONT THREE-QUARTER facing diagonally RIGHT (45 degrees);\ncolumn 3 TRUE RIGHT SIDE PROFILE (90 degrees);\ncolumn 4 REAR THREE-QUARTER facing diagonally away to RIGHT (135 degrees);\ncolumn 5 TRUE BACK looking away (180 degrees).\nPerspective, occlusion, skull silhouette, ears, shoulder/rump and paws must genuinely change with each angle. The back head has NO visible eyes or muzzle. Never repeat front views as rear views. Neutral relaxed anatomy, no perspective foreshortening from high camera.\n\nThe FIVE ROWS are:\nrow 1 COMPLETE HEAD including both anatomically connected short drop ears, cheek and jaw volume, ending in a short furry neck-root overlap tab. Open eyes in forward views. Each head fills about 75% of its cell.\nrow 2 TORSO ONLY, with shoulders/chest and rump, complete furry volumes for overlap; absolutely no head, external ears, legs, paws or tail. Broad chest from front, compact horizontal rib cage from side, rounded rump from behind. The torso fills 75% cell width.\nrow 3 ONE FRONT LEG, including soft shoulder overlap and the planted rounded front paw; angle matches its column. Full uninterrupted limb with no other parts.\nrow 4 ONE HIND LEG, including rounded hip/haunch overlap, hock and rounded planted paw; angle matches its column. Full uninterrupted limb with no other parts.\nrow 5 ONE small fluffy upward-curled TAIL, with a furry base overlap; angle matches its column. Front view tail can be seen slightly to one side, rear view points upward on rump center.\n\nPuppy build is short-legged but anatomically plausible, plump, soft and youthful, no toy-doll face, no flat muzzle, no moustache or human grin, no sheep wool clouds, no cocker-spaniel long hair. Uniform warm honey-apricot coat across all 25 parts. Keep careful anatomical volume and turn continuity. This is a layered puppet-production asset, not a contact sheet of five complete dogs. No complete assembled dogs anywhere. Actual transparent background and fine fur-edge alpha."
+      },
+      {
+        "key": "cream-turnaround",
+        "source": "C:/Users/luomin/.codex/generated_images/01a10548-dc78-7630-b7e9-72306f638303/exec-24c316ea-b115-450f-b2f8-a08e5c9fe11c.png",
+        "master": ".asset-build/memory-book/masters/teddy-cream-turnaround-v9.png",
+        "runtime": "public/memory-book/teddy-cream-turnaround-v9.webp",
+        "references": [
+          "apricot-turnaround"
+        ],
+        "prompt": "Use case: identity-preserve.\nEdit target: the attached 5-column, 5-row apricot toy-poodle layered turnaround rig atlas.\nMake the matching CHAMPAGNE-CREAM puppy companion atlas. Change ONLY coat color: warm buttery cream with soft biscuit shading, restrained honey ear tips, dark brown eyes and small black nose. Never pure white, gray or sheep-like wool.\nPreserve EXACTLY the 25 part positions, exact silhouette, angles, sizes, crop margins and lighting from the target. Five columns remain front / right-front three-quarter / true right profile / right-rear three-quarter / true back. Rows remain complete head / headless legless torso / one front leg / one hind leg / one tail. Keep the compact short canine muzzle, soft full cheeks and short ears attached naturally. Heads should remain anatomically identical during turns. No extra parts, expressions, labels or assembled dogs. Same detailed painterly soft curls, no flat coloring or plastic rendering.\nOutput true transparent RGBA, same square dimensions and alpha fidelity; do not add a background or grid. This atlas will be paired cell-for-cell with the apricot rig."
+      },
+      {
+        "key": "closed-eye-turnaround",
+        "source": "C:/Users/luomin/.codex/generated_images/01a10548-dc78-7630-b7e9-72306f638303/exec-e348b15d-1cd7-4627-a94b-d9d7254c7300.png",
+        "master": ".asset-build/memory-book/masters/teddy-turnaround-blink-v9.png",
+        "runtime": "public/memory-book/teddy-turnaround-blink-v9.webp",
+        "references": [
+          "apricot-turnaround",
+          "cream-turnaround"
+        ],
+        "prompt": "Use case: identity-preserve.\nAsset type: matching closed-eye head atlas for the two attached layered puppy rigs.\nUse ONLY the five complete heads in the top row of each reference. Do not redesign these heads: preserve their exact skull shapes, muzzle, connected short ears, fur markings, and each of the five yaw angles. Change only open eyelids to softly CLOSED eyes for the three forward views. The rear-three-quarter and back remain unchanged, with no invented visible face.\nOutput a clean transparent 5-COLUMN, 2-ROW atlas, ten isolated complete HEADS ONLY, with generous gaps and no body, paws, tail, captions, numbers or background.\nRow 1: apricot puppy heads from reference 1.\nRow 2: cream puppy heads from reference 2.\nColumns 1 to 5: exact front, right-front 45 degrees, right profile 90 degrees, right-rear 135 degrees, back 180 degrees.\nAll heads equal intended scale and centered in their cells; no tall neck or extra hair. Same warm painterly realistic storybook texture. Retain actual transparent RGBA and soft fur edges. These match the open-eye rig, not alternate puppy designs. Prefer a wide 2048 by 1024 canvas."
+      }
+    ],
+    "preparation": {
+      "script": "scripts/pets/prepare-turnaround.py",
+      "operations": [
+        "Preserve original PNG masters",
+        "Encode RGBA WebP quality 93",
+        "Measure per-part crop bounds without changing artistic pixels"
+      ],
+      "layout": "public/memory-book/teddy-turnaround-layout-v9.json"
+    },
+    "runtime": {
+      "angles": [
+        0,
+        45,
+        90,
+        135,
+        180
+      ],
+      "parts": [
+        "complete head with integrated ear roots",
+        "torso",
+        "two independently animated front limbs",
+        "two independently animated hind limbs",
+        "tail"
+      ],
+      "turns": "Interpolate anatomical joints while blending neighboring true angle cutouts; head yaw also independent for lookback.",
+      "occlusion": "DOM obstacle boxes, movement-path sweep and jump envelope checks; retain 8px stage margin, retreat for mobile reading/cinema or unavailable floor space.",
+      "retainedHistoricalMasters": true
     }
   }
 ]

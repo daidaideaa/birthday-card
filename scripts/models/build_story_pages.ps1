@@ -76,163 +76,119 @@ public static class StoryPages {
     wing(0,-13,false);wing(0,-13,true);ellipse(-23,-34,46,46,ink,2);ellipse(-13,-24,26,26,faint,1);
     line(0,12,0,126,ink,4);line(4,15,4,128,faint,.8f);poly(ink,3,0,119,25,119,25,103,36,103,36,130,0,130);g.Restore(st);
   }
+  static void blindFrame(float x,float y,float w,float h) {
+    using(var p=pen(Color.FromArgb(222,204,175),1))g.DrawRectangle(p,x+2,y+2,w,h);
+    using(var p=pen(Color.FromArgb(160,135,102),.8f))g.DrawRectangle(p,x,y,w,h);
+  }
+  static void strokes(float y,int count) {
+    for(int i=0;i<count;i++){float x=144+(i%3)*22,yy=y+i*30;
+      curve(faint,.8f,x,yy,x+42,yy-3,x+82,yy+2,x+131,yy-2);
+      curve(faint,.7f,x+165,yy-1,x+220,yy+2,x+280,yy-2,x+355-(i%2)*60,yy);
+    }
+  }
   static void page0() {
-    latin("LIBER MEMORIAE  ·  AD TE");title("只为你打开");key(384,397,1.2f);
-    ellipse(236,274,296,296,faint,.65f);star(550,305,9,gold);star(207,488,6,faint);
-    text("师宝宝",665,58);text("每一段走过的路",780,28);text("都值得被温柔收藏",828,28);
+    latin("AD TE");title("只为你打开");key(384,315,.54f);
+    line(294,683,474,683,faint,.8f);
+    text("这一页，只认得你。",809,31);
   }
   static void page1() {
-    latin("I.  ITINERA EIUS");title("她的来路");
-    // A winding river and three stops; this is a narrative route, not a geographic map.
-    curve(ink,1.8f,131,311,234,340,285,398,410,424,462,505,606,544);
-    curve(faint,1.1f,123,329,219,360,271,419,398,444,449,529,601,563);
-    curve(faint,.7f,139,315,236,346,286,405,407,429,458,512,605,550);
-    for(int i=0;i<8;i++){line(134+i*13,365+i*5,157+i*13,358+i*5,faint,.7f);line(464+i*12,568+i*3,476+i*12,564+i*3,faint,.7f);}
-    float[,] stops={{191,331},{371,416},{553,532}};
-    for(int i=0;i<3;i++){dot(stops[i,0],stops[i,1],5,ink);ellipse(stops[i,0]-12,stops[i,1]-12,24,24,faint,.8f);}
-    text("河南周口",267,27,"华文楷体",ink,false,113);text("天津",364,29,"华文楷体",ink,false,360);
-    text("北京",572,27,"华文楷体",ink,false,510);text("中国政法大学",618,29,"华文楷体",ink,false,407);
-    text("河南周口 → 天津",754,28);text("北京 · 中国政法大学",806,30);
-    latin("Flumen memoriam servat.",874);
-  }
-  static void buildings(float x,float baseline,int[] heights,int unit=25) {
-    for(int i=0;i<heights.Length;i++){float X=x+i*unit,h=heights[i];poly(ink,1,X,baseline,X,baseline-h,X+unit-6,baseline-h,X+unit-6,baseline);for(int j=1;j<(int)(h/14);j++)line(X+5,baseline-j*14,X+unit-12,baseline-j*14,faint,.6f);}
+    latin("FOLIUM I");title("书有许多页，");
+    blindFrame(165,310,438,404);blindFrame(181,327,406,371);
+    for(int i=0;i<6;i++)line(201+i*61,749,215+i*61,749,faint,.7f);
+    text("有些留白，",810,29);text("不必急着写满。",862,29);
   }
   static void page2() {
-    latin("II.  INTER MONTES ET MARE");title("山海之间");
-    curve(faint,1.2f,101,462,163,415,202,436,270,366,326,409,387,372,457,445,524,403,658,463);
-    curve(faint,.7f,112,472,175,429,207,448,274,380,325,420,387,384,451,453,534,418,650,470);
-    buildings(132,532,new int[]{41,54,71,52,102,71,61,38},23);buildings(446,532,new int[]{44,55,88,61,70,46},24);
-    waves(105,546,551,5);line(413,412,413,540,ink,1.6f);poly(ink,1.3f,409,420,349,512,409,503);poly(ink,1.1f,419,447,459,513,419,508);curve(ink,1.5f,362,539,387,550,439,550,459,535);line(361,534,459,534,ink,1.5f);
-    hatch(146,595,445,33,32);star(592,328,8,gold);
-    text("香港 · 香港科技大学",736,31);text("↓",790,26,"宋体",faint);text("深圳",841,31);
+    latin("TIBI");title("这一页留给你。");
+    blindFrame(159,350,450,310);
+    line(211,514,557,514,Color.FromArgb(176,151,115),.6f);
+    line(211,565,557,565,Color.FromArgb(176,151,115),.6f);
+    dot(384,761,4,gold);line(369,761,350,761,faint,.6f);line(399,761,418,761,faint,.6f);
   }
   static void page3() {
-    latin("III.  UNDE INCEPIT");title("他的起点");
-    // River city impression, without inventing a particular campus.
-    buildings(109,496,new int[]{33,54,79,44,29,52,93,58,40,49,34,21,45,60,32,39,27,34,31},28);
-    curve(ink,1.1f,101,504,232,496,380,501,505,490,667,503);
-    for(int i=0;i<8;i++) waves(117+i*12,520+i*15,504-i*25,1);
-    curve(ink,1.7f,197,610,285,642,415,633,540,606);poly(ink,1.3f,526,600,542,606,532,620);
-    dot(194,609,6,ink);dot(543,604,6,ink);text("武汉",314,34,"华文楷体",ink,false,139);text("南京",368,34,"华文楷体",ink,false,497);
-    text("湖北武汉",746,31);text("↓",795,25,"宋体",faint);text("南京 · 东南大学",846,31);
+    latin("INTER VERBA");title("万千字句里，");
+    strokes(344,5);
+    curve(ink,1.4f,205,587,277,562,322,590,354,581,416,601,541,576);
+    line(209,613,549,613,gold,.8f);
+    text("有一句，想慢慢说给你。",817,29);
   }
   static void page4() {
-    latin("IV.  VERSUS MERIDIEM");title("向南而行");
-    // An invented bridge engraving, intentionally no recognizable campus gate.
-    line(120,493,648,493,ink,2);line(120,502,648,502,faint,1);
-    poly(ink,2,236,566,236,332,248,319,260,332,260,566);poly(ink,2,509,566,509,351,521,338,533,351,533,566);
-    curve(ink,1.8f,111,449,247,334,382,451,521,353,655,455);
-    for(int i=0;i<28;i++){float x=120+i*19;float y=x<247?334+(247-x)*.84f:(x<383?334+(x-247)*.86f:(x<521?451-(x-383)*.7f:353+(x-521)*.77f));line(x,y,x,491,faint,.8f);}
-    waves(124,576,514,4);ellipse(218,669,18,18,ink);ellipse(530,669,18,18,ink);curve(ink,1.1f,241,678,360,686,425,675,529,678);poly(ink,1,519,670,529,678,518,685);
-    text("上海 · 上海交通大学",751,31);text("↓",800,25,"宋体",faint);text("深圳",850,31);
+    latin("VERBA CONVENIUNT");title("万千字句里，");
+    blindFrame(164,291,440,461);
+    for(int i=0;i<3;i++){line(190,335+i*137,213,335+i*137,faint,.7f);line(555,335+i*137,578,335+i*137,faint,.7f);}
+    text("轻轻叠上这一页。",839,28);
   }
   static void page5() {
-    latin("V.  DUAE VIAE, UNA LUX");title("在深圳并肩");
-    // Two independent paths retain their identity and form a soft knot.
-    curve(ink,2.5f,182,300,186,383,309,450,408,525,410,567,376,574,343,549,367,506,425,481,543,398,581,307);
-    curve(gold,2.3f,179,303,159,392,268,469,370,534,393,567,424,556,438,530,409,498,369,478,296,447,229,385);
-    curve(ink,2.2f,408,524,475,579,517,639,522,690);curve(gold,2.1f,370,534,414,589,435,650,433,701);
-    ellipse(166,283,25,25,faint,.8f);ellipse(570,283,25,25,faint,.8f);
-    star(482,387,9,gold);star(296,640,6,faint);
-    text("深圳",727,41);text("两条各自走来的路",800,29);text("从这里开始并肩",850,29);
-  }
-  static void feather(float cx,float cy,float scale=1) {
-    var state=g.Save();g.TranslateTransform(cx,cy);g.ScaleTransform(scale,scale);g.RotateTransform(28);
-    bez(ink,1.7f,-1,122,-13,44,13,-90,6,-175);
-    curve(ink,1.1f,3,-172,-45,-110,-61,-32,-31,40,-4,87,14,41,41,-37,36,-107,3,-172);
-    for(int i=0;i<21;i++){float y=-147+i*10;float span=37*(float)Math.Sin((i+2)*Math.PI/26);line(0,y,-span-2,y-25,ink,.75f);line(1,y,span*.75f,y-31,faint,.75f);}
-    line(-1,88,-3,127,ink,2);g.Restore(state);
+    latin("PAULO PLUS");title("总想把温柔，");
+    using(var b=new SolidBrush(Color.FromArgb(129,95,49)))g.FillRectangle(b,351,300,65,370);
+    poly(ink,1.4f,351,300,416,300,416,670,384,647,351,670,351,300);
+    for(int i=0;i<7;i++)line(362,336+i*43,405,336+i*43,Color.FromArgb(186,150,83),.7f);
+    curve(ink,1.1f,383,301,400,263,418,263,434,281);dot(433,284,4,gold);
+    text("在书页之间，",822,29);text("悄悄多留一点。",871,29);
   }
   static void page6() {
-    latin("VI.  EPISTOLA TIBI");title("写给你");
-    var state=g.Save();g.TranslateTransform(335,520);g.RotateTransform(-8);
-    poly(ink,1.5f,-150,-74,150,-74,150,93,-150,93,-150,-74);poly(ink,1.2f,-150,-74,0,28,150,-74);poly(faint,1,-150,93,-28,6);poly(faint,1,150,93,28,6);g.Restore(state);
-    feather(487,397,.95f);ellipse(416,565,41,40,gold,2);line(426,584,447,584,gold,1.4f);line(439,574,439,594,gold,1);
-    text("你走过的每一段路，",730,28);text("都值得被看见。",774,28);
-    text("愿往后的日子里，有热爱，",834,25);text("也有被偏爱的安心。",874,25);
-  }
-  static void frame(float x,float y,float w,float h,float rotation) {
-    var state=g.Save();g.TranslateTransform(x,y);g.RotateTransform(rotation);
-    using(var b=new SolidBrush(Color.FromArgb(90,246,232,210)))g.FillRectangle(b,0,0,w,h);
-    using(var p=pen(ink,1.2f))g.DrawRectangle(p,0,0,w,h);
-    using(var p=pen(faint,.8f))g.DrawRectangle(p,12,13,w-24,h-47);
-    line(6,6,27,6,faint,.7f);line(w-6,h-6,w-25,h-6,faint,.7f);g.Restore(state);
+    latin("TENERITAS");title("多分给你一点。");
+    var st=g.Save();g.TranslateTransform(385,526);g.RotateTransform(-8);
+    blindFrame(-210,-114,420,228);
+    line(-159,-22,157,-22,ink,.8f);line(-159,26,80,26,faint,.7f);
+    g.Restore(st);
+    curve(gold,1.3f,242,682,306,700,363,684,394,721);
+    text("不声张，也不计数。",837,29);
   }
   static void page7() {
-    latin("VII.  LUCEM RETINERE");title("把光留住");
-    line(131,311,644,292,ink,1.3f);frame(168,329,204,251,-11);frame(406,321,202,249,10);
-    line(199,302,199,338,ink,4);line(484,296,484,335,ink,4);
-    // Contact print tray with a small unexposed strip; no invented photograph.
-    poly(ink,1.4f,228,642,561,642,587,703,205,703,228,642);poly(faint,1,241,653,547,653,566,688,222,688,241,653);
-    poly(ink,1,302,661,483,662,499,680,292,680,302,661);hatch(240,706,278,18,23);
-    text("有些瞬间，",791,32);text("值得慢慢收藏。",846,32);
+    latin("NOMEN AMORIS");title("原来，");
+    for(int i=0;i<19;i++){float x=191+(float)random.NextDouble()*372,y=319+(float)random.NextDouble()*360;dot(x,y,.7f+(i%4)*.55f,i%3==0?ink:faint);}
+    curve(ink,1.9f,261,487,278,463,300,486,326,468);
+    curve(ink,1.5f,406,551,435,562,461,538);
+    line(296,737,472,737,faint,.7f);
+    text("有些字，自己知道归处。",824,28);
   }
   static void page8() {
-    latin("VIII.  VENTUS RESPONDET");title("风会回答");
-    curve(ink,1.8f,115,366,243,329,417,345,589,315,625,339,569,366,422,382);
-    curve(faint,1.3f,159,410,300,380,462,390,600,368);curve(ink,1.1f,285,438,415,418,542,425,647,401);
-    curve(ink,1.3f,112,573,248,539,364,565,520,517,651,537);curve(faint,1.1f,99,608,235,573,355,602,503,552,665,573);
-    for(int i=0;i<34;i++){float x=128+i*15,y=636+13*(float)Math.Sin(i*.4);curve(ink,.8f,x,y,x+4,y-24,x+19,y-47);line(x+7,y-28,x-3,y-42,faint,.7f);}
-    hatch(139,682,465,30,45);star(162,454,7,gold);
-    text("愿你保有出发的勇气，",794,29);text("也保有自由的方向。",848,29);
+    latin("AD NOMEN");title("原来，");
+    line(159,459,608,459,Color.FromArgb(175,149,112),.6f);
+    line(159,632,608,632,Color.FromArgb(175,149,112),.6f);
+    dot(384,749,3,gold);
+    text("轻触，让字句回到这里。",849,27);
   }
   static void page9() {
-    latin("IX.  SUB STELLIS");title("星光作伴");
-    // Antique astronomer's field sketch; circles are faint pencil construction marks.
-    ellipse(170,276,428,428,faint,.9f);ellipse(185,291,398,398,faint,.45f);
-    using(var p=pen(faint,.65f)){p.DashPattern=new float[]{2,8};g.DrawEllipse(p,249,355,270,270);}
-    for(int i=0;i<36;i++){double a=i*Math.PI/18;float R=214;line(384+(float)Math.Cos(a)*R,490+(float)Math.Sin(a)*R,384+(float)Math.Cos(a)*(R-(i%3==0?13:5)),490+(float)Math.Sin(a)*(R-(i%3==0?13:5)),faint,.6f);}
-    float[] xy={246,466,311,389,359,450,440,413,500,514,428,574,316,600,359,450};poly(ink,.9f,xy);
-    for(int i=0;i<xy.Length-2;i+=2)star(xy[i],xy[i+1],i%4==0?8:5,gold);
-    random=new Random(234);for(int i=0;i<57;i++){float x=208+(float)random.NextDouble()*352,y=318+(float)random.NextDouble()*340;if((x-384)*(x-384)+(y-490)*(y-490)<34000)dot(x,y,i%5==0?1.5f:.7f,ink);}
-    // Crescent, with paper-coloured cutout, belongs to the engraving itself.
-    using(var b=new SolidBrush(ink))g.FillEllipse(b,476,332,35,35);using(var b=new SolidBrush(Color.FromArgb(210,190,160)))g.FillEllipse(b,487,327,30,30);
-    text("愿你抬头时，",789,31);text("总能看见属于自己的光。",845,29);
-  }
-  static void candle(float x,float baseY,float h,float w) {
-    poly(ink,1.4f,x-w/2,baseY,x-w/2,baseY-h,x+w/2,baseY-h,x+w/2,baseY);
-    ellipse(x-w/2,baseY-h-4,w,8,ink,1);line(x,baseY-h-4,x,baseY-h-20,ink,1.2f);
-    curve(gold,1.7f,x,baseY-h-21,x-9,baseY-h-40,x+2,baseY-h-65,x+10,baseY-h-39,x,baseY-h-21);
-    curve(gold,.7f,x,baseY-h-26,x-3,baseY-h-40,x+2,baseY-h-49);
-    curve(faint,1,x-w/2+4,baseY-h+5,x-w/2+5,baseY-h+35,x-w/2+11,baseY-h+47,x-w/2+13,baseY-h+14);
-    for(int i=0;i<3;i++)line(x+w/2-4-i*3,baseY-6,x+w/2-4-i*3,baseY-h+14,faint,.5f);
+    latin("APERI LENITER");title("把这句话，轻轻展开。");
+    blindFrame(193,343,384,278);
+    poly(faint,1.1f,193,343,384,476,577,343);
+    line(193,621,315,495,faint,.8f);line(577,621,457,495,faint,.8f);
+    using(var b=new SolidBrush(Color.FromArgb(104,36,29)))g.FillEllipse(b,360,455,49,46);
+    ellipse(367,462,34,32,gold,.8f);line(384,469,384,486,gold,.9f);
+    text("不必猜，也不必寻找。",816,29);
   }
   static void page10() {
-    latin("X.  VOTUM IN LUMINE");title("许一个心愿");
-    candle(259,609,178,34);candle(384,609,238,37);candle(509,609,142,32);
-    ellipse(195,611,378,62,ink,1.4f);ellipse(208,621,352,39,faint,.75f);curve(ink,1.3f,204,648,233,675,533,675,565,649);
-    for(int i=0;i<24;i++) {float a=i*(float)Math.PI/12;line(384+(float)Math.Cos(a)*168,647+(float)Math.Sin(a)*21,384+(float)Math.Cos(a)*172,650+(float)Math.Sin(a)*22,faint,.7f);}
-    star(182,410,8,gold);star(584,378,9,gold);star(524,295,5,faint);star(284,296,6,faint);
-    text("把想说的话，",791,31);text("轻轻交给烛光。",847,31);
+    latin("TIBI SOLI");text("这一页的温柔",153,42);
+    corner(151,283,1,1);corner(617,283,-1,1);corner(151,804,1,-1);corner(617,804,-1,-1);
   }
   static void page11() {
-    latin("XI.  FELIX DIES NATALIS");title("生日快乐");
-    // Small midnight-blue patisserie study, with restrained gold flecks.
-    var fill=Color.FromArgb(43,58,78);
-    using(var b=new SolidBrush(fill)){g.FillRectangle(b,240,462,288,151);g.FillEllipse(b,240,569,288,82);g.FillEllipse(b,240,421,288,82);}
-    ellipse(240,421,288,82,ink,1.8f);curve(faint,1.1f,243,463,304,491,387,501,470,489,526,462);
-    for(int i=0;i<23;i++){float x=246+i*12;float y=461+35*(float)Math.Sin(i*Math.PI/22);ellipse(x-3,y-5,9,12,Color.FromArgb(160,150,119),1.1f);}
-    ellipse(215,611,338,69,ink,1.2f);curve(ink,1.4f,219,649,268,685,503,685,548,649);
-    for(int i=0;i<14;i++){float x=257+i*18,y=539+(i%3)*17;line(x,y,x+2,y+4,gold,2);}
-    star(356,555,11,gold);star(444,584,7,gold);star(314,601,6,gold);
-    candle(323,454,82,12);candle(386,452,114,13);candle(447,453,80,12);
-    star(195,425,8,gold);star(558,352,10,gold);star(606,521,5,faint);
-    text("师宝宝",737,49);text("愿这一岁，明亮、自在，",823,28);text("被爱包围。",870,29);
+    latin("INITIUM");title("致师宝宝");
+    key(384,367,.47f);
+    text("故事从这里开始。",640,43);
+    line(274,762,494,762,faint,.9f);
+  }
+  static void endpaper() {
+    latin("MEMORIA",198);text("写给师宝宝",352,44);text("的一场梦",419,44);
+    line(270,570,498,570,faint,.9f);key(385,676,.34f);
+  }
+  static void note() {
+    text("师宝宝，",252,87,"华文楷体",Color.FromArgb(12,8,5));text("愿今晚的温柔，",442,61,"华文楷体",Color.FromArgb(12,8,5));text("都向你走来。",547,61,"华文楷体",Color.FromArgb(12,8,5));
+    line(299,728,469,728,faint,.8f);
   }
   public static void Build(string path) {
-    Directory.CreateDirectory(path);Action[] pages={page0,page1,page2,page3,page4,page5,page6,page7,page8,page9,page10,page11};
+    Directory.CreateDirectory(path);Action[] pages={page0,page1,page2,page3,page4,page5,page6,page7,page8,page9,page10,page11,endpaper,note};
     var codec=Array.Find(ImageCodecInfo.GetImageEncoders(),c=>c.MimeType=="image/jpeg");
     using(var quality=new EncoderParameters(1)) {quality.Param[0]=new EncoderParameter(System.Drawing.Imaging.Encoder.Quality,90L);
-      for(int i=0;i<12;i++)using(var bitmap=paper(i)) {
+      for(int i=0;i<14;i++)using(var bitmap=paper(i)) {
         using(g=Graphics.FromImage(bitmap)){g.SmoothingMode=SmoothingMode.AntiAlias;g.TextRenderingHint=TextRenderingHint.AntiAliasGridFit;g.CompositingQuality=CompositingQuality.HighQuality;borders(i);pages[i]();}
-        bitmap.Save(Path.Combine(path,"story-page-"+i.ToString("00")+".jpg"),codec,quality);
+        bitmap.Save(Path.Combine(path,i<12?"story-page-"+i.ToString("00")+".jpg":i==12?"story-endpaper.jpg":"note-message.jpg"),codec,quality);
       }
     }
     // Contact sheet is a local review artifact, outside the production texture set.
-    using(var preview=new Bitmap(W*3/2,H*4/2))using(var pg=Graphics.FromImage(preview)) {
+    using(var preview=new Bitmap(W*3/2,H*5/2))using(var pg=Graphics.FromImage(preview)) {
       pg.Clear(Color.FromArgb(47,40,33));pg.InterpolationMode=InterpolationMode.HighQualityBicubic;
-      for(int i=0;i<12;i++)using(var im=Image.FromFile(Path.Combine(path,"story-page-"+i.ToString("00")+".jpg")))pg.DrawImage(im,(i%3)*W/2,(i/3)*H/2,W/2,H/2);
+      for(int i=0;i<14;i++)using(var im=Image.FromFile(Path.Combine(path,i<12?"story-page-"+i.ToString("00")+".jpg":i==12?"story-endpaper.jpg":"note-message.jpg")))pg.DrawImage(im,(i%3)*W/2,(i/3)*H/2,W/2,H/2);
       preview.Save(Path.Combine(path,"..","story-pages-contact.jpg"),ImageFormat.Jpeg);
     }
   }

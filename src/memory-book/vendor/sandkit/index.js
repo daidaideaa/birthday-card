@@ -235,7 +235,8 @@ export class SandKit {
         const gl = this.gl, T = this.options, u = this.uniforms, now = this.time;
         gl.useProgram(this.program);
         gl.bindVertexArray(this.vao);
-        const dpr = Math.min(devicePixelRatio || 1, 2), w = Math.max(1, Math.round(this.canvas.clientWidth * dpr)), h = Math.max(1, Math.round(this.canvas.clientHeight * dpr));
+        // Mobile chapter budgets include framebuffer pixels as well as grain count.
+        const dpr = Math.min(devicePixelRatio || 1, window.innerWidth <= 700 ? 1.5 : 2), w = Math.max(1, Math.round(this.canvas.clientWidth * dpr)), h = Math.max(1, Math.round(this.canvas.clientHeight * dpr));
         if (this.canvas.width !== w || this.canvas.height !== h) {
             this.canvas.width = w;
             this.canvas.height = h;

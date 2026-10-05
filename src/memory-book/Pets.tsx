@@ -1,267 +1,346 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { assetUrl } from '../utils/assetUrl';
+import rigCrops from '../../public/memory-book/teddy-turnaround-layout-v9.json';
 import './pets.css';
 
 type PetsProps = { scene: number; quiet: boolean; reducedMotion: boolean; celebrate: number; transitioning?: boolean; onPet?: () => void };
-type DogColor = 'apricot' | 'cream';
-type Mood = 'watch' | 'sniff' | 'walk' | 'sit' | 'sleep' | 'stretch' | 'look' | 'greet' | 'bow';
-type Actor = {
-  element: HTMLDivElement; touch: HTMLButtonElement; parts: Record<string, SVGElement>;
-  x: number; target: number; direction: number; facing: number; phase: number;
-  mood: Mood; beat: number; moodSince: number; nextMood: number; nextBlink: number; blinkUntil: number; petUntil: number; petStarted: number; noticeAt: number; noticeUntil: number; jumpAt: number;
-  sitting: number; sleeping: number; sniffing: number; stretching: number; affection: number; gait: number;
-  greeting: number; curiosity: number; bowing: number;
-  random: () => number;
+type Color = 'apricot' | 'cream';
+type Mood = 'watch' | 'walk' | 'trot' | 'lookback' | 'greet' | 'sniff' | 'sit' | 'rest' | 'hop';
+type Part = 'head' | 'body' | 'front' | 'back' | 'tail' | 'blink';
+type Rect = [number, number, number, number];
+type Point = { x: number; depth: number };
+type Obstacle = { left: number; top: number; right: number; bottom: number };
+type Pose = { head: Rect; body: Rect; tail: Rect; legs: Rect[]; neck: [number, number] };
+type Actor = Point & {
+  element: HTMLDivElement; button: HTMLButtonElement; context: CanvasRenderingContext2D;
+  color: Color; target: Point; yaw: number; headYaw: number; phase: number; gait: number;
+  mood: Mood; moodAt: number; nextMood: number; beat: number; hopAt: number;
+  sit: number; rest: number; sniff: number; greeting: number; tilt: number;
+  petAt: number; petUntil: number; noticeAt: number; noticeUntil: number;
+  nextBlink: number; blinkUntil: number; opacity: number; hasSpace: boolean; random: () => number;
 };
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
-const mix = (a: number, b: number, amount: number) => a + (b - a) * amount;
+const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+const smooth = (t: number) => t * t * (3 - 2 * t);
 const damp = (a: number, b: number, dt: number, speed = 6) => mix(a, b, 1 - Math.exp(-dt * speed));
-const f = (n: number) => n.toFixed(2);
+const angle = (n: number) => ((n + 180) % 360 + 360) % 360 - 180;
+const turn = (a: number, b: number, dt: number) => a + angle(b - a) * (1 - Math.exp(-dt * 4.8));
+const pulse = (t: number, start: number, duration: number) => t > start && t < start + duration ? Math.sin((t - start) / duration * Math.PI) : 0;
 const seeded = (seed: number) => () => { seed = Math.imul(seed, 1664525) + 1013904223 | 0; return (seed >>> 0) / 4294967296; };
-const pulse = (time: number, start: number, duration: number) => time > start && time < start + duration ? Math.sin((time - start) / duration * Math.PI) : 0;
-// Small, readable performances separated by long pauses. The two puppies have
-// their own rhythm; curiosity and greetings are deliberate, not rare dice rolls.
-const ROUTINES: { mood: Mood; seconds: number }[][] = [
-  [{ mood: 'look', seconds: 2.8 }, { mood: 'greet', seconds: 2.8 }, { mood: 'watch', seconds: 9 }, { mood: 'sniff', seconds: 3.2 }, { mood: 'walk', seconds: 6 }, { mood: 'look', seconds: 3.6 }, { mood: 'bow', seconds: 2.3 }, { mood: 'watch', seconds: 8 }, { mood: 'sit', seconds: 13 }, { mood: 'sleep', seconds: 16 }, { mood: 'stretch', seconds: 2.6 }],
-  [{ mood: 'look', seconds: 3.3 }, { mood: 'watch', seconds: 3 }, { mood: 'greet', seconds: 2.8 }, { mood: 'sit', seconds: 12 }, { mood: 'sniff', seconds: 3.8 }, { mood: 'walk', seconds: 5 }, { mood: 'look', seconds: 4.2 }, { mood: 'watch', seconds: 9 }, { mood: 'sleep', seconds: 20 }, { mood: 'stretch', seconds: 2.8 }],
-];
+const overlaps = (a: Obstacle, b: Obstacle) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 
-// ImageGen-painted RGBA layers. Each cutout is an anatomical volume with generous
-// overlap at its joint; the reference dog in the atlas is never used as a sprite.
-const PAINTED_CROPS = {
-  body: '26 94 507 313',
-  tail: '1269 103 220 298', front: '64 508 180 421', back: '323 513 206 415',
-  paw: '65 831 180 100',
-};
-function PaintedPart({ color, crop, x, y, width, height }: { color: DogColor; crop: keyof typeof PAINTED_CROPS; x: number; y: number; width: number; height: number }) {
-  return <svg x={x} y={y} width={width} height={height} viewBox={PAINTED_CROPS[crop]} overflow="hidden" aria-hidden="true">
-    <image href={assetUrl(`memory-book/teddy-${color}-painted.webp`)} width="1536" height="1024" />
-  </svg>;
+// Actual perspective drawings, not a side-view flattened into a front or back.
+// Coordinates share planted feet and an anatomical neck anchor through a turn.
+const POSES: Pose[] = [
+  { head: [82, 37, 116, 101], body: [94, 109, 92, 87], tail: [143, 107, 31, 48], legs: [[101, 144, 29, 67], [151, 144, 29, 67], [108, 145, 28, 69], [146, 145, 28, 69]], neck: [140, 130] },
+  { head: [120, 42, 116, 104], body: [81, 110, 121, 86], tail: [68, 105, 37, 50], legs: [[78, 144, 37, 70], [111, 140, 32, 69], [159, 144, 31, 70], [183, 140, 28, 67]], neck: [180, 134] },
+  { head: [141, 43, 109, 104], body: [63, 112, 141, 84], tail: [39, 103, 40, 51], legs: [[69, 144, 40, 70], [97, 141, 33, 69], [163, 144, 31, 70], [186, 140, 28, 69]], neck: [189, 134] },
+  { head: [141, 42, 109, 104], body: [82, 109, 121, 89], tail: [81, 113, 39, 52], legs: [[91, 145, 37, 70], [121, 140, 32, 70], [177, 143, 29, 70], [196, 140, 25, 67]], neck: [190, 134] },
+  { head: [82, 37, 116, 101], body: [93, 108, 94, 90], tail: [123, 119, 35, 53], legs: [[103, 145, 30, 70], [148, 145, 30, 70], [106, 142, 27, 68], [147, 142, 27, 68]], neck: [140, 130] },
+];
+const ROUTINES: { mood: Mood; seconds: number }[][] = [
+  [{ mood: 'watch', seconds: 3.1 }, { mood: 'walk', seconds: 5 }, { mood: 'lookback', seconds: 3.2 }, { mood: 'trot', seconds: 4 }, { mood: 'greet', seconds: 3.1 }, { mood: 'watch', seconds: 8 }, { mood: 'hop', seconds: 2 }, { mood: 'sniff', seconds: 3.4 }, { mood: 'sit', seconds: 11 }, { mood: 'rest', seconds: 16 }],
+  [{ mood: 'greet', seconds: 3 }, { mood: 'watch', seconds: 7 }, { mood: 'walk', seconds: 5 }, { mood: 'lookback', seconds: 3.5 }, { mood: 'trot', seconds: 4 }, { mood: 'sit', seconds: 12 }, { mood: 'hop', seconds: 2 }, { mood: 'watch', seconds: 8 }, { mood: 'rest', seconds: 18 }],
+];
+function poseAt(yaw: number): Pose {
+  const value = Math.abs(angle(yaw)) / 45, lower = Math.floor(value), higher = Math.min(4, lower + 1), t = smooth(value - lower);
+  const a = POSES[lower], b = POSES[higher];
+  const rect = (r: Rect, s: Rect) => r.map((v, i) => mix(v, s[i], t)) as Rect;
+  return { head: rect(a.head, b.head), body: rect(a.body, b.body), tail: rect(a.tail, b.tail), legs: a.legs.map((r, i) => rect(r, b.legs[i])), neck: [mix(a.neck[0], b.neck[0], t), mix(a.neck[1], b.neck[1], t)] };
 }
-// Each portrait is one continuous skull, muzzle, ear-root and ear silhouette.
-// Its ears belong to the same painting; older standalone ears are not layered on.
-const HEAD_CROPS = {
-  apricot: { open: '40 80 588 520', closed: '39 654 588 520' },
-  cream: { open: '640 108 582 504', closed: '639 684 582 504' },
-};
-function TeddyHead({ color, expression }: { color: DogColor; expression: keyof typeof HEAD_CROPS.apricot }) {
-  return <svg x="122" y="43" width="116" height="104" viewBox={HEAD_CROPS[color][expression]} overflow="hidden" aria-hidden="true">
-    <image href={assetUrl('memory-book/teddy-head-anatomy.webp')} width="1254" height="1254" />
-  </svg>;
+function drawLayer(context: CanvasRenderingContext2D, atlas: HTMLImageElement, color: Color, part: Part, yaw: number, rect: Rect) {
+  const value = Math.abs(angle(yaw)) / 45, a = Math.floor(value), b = Math.min(4, a + 1), blend = smooth(value - a);
+  const crops = rigCrops[color][part];
+  const paint = (index: number, opacity: number) => {
+    if (opacity < .005) return;
+    const crop = crops[index];
+    context.globalAlpha = opacity;
+    context.drawImage(atlas, crop[0], crop[1], crop[2], crop[3], rect[0], rect[1], rect[2], rect[3]);
+  };
+  // Neighboring drawings share interpolated joints, so paws/head don't jump
+  // when the visible skull, chest, muzzle and rump rotate through a key view.
+  paint(a, 1 - blend); if (a !== b) paint(b, blend);
+  context.globalAlpha = 1;
 }
-const Teddy = memo(function Teddy({ color }: { color: DogColor }) {
-  return <svg className={`memory-pet-drawing memory-pet-fur-${color}`} viewBox="0 0 280 240" aria-hidden="true">
-    <g data-part="facing"><g data-part="bounce">
-      <g data-part="far-back" opacity=".86"><PaintedPart color={color} crop="back" x={88} y={132} width={36} height={77}/></g>
-      <g data-part="far-front" opacity=".86"><PaintedPart color={color} crop="front" x={176} y={131} width={32} height={77}/></g>
-      <g data-part="tail"><PaintedPart color={color} crop="tail" x={38} y={97} width={44} height={60}/></g>
-      <g data-part="body"><PaintedPart color={color} crop="body" x={64} y={110} width={138} height={85}/></g>
-      <g data-part="near-back"><PaintedPart color={color} crop="back" x={66} y={132} width={39} height={79}/></g>
-      <g data-part="near-front"><PaintedPart color={color} crop="front" x={149} y={132} width={34} height={79}/></g>
-      <g data-part="rest-far-paw" opacity="0"><PaintedPart color={color} crop="paw" x={225} y={188} width={38} height={21}/></g>
-      <g data-part="head">
-        <g data-part="eyes-open"><TeddyHead color={color} expression="open"/></g>
-        <g data-part="eyes-closed" opacity="0"><TeddyHead color={color} expression="closed"/></g>
-      </g>
-      <g data-part="rest-near-paw" opacity="0"><PaintedPart color={color} crop="paw" x={207} y={196} width={40} height={22}/></g>
-    </g></g>
-  </svg>;
-});
-function PetDrawing({ color, reply, onPet, elementRef }: { color: DogColor; reply: string; onPet: () => void; elementRef: (element: HTMLDivElement | null) => void }) {
-  return <div ref={elementRef} className={`memory-pet memory-pet-${color}`}>
-    <span className="memory-pet-shadow" aria-hidden="true" /><span className="memory-pet-heart" aria-hidden="true">♡</span>
-    <Teddy color={color} />
-    {reply && <span className="memory-pet-reply" role="status">{reply}</span>}
-    <button type="button" className="memory-pet-touch" aria-label={`摸摸${color === 'apricot' ? '杏色' : '奶油色'}泰迪`} onClick={onPet} title="轻轻摸摸我"><span className="memory-pet-touch-cue" aria-hidden="true">摸摸我</span></button>
-  </div>;
+function drawPuppy(actor: Actor, atlas: HTMLImageElement, blinkAtlas: HTMLImageElement, time: number, moving: boolean, reduced: boolean, closed: boolean, hopTime: number) {
+  const ctx = actor.context, yaw = angle(actor.yaw), facing = yaw < 0 ? -1 : 1, view = Math.abs(yaw), pose = poseAt(yaw);
+  const gait = actor.gait, trot = actor.mood === 'trot', breath = reduced ? 0 : Math.sin(time * (actor.color === 'apricot' ? 2 : 1.72));
+  let hop = 0, crouch = 0;
+  if (!reduced && hopTime >= 0 && hopTime < 1.35) {
+    if (hopTime < .28) crouch = Math.sin(hopTime / .28 * Math.PI / 2);
+    else if (hopTime < .91) { hop = Math.sin((hopTime - .28) / .63 * Math.PI) * 31; crouch = 0; }
+    else crouch = Math.sin((hopTime - .91) / .44 * Math.PI) * .68;
+  }
+  const bob = moving ? -Math.abs(Math.sin(actor.phase * (trot ? 1 : 2))) * gait * (trot ? 3.5 : 1.1) : 0;
+  actor.element.style.setProperty('--pet-shadow-scale', (1 - hop / 85 + actor.rest * .12).toFixed(3));
+  actor.element.style.setProperty('--pet-shadow-opacity', (.65 - hop / 115).toFixed(3));
+  actor.element.style.setProperty('--pet-shadow-blur', (hop / 12).toFixed(2) + 'px');
+  ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.clearRect(0, 0, 280, 280);
+  ctx.save(); ctx.translate(140, 20 + bob - hop + crouch * 5); ctx.scale(facing, 1); ctx.translate(-140, 0);
+  const render = (part: Part, rect: Rect, partYaw = yaw) => drawLayer(ctx, part === 'blink' ? blinkAtlas : atlas, actor.color, part, partYaw, rect);
+  const leg = (i: number) => {
+    const r = pose.legs[i], rear = i < 2, offered = i === 2 ? actor.greeting : 0;
+    const offset = trot ? [.5, 0, 0, .5][i] : [.5, 0, .25, .75][i];
+    const cycle = (actor.phase / (Math.PI * 2) + offset) % 1, swing = clamp((cycle - .61) / .39, 0, 1);
+    const stride = (cycle < .61 ? mix(-14, 14, cycle / .61) : mix(14, -14, smooth(swing))) * gait;
+    const angleDegrees = stride * Math.sin(view * Math.PI / 180) + (rear ? -actor.sit * 24 - actor.rest * 37 : -actor.rest * 63 - offered * 35);
+    const lower = rear ? actor.sit * 24 + actor.rest * 33 : actor.rest * 34;
+    const lift = Math.sin(swing * Math.PI) * gait * (trot ? 11 : 7) + offered * 11;
+    const squeeze = 1 - (rear ? actor.sit * .31 + actor.rest * .39 : actor.rest * .1 + offered * .15) - crouch * .17;
+    const pivotX = r[0] + r[2] * .5, pivotY = r[1] + 13;
+    ctx.save(); ctx.translate(0, lower - lift + crouch * 7);
+    // Front and back views lift the paws in depth; side views also swing at the shoulder.
+    ctx.translate(pivotX, pivotY); ctx.rotate(angleDegrees * Math.PI / 180); ctx.scale(1, squeeze); ctx.translate(-pivotX, -pivotY);
+    render(rear ? 'back' : 'front', r); ctx.restore();
+  };
+  const tail = () => {
+    const r = pose.tail, excited = actor.greeting * 16 + (hopTime >= 0 && hopTime < 1.35 ? 15 : 0) + gait * 7 + actor.tilt * 4;
+    const wag = reduced ? 0 : Math.sin(time * (excited > 8 ? 13 : 7)) * (excited + 2) * (1 - actor.rest);
+    ctx.save(); ctx.translate(0, actor.sit * 12 + actor.rest * 24);
+    ctx.translate(r[0] + r[2] * .5, r[1] + r[3] * .86); ctx.rotate((wag - actor.rest * 17) * Math.PI / 180);
+    ctx.translate(-r[0] - r[2] * .5, -r[1] - r[3] * .86); render('tail', r); ctx.restore();
+  };
+  const head = () => {
+    const r = pose.head, tilt = actor.sniff * 18 + actor.rest * 20 - actor.tilt * 13 + (reduced ? 0 : Math.sin(actor.phase - .8) * gait * 1.8);
+    ctx.save(); ctx.translate(actor.sniff * 8 + actor.rest * 9, actor.sniff * 23 + actor.rest * 46 - actor.sit * 3 + breath * .22 - actor.tilt * 2);
+    ctx.translate(...pose.neck); ctx.rotate(tilt * Math.PI / 180); ctx.translate(-pose.neck[0], -pose.neck[1]);
+    render(closed ? 'blink' : 'head', r, actor.headYaw); ctx.restore();
+  };
+  if (view < 112) tail();
+  leg(1); leg(3);
+  if (view > 112) head();
+  ctx.save(); ctx.translate(-actor.sit * 2 - actor.greeting, actor.rest * 21 + crouch * 4);
+  ctx.translate(140, 163); ctx.rotate((-actor.sit * Math.sin(view * Math.PI / 180) * 10) * Math.PI / 180);
+  ctx.scale(1 - actor.rest * .08, 1 - actor.rest * .13 + breath * .008); ctx.translate(-140, -163);
+  render('body', pose.body); ctx.restore();
+  leg(0); leg(2);
+  if (view < 35) leg(3);
+  if (view > 145) leg(1);
+  if (view <= 112) head();
+  if (view >= 112) tail();
+  // The forward paw tips visibly support the lowered chin during a rest.
+  if (actor.rest > .45) {
+    const alpha = clamp((actor.rest - .45) / .5, 0, 1), fore = rigCrops[actor.color].front[1];
+    const x = pose.neck[0] + 25, y = 198;
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(atlas, fore[0], fore[1] + fore[3] * .76, fore[2], fore[3] * .24, x, y, 28, 16);
+    ctx.drawImage(atlas, fore[0], fore[1] + fore[3] * .76, fore[2], fore[3] * .24, x + 19, y - 5, 26, 15);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
 }
 
 export default function Pets(props: PetsProps) {
-  const container = useRef<HTMLDivElement>(null), dogElements = useRef<(HTMLDivElement | null)[]>([null, null]);
+  const container = useRef<HTMLDivElement>(null), elements = useRef<(HTMLDivElement | null)[]>([]);
   const actors = useRef<Actor[]>([]), current = useRef(props), wake = useRef<() => void>(() => {});
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]), [replies, setReplies] = useState(['', '']);
   current.current = props;
-  const [replies, setReplies] = useState(['', '']);
-  const replyTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const pet = (index: number) => {
-    const actor = actors.current[index];
-    const now = performance.now();
-    if (actor) { actor.petStarted = now; actor.petUntil = now + 4400; }
-    const companion = actors.current[1 - index];
-    if (companion) { companion.noticeAt = now + 600; companion.noticeUntil = now + 3500; }
+    const now = performance.now(), actor = actors.current[index], other = actors.current[1 - index];
+    if (!actor || actor.button.disabled) return;
+    actor.petAt = now; actor.petUntil = now + 4300; actor.target = { x: actor.x, depth: actor.depth };
+    if (other) { other.noticeAt = now + 650; other.noticeUntil = now + 3300; }
     current.current.onPet?.();
-    if (replyTimers.current[index]) clearTimeout(replyTimers.current[index]);
-    setReplies((values) => values.map((value, i) => i === index ? current.current.quiet ? '我在这里陪你' : index ? '再靠近你一点 ♡' : '喜欢你的摸摸 ♡' : value));
-    replyTimers.current[index] = setTimeout(() => { setReplies((values) => values.map((value, i) => i === index ? '' : value)); wake.current(); }, 4400);
+    if (timers.current[index]) clearTimeout(timers.current[index]);
+    setReplies(v => v.map((value, i) => i === index ? index ? '也想靠近你一点 ♡' : '喜欢你的摸摸 ♡' : value));
+    timers.current[index] = setTimeout(() => { setReplies(v => v.map((value, i) => i === index ? '' : value)); wake.current(); }, 4300);
     wake.current();
   };
-
   useEffect(() => {
     const stage = container.current;
     if (!stage) return;
-    let width = stage.clientWidth, visible = true, raf = 0, last = 0, elapsed = 0;
-    let previousScene = current.current.scene, previousCelebrate = current.current.celebrate;
-    const pointer = { x: width / 2, until: 0 };
-    const keepOnStage = (position: number, element: HTMLDivElement | null) => {
-      const inset = (element?.clientWidth ?? 0) / 2 + 8;
-      return clamp(position, Math.min(inset, width / 2), Math.max(width - inset, width / 2));
-    };
-    const park = (index: number) => keepOnStage(width * (current.current.scene >= 3 ? index ? .88 : .12 : index ? .85 : .15), dogElements.current[index]);
-    actors.current = dogElements.current.filter((element): element is HTMLDivElement => Boolean(element)).map((element, index) => ({
-      element, touch: element.querySelector<HTMLButtonElement>('.memory-pet-touch')!, parts: Object.fromEntries(Array.from(element.querySelectorAll<SVGElement>('[data-part]')).map((part) => [part.dataset.part!, part])),
-      x: park(index), target: park(index), direction: index ? -1 : 1, facing: index ? -1 : 1, phase: index ? 2.7 : 0,
-      mood: index ? 'sit' : 'watch', beat: 0, moodSince: 0, nextMood: index ? 5.7 : 2.4, nextBlink: index ? 2.2 : 3.6, blinkUntil: 0, petUntil: 0, petStarted: -10000, noticeAt: 0, noticeUntil: 0, jumpAt: -20,
-      sitting: index ? 1 : 0, sleeping: 0, sniffing: 0, stretching: 0, affection: 0, gait: 0, random: seeded(index ? 7193 : 1207),
-      greeting: 0, curiosity: 0, bowing: 0,
-    }));
-    const transform = (actor: Actor, part: string, value: string) => actor.parts[part]?.setAttribute('transform', value);
-    const opacity = (actor: Actor, part: string, value: number) => actor.parts[part]?.setAttribute('opacity', f(value));
+    const root = stage.closest('.chapter-stage') ?? stage.parentElement!;
+    const images = { apricot: new Image(), cream: new Image(), blink: new Image() };
+    let width = stage.clientWidth, stageRect = stage.getBoundingClientRect(), obstacles: Obstacle[] = [];
+    let visible = true, raf = 0, last = 0, elapsed = 0, nextGeometry = 0, previousScene = current.current.scene, previousCelebrate = current.current.celebrate;
+    const pointer = { x: 0, until: 0 };
     const schedule = () => { if (!raf && visible && !document.hidden) raf = requestAnimationFrame(frame); };
     wake.current = schedule;
-    const resize = new ResizeObserver(() => {
-      const previousWidth = width;
-      width = stage.clientWidth;
-      actors.current.forEach((actor) => { actor.x = keepOnStage(actor.x / Math.max(1, previousWidth) * width, actor.element); actor.target = keepOnStage(actor.target / Math.max(1, previousWidth) * width, actor.element); });
-      schedule();
-    });
-    resize.observe(stage);
-    const visibility = new IntersectionObserver((entries) => {
-      visible = entries.some((entry) => entry.isIntersecting); last = 0;
-      if (visible) schedule(); else { cancelAnimationFrame(raf); raf = 0; }
-    }, { rootMargin: '40px' });
-    visibility.observe(stage);
-    const documentVisibility = () => { last = 0; if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else schedule(); };
-    document.addEventListener('visibilitychange', documentVisibility);
-    const point = (event: PointerEvent) => {
-      if (event.pointerType === 'touch') return;
-      const rect = stage.getBoundingClientRect();
-      if (event.clientY < rect.top + 25 || event.clientY > rect.bottom + 25) return;
-      pointer.x = event.clientX - rect.left; pointer.until = performance.now() + 1500;
+    const scaleAt = (depth: number) => 1 - depth * .19;
+    const edge = (actor: Actor, x: number, depth = actor.depth) => {
+      const inset = actor.element.clientWidth * scaleAt(depth) / 2 + 8;
+      return clamp(x, Math.min(inset, width / 2), Math.max(width - inset, width / 2));
     };
-    window.addEventListener('pointermove', point, { passive: true });
-
+    const bounds = (actor: Actor, point: Point, jumping = false): Obstacle => {
+      const size = actor.element.clientWidth * scaleAt(point.depth), ground = stageRect.bottom + (width < 600 ? 12 : 0) - point.depth * 36;
+      // Measured painted silhouette in the 280-square canvas: about y=54..234.
+      // Its transparent margins are not an obstacle and don't consume the lane.
+      return { left: stageRect.left + point.x - size * .44 - 3, right: stageRect.left + point.x + size * .44 + 3, top: ground - size * .81 - (jumping ? size * .15 : 2), bottom: ground - size * .155 + 1 };
+    };
+    const clear = (actor: Actor, point: Point, jumping = false, partner = true) => {
+      if (Math.abs(edge(actor, point.x, point.depth) - point.x) > .5) return false;
+      const box = bounds(actor, point, jumping);
+      if (box.top < 0 || box.bottom > innerHeight - 4 || obstacles.some(obstacle => overlaps(box, obstacle))) return false;
+      if (partner) {
+        const other = actors.current.find(value => value !== actor);
+        if (other && other.opacity > .1 && overlaps(box, bounds(other, other))) return false;
+      }
+      return true;
+    };
+    const routeClear = (actor: Actor, target: Point) => {
+      for (let i = 0; i <= 10; i++) {
+        const t = i / 10;
+        if (!clear(actor, { x: mix(actor.x, target.x, t), depth: mix(actor.depth, target.depth, t) })) return false;
+      }
+      return true;
+    };
+    const findSpace = (actor: Actor, index: number, moving: boolean): Point | null => {
+      const desired = width * (index ? .85 : .15), candidates: { point: Point; score: number }[] = [];
+      const depths = width < 600 ? [0, .35, .65] : [0, .35, .7, 1];
+      for (const depth of depths) {
+        for (let x = 12; x < width; x += width < 600 ? 14 : 22) {
+          const point = { x: edge(actor, x, depth), depth };
+          // Each puppy owns its half of the foreground. Never cross a CTA or
+          // another puppy just to make an idle routine reach its nominal mark.
+          if (index ? point.x < width * .54 : point.x > width * .46) continue;
+          if (!clear(actor, point) || (moving && !routeClear(actor, point))) continue;
+          const distance = Math.abs(point.x - actor.x) + Math.abs(depth - actor.depth) * 55;
+          const score = moving ? -distance + actor.random() * 28 : Math.abs(point.x - desired) + depth * 18;
+          candidates.push({ point, score });
+        }
+      }
+      candidates.sort((a, b) => a.score - b.score);
+      return candidates[0]?.point ?? null;
+    };
+    actors.current = elements.current.filter((e): e is HTMLDivElement => Boolean(e)).flatMap((element, index) => {
+      const context = element.querySelector('canvas')?.getContext('2d');
+      if (!context) return [];
+      return [{ element, button: element.querySelector('button')!, context, color: index ? 'cream' as const : 'apricot' as const,
+        x: width * (index ? .85 : .15), depth: 0, target: { x: width * (index ? .85 : .15), depth: 0 }, yaw: index ? -45 : 45, headYaw: index ? -45 : 45, phase: index ? 2.7 : 0, gait: 0,
+        mood: 'watch' as Mood, moodAt: 0, nextMood: index ? 6.3 : 3.6, beat: 0, hopAt: -20, sit: 0, rest: 0, sniff: 0, greeting: 0, tilt: 0,
+        petAt: -10000, petUntil: 0, noticeAt: 0, noticeUntil: 0, nextBlink: index ? 2.2 : 3.6, blinkUntil: 0, opacity: 0, hasSpace: false, random: seeded(index ? 7193 : 1207) }];
+    });
+    const measure = () => {
+      const previousWidth = width; width = stage.clientWidth; stageRect = stage.getBoundingClientRect();
+      if (previousWidth !== width) actors.current.forEach(actor => { actor.x = edge(actor, actor.x / Math.max(1, previousWidth) * width); actor.target.x = edge(actor, actor.target.x / Math.max(1, previousWidth) * width); });
+      obstacles = Array.from(root.querySelectorAll<HTMLElement>('[data-pet-obstacle],button,a,[role="button"],.cinema-caption,.chapter-caption,.journey-caption,.book-caption,.object-tools')).filter(element => !stage.contains(element) && !element.closest('[hidden]')).flatMap(element => {
+        const rect = element.getBoundingClientRect(), style = getComputedStyle(element);
+        if (!rect.width || !rect.height || style.visibility === 'hidden' || style.display === 'none' || Number(style.opacity) < .08) return [];
+        const gap = width < 600 ? 5 : 9;
+        return [{ left: rect.left - gap, top: rect.top - gap, right: rect.right + gap, bottom: rect.bottom + gap }];
+      });
+      nextGeometry = performance.now() + 650;
+    };
+    const changed = () => { nextGeometry = 0; schedule(); };
+    const resize = new ResizeObserver(changed); resize.observe(root); resize.observe(stage);
+    const mutations = new MutationObserver(records => { if (records.some(record => !(record.target instanceof Element) || !record.target.closest('.memory-pets'))) changed(); });
+    mutations.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'data-pet-obstacle'] });
+    const intersection = new IntersectionObserver(entries => { visible = entries.some(entry => entry.isIntersecting); last = 0; if (visible) schedule(); else { cancelAnimationFrame(raf); raf = 0; } }, { rootMargin: '40px' });
+    intersection.observe(stage);
+    const visibility = () => { last = 0; if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else { nextGeometry = 0; schedule(); } };
+    const point = (event: PointerEvent) => { if (event.pointerType !== 'touch' && event.clientY > stageRect.top - 25) { pointer.x = event.clientX - stageRect.left; pointer.until = performance.now() + 1300; } };
+    document.addEventListener('visibilitychange', visibility); window.addEventListener('pointermove', point, { passive: true }); window.addEventListener('scroll', changed, { passive: true });
+    images.apricot.src = assetUrl('memory-book/teddy-apricot-turnaround-v9.webp');
+    images.cream.src = assetUrl('memory-book/teddy-cream-turnaround-v9.webp');
+    images.blink.src = assetUrl('memory-book/teddy-turnaround-blink-v9.webp');
+    Object.values(images).forEach(image => { image.onload = schedule; image.onerror = schedule; });
     function frame(now: number) {
       raf = 0;
-      if (document.hidden || !visible || width < 1) { last = 0; return; }
-      const settings = current.current, motion = !settings.reducedMotion;
-      if (motion && last && now - last < 25) { schedule(); return; }
-      const dt = motion ? Math.min((now - (last || now)) / 1000, .06) : 1;
-      last = now; if (motion) elapsed += dt;
+      if (!visible || document.hidden || width < 1) { last = 0; return; }
+      const settings = current.current, motion = !settings.reducedMotion, mobile = width < 600;
+      if (motion && last && now - last < (mobile ? 32 : 25)) { schedule(); return; }
+      const dt = motion ? Math.min((now - (last || now)) / 1000, .06) : 1; last = now; if (motion) elapsed += dt;
+      if (now >= nextGeometry) measure();
+      const reading = settings.quiet || settings.scene === 2 || settings.scene === 3 || Boolean(root.closest('.memory-gift')?.classList.contains('is-book-reading'));
+      const withdraw = Boolean(settings.transitioning) || (mobile && reading);
       if (previousScene !== settings.scene) {
         previousScene = settings.scene;
-        actors.current.forEach((actor, index) => { actor.target = park(index); actor.mood = settings.scene >= 3 ? 'walk' : index ? 'sit' : 'watch'; actor.beat = 0; actor.moodSince = elapsed; actor.nextMood = elapsed + (index ? 5.7 : 2.4); });
+        actors.current.forEach((actor, index) => { actor.mood = 'watch'; actor.beat = 0; actor.nextMood = elapsed + (index ? 6.3 : 3.6); actor.hopAt = -20; actor.target = { x: actor.x, depth: actor.depth }; });
       }
       if (previousCelebrate !== settings.celebrate) {
         previousCelebrate = settings.celebrate;
-        if (settings.celebrate) actors.current.forEach((actor, index) => { actor.jumpAt = elapsed + index * .6; });
+        if (settings.celebrate) actors.current.forEach((actor, index) => { if (clear(actor, actor, true) && !withdraw) actor.hopAt = elapsed + index * .58; });
       }
       actors.current.forEach((actor, index) => {
-        actor.x = keepOnStage(actor.x, actor.element);
-        actor.target = keepOnStage(actor.target, actor.element);
-        const quiet = settings.quiet || Boolean(settings.transitioning), reading = settings.scene === 2;
-        const beingPetted = !settings.transitioning && actor.petUntil > now, nearPointer = pointer.until > now && Math.abs(pointer.x - actor.x) < 125;
-        const noticing = now > actor.noticeAt && now < actor.noticeUntil, calm = quiet || reading;
-        // Clear the cinema's controls before settling, even when quiet mode is
-        // already on. The passing dog must not intercept a pause-button click.
-        const petWidth = actor.element.clientWidth;
-        const safeLeftMin = width * (width < 600 ? .08 : .1);
-        const safeLeftMax = width < 600 ? width * .16 : Math.max(safeLeftMin, Math.min(width * .24, width / 2 - 120 - petWidth / 2 - 18));
-        const safeMin = keepOnStage(index ? width - safeLeftMax : safeLeftMin, actor.element);
-        const safeMax = keepOnStage(index ? width - safeLeftMin : safeLeftMax, actor.element);
-        const outsideCakeZone = settings.scene === 4 && (actor.x < safeMin || actor.x > safeMax);
-        const parking = (settings.scene === 3 || outsideCakeZone) && Math.abs(park(index) - actor.x) > 2;
-        if (parking) { actor.target = park(index); actor.mood = 'walk'; }
-        actor.touch.style.pointerEvents = parking || settings.transitioning ? 'none' : '';
-        actor.touch.disabled = Boolean(settings.transitioning);
-        if (motion && !calm && !beingPetted && !parking && elapsed > actor.nextMood) {
-          const routine = ROUTINES[index], beat = routine[actor.beat % routine.length];
-          actor.beat += 1; actor.mood = beat.mood; actor.moodSince = elapsed;
-          if (actor.mood === 'walk') {
-            actor.target = keepOnStage(settings.scene === 4 ? mix(safeMin, safeMax, actor.random()) : width * mix(index ? .65 : .13, index ? .87 : width < 600 ? .36 : .43, actor.random()), actor.element);
+        const atlas = images[actor.color], ready = atlas.complete && atlas.naturalWidth > 0 && images.blink.complete && images.blink.naturalWidth > 0;
+        actor.x = edge(actor, actor.x);
+        const beingPetted = now < actor.petUntil && !withdraw, notice = now > actor.noticeAt && now < actor.noticeUntil;
+        let safe = clear(actor, actor);
+        if (!safe || !actor.hasSpace) {
+          const place = findSpace(actor, index, false);
+          actor.hasSpace = Boolean(place);
+          if (place) {
+            // Hide before relocating when a new page/control occupies the old
+            // patch of floor. An invisible relocation never passes over controls.
+            actor.opacity = 0; actor.x = place.x; actor.depth = place.depth; actor.target = { ...place }; actor.mood = 'sit'; safe = true;
           }
-          actor.nextMood = elapsed + beat.seconds + (beat.seconds > 5 ? actor.random() * 2 : 0);
         }
-        const jumpTime = elapsed - actor.jumpAt, celebrating = motion && !settings.transitioning && jumpTime >= 0 && jumpTime < 1.55;
-        const resting = !beingPetted && !celebrating && ((quiet && !parking) || actor.mood === 'sleep');
-        actor.sleeping = motion ? damp(actor.sleeping, resting ? 1 : 0, dt, resting ? 2.8 : 5) : 0;
-        actor.sitting = motion ? damp(actor.sitting, !resting && !beingPetted && !parking && (reading || actor.mood === 'sit') ? 1 : 0, dt, 3) : index;
-        actor.sniffing = motion ? damp(actor.sniffing, !calm && !resting && !beingPetted && actor.mood === 'sniff' ? 1 : 0, dt, 3.4) : 0;
-        actor.stretching = motion ? damp(actor.stretching, !calm && !beingPetted && actor.mood === 'stretch' ? 1 : 0, dt, 3.6) : 0;
-        actor.affection = motion ? damp(actor.affection, beingPetted ? 1 : 0, dt, 5.2) : beingPetted ? 1 : 0;
-        const petTime = (now - actor.petStarted) / 1000, moodTime = elapsed - actor.moodSince;
-        const greeting = beingPetted ? pulse(petTime, 1.05, 1.8) : !calm && actor.mood === 'greet' ? pulse(moodTime, .4, 1.8) : 0;
-        const curious = beingPetted ? pulse(petTime, .15, 3.6) : noticing ? .85 : nearPointer ? .6 : !calm && actor.mood === 'look' ? pulse(moodTime, .1, 2.7) : reading ? .18 : 0;
-        actor.greeting = motion ? damp(actor.greeting, actor.sleeping < .12 && actor.sitting < .15 && !parking ? greeting : 0, dt, 9) : 0;
-        actor.curiosity = motion ? damp(actor.curiosity, !resting && !parking ? curious : 0, dt, 4.5) : 0;
-        actor.bowing = motion ? damp(actor.bowing, !calm && !beingPetted && actor.mood === 'bow' ? pulse(moodTime, .15, 1.7) : 0, dt, 9) : 0;
-        const ready = actor.sleeping < .08 && actor.sitting < .1 && actor.sniffing < .1 && actor.stretching < .1, distance = actor.target - actor.x;
-        const wantsWalk = motion && (!calm || parking) && !beingPetted && !celebrating && actor.mood === 'walk' && Math.abs(distance) > 2;
-        actor.gait = damp(actor.gait, wantsWalk && ready ? 1 : 0, dt, 7);
-        if (wantsWalk && ready) {
-          actor.direction = Math.sign(distance);
-          const speed = parking ? index ? 54 : 66 : index ? 23 : 30;
-          const step = Math.sign(distance) * Math.min(Math.abs(distance), speed * (width < 600 ? .72 : 1) * dt * actor.gait);
-          actor.x += step; actor.phase += Math.abs(step) / (width < 600 ? 21 : 28) * Math.PI * 2;
-        } else if (actor.mood === 'walk' && !wantsWalk) { actor.mood = 'watch'; actor.nextMood = elapsed + 1.4 + actor.random() * 1.4; }
-        if (!motion) { actor.x = park(index); actor.direction = index ? -1 : 1; actor.touch.style.pointerEvents = settings.transitioning ? 'none' : ''; }
-        if (!parking && actor.gait < .15 && (calm || noticing || beingPetted || actor.mood === 'look' || actor.mood === 'greet')) actor.direction = index ? -1 : 1;
-        actor.facing = motion ? damp(actor.facing, actor.direction, dt, 10) : actor.direction;
-        const sit = actor.sitting, sleep = actor.sleeping, sniff = actor.sniffing, stretch = actor.stretching, love = actor.affection, greet = actor.greeting, curiousTilt = actor.curiosity, bow = actor.bowing;
-        const t = motion ? elapsed + index * 4.27 : 0, breath = motion ? Math.sin(t * (index ? 1.75 : 2.05)) : 0;
-        const bodyBob = -Math.abs(Math.sin(actor.phase * 2)) * actor.gait * 1.3;
-        let jump = 0, anticipation = 0;
-        if (celebrating) {
-          if (jumpTime < .26) anticipation = Math.sin(jumpTime / .26 * Math.PI) * 4;
-          else if (jumpTime < .9) jump = Math.sin((jumpTime - .26) / .64 * Math.PI) * (index ? 11 : 18);
-          else anticipation = Math.sin((jumpTime - .9) / .65 * Math.PI) * 2.4;
+        if (!safe) actor.hasSpace = false;
+        const display = ready && actor.hasSpace && !withdraw;
+        actor.opacity = motion ? damp(actor.opacity, display ? 1 : 0, dt, display ? 5 : 9) : display ? 1 : 0;
+        actor.element.style.opacity = safe ? actor.opacity.toFixed(3) : '0';
+        actor.button.disabled = !display || actor.opacity < .65;
+        actor.button.tabIndex = display ? 0 : -1;
+        actor.element.setAttribute('aria-hidden', display ? 'false' : 'true');
+        actor.button.style.pointerEvents = actor.button.disabled ? 'none' : '';
+        if (!display) { actor.target = { x: actor.x, depth: actor.depth }; actor.hopAt = -20; }
+        if (motion && display && !reading && !beingPetted && elapsed > actor.nextMood) {
+          const beat = ROUTINES[index][actor.beat++ % ROUTINES[index].length]; actor.mood = beat.mood; actor.moodAt = elapsed;
+          actor.nextMood = elapsed + beat.seconds;
+          if (beat.mood === 'walk' || beat.mood === 'trot') {
+            const destination = findSpace(actor, index, true);
+            if (destination && Math.abs(destination.x - actor.x) + Math.abs(destination.depth - actor.depth) * 55 > 22) actor.target = destination;
+            else { actor.mood = 'sit'; actor.target = { x: actor.x, depth: actor.depth }; }
+          } else actor.target = { x: actor.x, depth: actor.depth };
+          if (beat.mood === 'hop' && clear(actor, actor, true)) actor.hopAt = elapsed;
         }
-        const follow = nearPointer ? clamp((pointer.x - actor.x) * actor.direction / 50, -1.7, 1.7) : Math.sin(t * .28) * .45;
-        const headTilt = sniff * 22 + sleep * 27 + stretch * 10 + bow * 12 - love * 3 - curiousTilt * (index ? 13 : 16) + follow * 1.4;
-        const headX = sniff * 13 + sleep * 10 + stretch * 15 + bow * 12 + love * 1.5;
-        const headY = sniff * 27 + sleep * 49 + stretch * 32 + bow * 28 - sit * 4 - love * 3 - curiousTilt * 2 + breath * .25 + sniff * Math.sin(t * 7.7) * .9;
-        const wag = motion ? Math.sin(t * (love > .2 || celebrating || greet > .1 ? 13 : 7.2)) * (love * 15 + (celebrating ? 10 : 0) + greet * 12 + curiousTilt * 5 + bow * 13 + (!calm ? Math.max(0, Math.sin(t * .43 + index) - .75) * 13 : 0) + actor.gait * 4) * (1 - sleep) : 0;
-        if (motion && elapsed > actor.nextBlink) { actor.blinkUntil = elapsed + .14 + actor.random() * .08; actor.nextBlink = elapsed + 2.7 + actor.random() * 4.2; }
-        const closed = sleep > .72 || (motion && elapsed < actor.blinkUntil) || (beingPetted && petTime > .18 && petTime < .65);
-        actor.element.style.transform = `translate3d(${f(actor.x)}px,0,0)`;
-        actor.element.dataset.mood = beingPetted ? 'loved' : celebrating ? 'celebrating' : sleep > .55 ? 'sleeping' : actor.gait > .1 ? 'walking' : actor.mood;
-        actor.element.style.setProperty('--pet-shadow-scale', f(1 - jump / 80 + sleep * .14));
-        // A painted profile changes direction with a small squash, never a
-        // paper-thin 3D-card flip that makes the puppy disappear mid-turn.
-        const facingScale = (actor.facing < 0 ? -1 : 1) * (.84 + .16 * Math.abs(actor.facing));
-        transform(actor, 'facing', `translate(140 0) scale(${f(facingScale)} 1) translate(-140 0)`);
-        transform(actor, 'bounce', `translate(0 ${f(bodyBob - jump + anticipation)})`);
-        transform(actor, 'body', `translate(${f(-sit * 3 - greet * 2)} ${f(sleep * 23 + stretch * 8 + bow * 8)}) translate(166 149) rotate(${f(-sit * 13 + stretch * 6 + bow * 9 - greet * 2)}) scale(${f(1 - sleep * .1)} ${f(1 - sleep * .13 + breath * .008)}) translate(-166 -149)`);
-        transform(actor, 'tail', `translate(0 ${f(sit * 18 + sleep * 25)}) rotate(${f(wag + sleep * -24 - sit * 6)} 82 151)`);
-        // Four-beat walk: longer planted stance, shorter lifted return. Phase is
-        // advanced by distance travelled so feet don't cycle while standing still.
-        const limbs: [string, number, number, number, boolean][] = [['near-back', 83, 148, .75, true], ['far-back', 100, 145, .25, true], ['near-front', 161, 148, 0, false], ['far-front', 183, 146, .5, false]];
-        limbs.forEach(([name, px, py, offset, rear]) => {
-          const cycle = (actor.phase / (Math.PI * 2) + offset) % 1;
-          const swing = clamp((cycle - .62) / .38, 0, 1);
-          const stride = (cycle < .62 ? mix(-13, 13, cycle / .62) : mix(13, -13, swing * swing * (3 - 2 * swing))) * actor.gait;
-          const offering = name === 'near-front' ? greet : 0;
-          const angle = stride + (rear ? sit * -23 + sleep * -34 - bow * 4 : sleep * -71 - stretch * 32 - bow * 28) - offering * (37 + Math.sin((beingPetted ? petTime : moodTime) * 12) * 4);
-          const lower = rear ? sit * 24 + sleep * 38 - bow * 2 : sleep * 40 + stretch * 12 + bow * 12, compress = rear ? 1 - sit * .36 - sleep * .46 : 1 - sleep * .1 - offering * .19;
-          const lift = Math.sin(swing * Math.PI) * actor.gait * 7 + offering * 10;
-          transform(actor, name, `translate(0 ${f(lower - lift)}) translate(${px} ${py}) rotate(${f(angle)}) scale(1 ${f(compress)}) translate(${-px} ${-py})`);
-        });
-        transform(actor, 'head', `translate(${f(headX)} ${f(headY)}) rotate(${f(headTilt)} 183 137)`);
-        // The curled front limbs retain their full joints underneath; their paw
-        // tips are composited over the chin so the sleeping pose visibly bears weight.
-        const restingPaws = clamp((sleep - .45) / .5, 0, 1);
-        transform(actor, 'rest-near-paw', `translate(${f(-42 * (1 - sleep))} ${f(3 * (1 - sleep))})`);
-        transform(actor, 'rest-far-paw', `translate(${f(-42 * (1 - sleep))} ${f(15 * (1 - sleep))})`);
-        opacity(actor, 'rest-near-paw', restingPaws); opacity(actor, 'rest-far-paw', restingPaws * .88);
-        opacity(actor, 'eyes-open', closed ? 0 : 1); opacity(actor, 'eyes-closed', closed ? 1 : 0);
+        // Jump envelopes are tested separately: a standing gap is not enough
+        // if an upward hop would touch a caption or button.
+        if (elapsed - actor.hopAt < 1.35 && !clear(actor, actor, true)) actor.hopAt = -20;
+        const hopTime = elapsed - actor.hopAt, hopping = motion && hopTime >= 0 && hopTime < 1.35;
+        const resting = display && !beingPetted && !hopping && (reading || actor.mood === 'rest');
+        const sitting = display && !resting && !beingPetted && !hopping && actor.mood === 'sit';
+        actor.rest = motion ? damp(actor.rest, resting ? 1 : 0, dt, 4) : 0;
+        actor.sit = motion ? damp(actor.sit, sitting ? 1 : 0, dt, 4) : index;
+        actor.sniff = motion ? damp(actor.sniff, !reading && !beingPetted && actor.mood === 'sniff' ? 1 : 0, dt, 4) : 0;
+        const petTime = (now - actor.petAt) / 1000, moodTime = elapsed - actor.moodAt;
+        const wantsGreeting = beingPetted ? pulse(petTime, .8, 2) : actor.mood === 'greet' && !reading ? pulse(moodTime, .4, 2) : 0;
+        actor.greeting = motion ? damp(actor.greeting, actor.rest < .1 && actor.sit < .1 ? wantsGreeting : 0, dt, 8) : 0;
+        const attentive = beingPetted ? pulse(petTime, .1, 3.8) : notice ? .7 : pointer.until > now && Math.abs(pointer.x - actor.x) < 90 ? .5 : 0;
+        actor.tilt = motion ? damp(actor.tilt, clear(actor, actor, true) ? attentive : 0, dt, 5) : 0;
+        const dx = actor.target.x - actor.x, dd = (actor.target.depth - actor.depth) * 80, distance = Math.hypot(dx, dd);
+        let walking = display && motion && !reading && !beingPetted && !hopping && (actor.mood === 'walk' || actor.mood === 'trot') && distance > 2;
+        if (walking && !routeClear(actor, actor.target)) { walking = false; actor.target = { x: actor.x, depth: actor.depth }; actor.mood = 'sit'; }
+        actor.gait = motion ? damp(actor.gait, walking && actor.rest < .08 && actor.sit < .1 && actor.sniff < .1 ? 1 : 0, dt, 7) : 0;
+        const inward = index ? -1 : 1;
+        let desiredYaw = actor.mood === 'lookback' ? inward * 135 : actor.mood === 'watch' || beingPetted ? 0 : inward * 45;
+        if (resting) desiredYaw = inward * 45;
+        if (walking) {
+          desiredYaw = Math.atan2(dx, -dd) * 180 / Math.PI;
+          const speed = (actor.mood === 'trot' ? 65 : 29) * (mobile ? .78 : 1) * actor.gait;
+          const amount = Math.min(1, speed * dt / Math.max(1, distance));
+          actor.x += dx * amount; actor.depth += dd / 80 * amount; actor.phase += distance * amount / (actor.mood === 'trot' ? 31 : 26) * Math.PI * 2;
+        }
+        actor.yaw = motion ? turn(actor.yaw, desiredYaw, dt) : inward * 45;
+        const headTarget = actor.mood === 'lookback' || notice ? inward * 45 : beingPetted ? 0 : actor.yaw;
+        actor.headYaw = motion ? turn(actor.headYaw, headTarget, dt) : actor.yaw;
+        if (motion && elapsed > actor.nextBlink) { actor.blinkUntil = elapsed + .14 + actor.random() * .07; actor.nextBlink = elapsed + 2.9 + actor.random() * 3.7; }
+        const closed = actor.rest > .75 || (motion && elapsed < actor.blinkUntil) || (beingPetted && petTime > .15 && petTime < .6);
+        actor.element.style.transform = 'translate3d(' + actor.x.toFixed(2) + 'px,' + ((mobile ? 12 : 0) - actor.depth * 36).toFixed(2) + 'px,0) scale(' + scaleAt(actor.depth).toFixed(3) + ')';
+        actor.element.style.zIndex = String(20 - Math.round(actor.depth * 10));
+        actor.element.dataset.mood = beingPetted ? 'loved' : hopping ? 'hopping' : resting ? 'resting' : walking ? actor.mood : actor.mood;
+        actor.element.dataset.view = ['front', 'front-quarter', 'side', 'rear-quarter', 'back'][Math.round(Math.abs(angle(actor.yaw)) / 45)];
+        if (ready && safe && actor.opacity > .005) drawPuppy(actor, atlas, images.blink, elapsed + index * 3.71, walking, !motion, closed, hopping ? hopTime : -1);
       });
       if (motion) schedule();
     }
-    schedule();
-    const timers = replyTimers.current;
-    return () => { wake.current = () => {}; cancelAnimationFrame(raf); resize.disconnect(); visibility.disconnect(); document.removeEventListener('visibilitychange', documentVisibility); window.removeEventListener('pointermove', point); timers.forEach(clearTimeout); };
+    measure(); schedule();
+    const replyTimers = timers.current;
+    return () => {
+      wake.current = () => {}; cancelAnimationFrame(raf); resize.disconnect(); intersection.disconnect(); mutations.disconnect();
+      document.removeEventListener('visibilitychange', visibility); window.removeEventListener('pointermove', point); window.removeEventListener('scroll', changed);
+      Object.values(images).forEach(image => { image.onload = null; image.onerror = null; }); replyTimers.forEach(clearTimeout);
+    };
   }, []);
-  useEffect(() => { wake.current(); }, [props.scene, props.quiet, props.reducedMotion, props.celebrate, props.transitioning]);
-  return <div ref={container} className={`memory-pets${props.scene === 4 ? ' memory-pets-cake' : ''}${props.quiet ? ' memory-pets-reading' : ''}${props.reducedMotion ? ' memory-pets-still' : ''}`} aria-label="两只会歪头、招呼和陪伴你的泰迪幼犬">
-    <PetDrawing color="apricot" reply={replies[0]} onPet={() => pet(0)} elementRef={(element) => { dogElements.current[0] = element; }} />
-    <PetDrawing color="cream" reply={replies[1]} onPet={() => pet(1)} elementRef={(element) => { dogElements.current[1] = element; }} />
+  useEffect(() => { wake.current(); }, [props.scene, props.quiet, props.transitioning, props.reducedMotion, props.celebrate]);
+  return <div ref={container} className={'memory-pets' + (props.quiet ? ' memory-pets-reading' : '') + (props.reducedMotion ? ' memory-pets-still' : '')} aria-label="两只会转身、小跑和陪伴你的泰迪幼犬">
+    {(['apricot', 'cream'] as const).map((color, index) => <div key={color} ref={element => { elements.current[index] = element; }} className={'memory-pet memory-pet-' + color}>
+      <span className="memory-pet-shadow" aria-hidden="true" />
+      <canvas className="memory-pet-drawing" width="560" height="560" aria-hidden="true" />
+      <span className="memory-pet-heart" aria-hidden="true">♡</span>
+      {replies[index] && <span className="memory-pet-reply" role="status">{replies[index]}</span>}
+      <button type="button" className="memory-pet-touch" aria-label={'摸摸' + (index ? '奶油色' : '杏色') + '泰迪'} title="轻轻摸摸我" onClick={() => pet(index)}><span className="memory-pet-touch-cue" aria-hidden="true">摸摸我</span></button>
+    </div>)}
   </div>;
 }
+

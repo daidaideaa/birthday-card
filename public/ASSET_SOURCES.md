@@ -105,3 +105,14 @@ V7 teddy-puppy-expressions.webp 与更早的 teddy-rig.webp 已从当前发布�
 
 已删除的旧三维角色、琴舞、旧预览、静态书与蛋糕等来源，保存在[清理前的素材记录](https://github.com/daidaideaa/birthday-card/blob/f27a7386e60436d85b6ac9e394888068e4937141/public/ASSET_SOURCES.md)。历史出处并未被改写为项目原创；当前运行素材、源 GIF 与可编辑遮罩保留。
 
+
+## V9 · 手机空间与双人叙事（2026-10-05）
+
+- 首尾竖屏场景由内置image_gen生成；wizard-study-layer.webp与window-night-layer.webp保留真实alpha窗洞，window-distance.webp为独立窗外远景。SVG分别合成远景、窗框/室内、桌面、帘子、烛光与浮尘。不是实拍；母版、引用关系和完整提示词已合并到assets/memory-book-artwork.json，本机原PNG在masters。WebP仅机械编码。
+- 书保留Blender真实六叶七组展开，换成不剧透的独立浪漫纸稿，姓名显影、透明叠页和双轴折笺由Three.js控制。纸稿是本地程序排版/线稿；字体仅在本机渲染为纹理，不分发系统字体。可编辑脚本与母版保留。
+- 泰迪为内置image_gen五角度独立头/躯干/四肢/尾图稿，杏色、奶油色和闭眼图分别生成；Canvas逐件关节动画与朝向插值，不是整张静姿图片移动。来源与完整提示词见统一生成记录teddy-articulated-turnaround-v9。
+- 旧手机背景与三份退役泰迪导出已移至Windows回收站；可编辑母版、历史出处和Git历史保留。
+- 双人沙画沿用SandKit许可，两个实例总预算52,000粒；手机DPR上限1.5的本地渲染调整有代码注释。
+- 电影保持已提取的原版短动作与既有来源。V9重排竖屏镜头、限制角色过度放大并改进地面衔接。尝试核实[Disney官方音乐视频](https://www.youtube.com/watch?v=25QyCxVkXwQ)与[Movieclips小马王片段](https://www.youtube.com/watch?v=QSqUVzkUvj8)的更高清源，均在格式获取阶段遇到TLS连接提前断开，未取得新源，不能声称已升级原片分辨率。检查记录保留film-source/source-check-20261005.json。
+
+本轮没有购买素材、订阅或调用额外收费API。

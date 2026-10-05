@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
 import { SandKit } from './vendor/sandkit/index.js';
 import type { ShapeSource } from './vendor/sandkit/index.js';
 import './journey.css';
@@ -11,7 +10,7 @@ const PLACES: Place[] = [
   { id: 'tianjin', city: '天津', region: '海河之畔', motif: '天津之眼 · 海河', owner: 'her', line: '后来，你走向了天津。', caption: '一座城，成为下一页的开头。' },
   { id: 'beijing', city: '北京', region: '求学的这一页', school: '中国政法大学', motif: '古都檐影', owner: 'her', line: '在北京，写下认真而明亮的一页。', caption: '中国政法大学，留在你的来路里。' },
   { id: 'hongkong', city: '香港', region: '越过山海', school: '香港科技大学', motif: '山海 · 维港帆影', owner: 'her', line: '从北京到香港，山海也成为书页。', caption: '香港科技大学，和更辽阔的远方。' },
-  { id: 'shenzhen', city: '深圳', region: '南方的这一程', motif: '城市天际线 · 海湾', owner: 'her', line: '你的路，来到了深圳。', caption: '先把这一页留在这里，书还想讲另一条来路。' },
+  { id: 'shenzhen', city: '深圳', region: '南方的这一程', motif: '城市天际线 · 海湾', owner: 'her', line: '你的路，来到了深圳。', caption: '海风翻开新一页，也把你带到我身边。' },
   { id: 'wuhan', city: '武汉', region: '湖北', motif: '黄鹤楼 · 长江', owner: 'me', line: '而我的故事，从湖北武汉开始。', caption: '另一页，另一条向前走的路。' },
   { id: 'nanjing', city: '南京', region: '求学的这一页', school: '东南大学', motif: '城门 · 梧桐', owner: 'me', line: '经过南京，也经过自己的春夏。', caption: '东南大学，是我来路中的一站。' },
   { id: 'shanghai', city: '上海', region: '继续向前', school: '上海交通大学', motif: '浦江 · 东方明珠', owner: 'me', line: '又从南京，走到了上海。', caption: '上海交通大学之后，这条路也写向了深圳。' },
@@ -25,32 +24,29 @@ const CHINA_OUTLINE = 'M650.7 736.5L639.2 731.1L638.8 716.1L645.7 708.1L661 703.
 const ART_WIDTH = 1280;
 const ART_HEIGHT = 850;
 const LAST = PLACES.length - 1;
-// Reading time is part of the film, independent of particle frame rate or WebGL.
-// Arrival → a settled landmark → a second thought → sand carries us onward.
-const SHOTS = [
-  { duration: 8000, secondLine: 4200, zoom: [1, 1.055], pan: [-7, 4] },
-  { duration: 7200, secondLine: 3700, zoom: [1.015, 1.055], pan: [8, -6] },
-  { duration: 9000, secondLine: 4700, zoom: [1, 1.055], pan: [-5, 3] },
-  { duration: 9300, secondLine: 4900, zoom: [1.05, 1.01], pan: [10, -9] },
-  { duration: 7000, secondLine: 3600, zoom: [1.01, 1.045], pan: [-6, 5] },
-  { duration: 8600, secondLine: 4500, zoom: [1, 1.055], pan: [6, -4] },
-  { duration: 9000, secondLine: 4700, zoom: [1.01, 1.055], pan: [-5, 5] },
-  { duration: 9300, secondLine: 4900, zoom: [1.05, 1.01], pan: [8, -7] },
-  { duration: 7500, secondLine: 3900, zoom: [1.015, 1.05], pan: [-6, 3] },
-  { duration: 12000, secondLine: 7400, zoom: [1, 1.018], pan: [0, 0] },
-];
+const HER_STOPS = [0, 1, 2, 3, 4];
+const HIS_STOPS = [5, 6, 7, 8];
+const ROUTE_MS = 40000;
+const MEETING_MS = 12000;
+const TOTAL_MS = ROUTE_MS + MEETING_MS;
 // Cities: Natural Earth ne_10m_populated_places_simple (public domain).
 // The user confirmed Zhoukou, Henan, as her starting city.
 const MAP_POINTS = [
   { id: 'zhoukou', label: '河南 · 周口', lon: 114.65, lat: 33.62, dx: -61, dy: -4 },
   { id: 'tianjin', label: '天津', lon: 117.196607, lat: 39.082772, dx: 31, dy: 10 },
   { id: 'beijing', label: '北京', lon: 116.394201, lat: 39.901720, dx: -30, dy: -28 },
-  { id: 'hongkong', label: '香港', lon: 114.183064, lat: 22.306927, dx: 45, dy: 39 },
-  { id: 'shenzhen', label: '深圳 · 相遇', lon: 114.061154, lat: 22.548097, dx: -71, dy: 22 },
+  { id: 'hongkong', label: '香港', lon: 114.183064, lat: 22.306927, dx: 50, dy: 52 },
+  { id: 'shenzhen', label: '深圳 · 相遇', lon: 114.061154, lat: 22.548097, dx: -78, dy: 16 },
   { id: 'wuhan', label: '武汉', lon: 114.268071, lat: 30.581977, dx: -44, dy: 2 },
   { id: 'nanjing', label: '南京', lon: 118.778029, lat: 32.051965, dx: -10, dy: -27 },
   { id: 'shanghai', label: '上海', lon: 121.434559, lat: 31.218398, dx: 39, dy: 13 },
 ];
+// Screen-pixel callouts keep mobile labels legible without moving the geographic anchors.
+const MOBILE_MAP_CALLOUTS: Record<string, { x: number; y: number }> = {
+  zhoukou: { x: -30, y: -9 }, tianjin: { x: 28, y: -10 }, beijing: { x: -22, y: -22 },
+  hongkong: { x: 32, y: 22 }, shenzhen: { x: -29, y: -3 }, wuhan: { x: -24, y: 16 },
+  nanjing: { x: 32, y: -17 }, shanghai: { x: 36, y: 13 },
+};
 const mapPosition = (point: { lon: number; lat: number }) => [140 + (point.lon - 73) * 14, 110 + (54 - point.lat) * 17.5];
 const mapRoute = (ids: string[]) => ids.map((id, i) => `${i ? 'L' : 'M'}${mapPosition(MAP_POINTS.find((point) => point.id === id)!).join(' ')}`).join('');
 const MAP_ROUTES = [mapRoute(['zhoukou', 'tianjin', 'beijing', 'hongkong', 'shenzhen']), mapRoute(['wuhan', 'nanjing', 'shanghai', 'shenzhen'])];
@@ -61,7 +57,6 @@ const HONGKONG = mapPosition(MAP_POINTS[3]);
 const deltaPosition = (point: { lon: number; lat: number }) => [118 + (point.lon - 114.02) * 260, 23 + (22.65 - point.lat) * 280];
 const DELTA_HONGKONG = deltaPosition(MAP_POINTS[3]);
 const DELTA_SHENZHEN = deltaPosition(MAP_POINTS[4]);
-type FallingGrain = { x: number; y: number; vx: number; vy: number; life: number; size: number; shade: number };
 
 // SandKit is MIT licensed, Copyright (c) 2026 Linkly AI. The original distribution
 // and full license are preserved in vendor/sandkit. Story and drawings are ours.
@@ -228,248 +223,256 @@ const clamp = (n: number) => Math.min(1, Math.max(0, n));
 const shapeName = (index: number) => `${PLACES[index].owner}-${PLACES[index].id}`;
 const sandColor = (index: number) => PLACES[index].owner === 'me' ? '#eee0bf' : '#dfb775';
 
+type JourneyView = { indices: [number, number]; finale: boolean; closingLine: boolean };
+type LaneRuntime = {
+  node: HTMLDivElement; picture: HTMLDivElement; sand: HTMLCanvasElement; canvas: HTMLCanvasElement;
+  context: CanvasRenderingContext2D; renderer: SandKit | null; loaded: boolean; staticOnly: boolean;
+  index: number; previous: number; width: number; height: number; fit: number; ox: number; oy: number; entrance: boolean;
+};
+
 export default function Journey({ onComplete, reducedMotion, active: sceneActive = true }: { onComplete: () => void; reducedMotion: boolean; active?: boolean }) {
-  const [active, setActive] = useState(0);
+  const [view, setView] = useState<JourneyView>({ indices: [0, 5], finale: false, closingLine: false });
   const [playing, setPlaying] = useState(true);
-  const [narration, setNarration] = useState(0);
   const [ready, setReady] = useState(false);
   const [fallback, setFallback] = useState(false);
   const [leaving, setLeaving] = useState(false);
-  const [routesOpen, setRoutesOpen] = useState(false);
   const rootRef = useRef<HTMLElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const sandRef = useRef<HTMLCanvasElement>(null);
-  const drawingRef = useRef<HTMLCanvasElement>(null);
-  const fallbackRef = useRef<HTMLCanvasElement>(null);
-  const pathRefs = useRef<(SVGPathElement | null)[]>([]);
-  const mapKnotRef = useRef<SVGGElement>(null);
-  const clockRef = useRef({ index: 0, local: 0, playing: true, exitMs: null as number | null });
-  const controller = useRef<{ select: (index: number) => void; toggle: () => void; replay: () => void; finish: () => void; sync: () => void } | null>(null);
-  const pointer = useRef({ x: -9999, y: -9999, down: false });
+  const laneRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const pictureRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const sandRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const staticRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const pathRefs = useRef<(SVGPathElement | null)[][]>([[], []]);
+  const controller = useRef<{ toggle: () => void; replay: () => void; next: () => void; sync: () => void } | null>(null);
+  const clockRef = useRef({ elapsed: 0, playing: true });
   const allowedRef = useRef(sceneActive);
-  allowedRef.current = sceneActive && !routesOpen;
+  allowedRef.current = sceneActive;
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
   const completedRef = useRef(false);
-  const place = PLACES[active];
-  useEffect(() => { controller.current?.sync(); }, [sceneActive, routesOpen]);
+
+  useEffect(() => { controller.current?.sync(); }, [sceneActive]);
 
   useEffect(() => {
-    const sand = sandRef.current; const drawing = drawingRef.current; const staticCanvas = fallbackRef.current; const stage = stageRef.current; const root = rootRef.current;
-    const context = drawing?.getContext('2d'); const staticContext = staticCanvas?.getContext('2d');
-    if (!sand || !drawing || !staticCanvas || !stage || !root || !context || !staticContext) return;
-    let renderer: SandKit | null = null;
-    let disposed = false; let frame = 0; let last = 0;
-    let index = clockRef.current.index; let previous = index; let local = clockRef.current.local; let play = clockRef.current.playing; let exitMs = clockRef.current.exitMs;
-    let usingStatic = reducedMotion; let loaded = false; let visible = true; let spoken = local >= SHOTS[index].secondLine ? 1 : 0; let entrancePending = !reducedMotion && local === 0;
-    let width = 0; let height = 0; let brushUntil = 0;
-    const flying: FallingGrain[] = [];
-    const art = PLACES.map(makeArtwork); const rng = randomGenerator(7427);
-    staticCanvas.style.opacity = '1';
-    const shapes: ShapeSource[] = art.map(({ line }, i) => ({ name: shapeName(i), pinOnly: true, raster: () => ({ line: { w: line.width, h: line.height, data: line.getContext('2d', { willReadFrequently: true })!.getImageData(0, 0, line.width, line.height).data } }) }));
-    const available = () => !disposed && !document.hidden && visible && allowedRef.current && loaded && !completedRef.current;
+    const root = rootRef.current;
+    if (!root) return;
+    const artwork = PLACES.map(makeArtwork);
+    const lanes: LaneRuntime[] = [];
+    for (let n = 0; n < 2; n += 1) {
+      const node = laneRefs.current[n]; const picture = pictureRefs.current[n];
+      const sand = sandRefs.current[n]; const canvas = staticRefs.current[n];
+      const context = canvas?.getContext('2d');
+      if (!node || !picture || !sand || !canvas || !context) return;
+      const index = clockRef.current.elapsed >= ROUTE_MS ? (n === 0 ? LAST : 8) : (n === 0 ? HER_STOPS[Math.floor(clockRef.current.elapsed / 8000)] : HIS_STOPS[Math.floor(clockRef.current.elapsed / 10000)]);
+      lanes.push({ node, picture, sand, canvas, context, renderer: null, loaded: reducedMotion, staticOnly: reducedMotion, index, previous: index, width: 1, height: 1, fit: 1, ox: 0, oy: 0, entrance: clockRef.current.elapsed === 0 });
+      canvas.style.opacity = '1';
+    }
+    let disposed = false; let frame = 0; let last = 0; let visible = true;
+    let elapsed = clockRef.current.elapsed; let play = clockRef.current.playing;
+    let finale = elapsed >= ROUTE_MS; let closingLine = elapsed >= ROUTE_MS + 6500;
+    const loaded = () => lanes.every((lane) => lane.loaded);
+    const available = () => !disposed && !document.hidden && visible && allowedRef.current && loaded() && !completedRef.current;
+    const localTime = (n: number) => finale ? elapsed - ROUTE_MS : elapsed % (n === 0 ? 8000 : 10000);
     const cancelFrame = () => { if (reducedMotion) clearTimeout(frame); else cancelAnimationFrame(frame); frame = 0; };
-    const setPlayback = (value: boolean) => { play = value; clockRef.current.playing = value; setPlaying(value); };
-    const fitArtwork = () => index === LAST ? Math.min(width / ART_WIDTH, height / ART_HEIGHT) : Math.min(width / (width < 700 ? PLACES[index].id === 'shanghai' ? 740 : 660 : 1030), height / 805, Math.min(width, height) * 2 / ART_WIDTH);
-    const showStatic = () => {
-      const fit = fitArtwork(); const blend = reducedMotion || previous === index ? 1 : clamp(local / 1700);
-      staticContext.clearRect(0, 0, width, height); staticContext.save();
-      staticContext.translate((width - ART_WIDTH * fit) / 2, (height - ART_HEIGHT * fit) / 2); staticContext.scale(fit, fit);
-      if (blend < 1) { staticContext.globalAlpha = .9 * (1 - blend); staticContext.drawImage(art[previous].painting, 0, 0); }
-      staticContext.globalAlpha = .9 * blend; staticContext.drawImage(art[index].painting, 0, 0); staticContext.restore();
-    };
-    const setComposition = () => {
-      const fit = fitArtwork();
-      void renderer?.setOptions({ pictureScale: fit * ART_WIDTH / Math.max(1, Math.min(width, height)), color: sandColor(index), colorDark: sandColor(index) });
-      stage.style.setProperty('--map-width', `${fit * ART_WIDTH}px`); stage.style.setProperty('--map-height', `${fit * ART_HEIGHT}px`);
-      showStatic();
-    };
-    const directShot = () => {
-      const shot = SHOTS[index]; const progress = clamp(local / shot.duration); const ease = progress * progress * (3 - 2 * progress);
-      const motion = width < 700 ? .65 : 1;
-      const zoom = reducedMotion ? 1 : 1 + ((shot.zoom[0] - 1) + (shot.zoom[1] - shot.zoom[0]) * ease) * motion;
-      const portraitFocus = width < 700 && PLACES[index].id === 'shanghai' ? -18 : 0;
-      const pan = portraitFocus + (reducedMotion ? 0 : (shot.pan[0] + (shot.pan[1] - shot.pan[0]) * ease) * motion);
-      stage.style.setProperty('--journey-zoom', `${zoom}`); stage.style.setProperty('--journey-pan-x', `${pan}px`);
-      stage.style.setProperty('--journey-pan-y', reducedMotion ? '0px' : `${Math.sin(progress * Math.PI) * -3 * motion}px`);
-      const cue = local >= shot.secondLine ? 1 : 0;
-      if (cue !== spoken) { spoken = cue; setNarration(cue); }
-      const titleAlpha = reducedMotion ? 1 : clamp((local - 350) / 1000) * clamp((shot.duration - local) / 800);
-      const captionAlpha = reducedMotion ? 1 : cue === 0 ? clamp((local - 1200) / 700) * clamp((shot.secondLine - local) / 500) : clamp((local - shot.secondLine) / 700) * clamp((shot.duration - local) / 850);
-      root.style.setProperty('--journey-title-opacity', `${titleAlpha}`);
-      root.style.setProperty('--journey-caption-opacity', `${captionAlpha}`);
-      root.style.setProperty('--journey-turn-veil', `${!reducedMotion && index === 5 ? .55 * (1 - clamp(local / 2100)) : 0}`);
-      root.style.setProperty('--journey-delta-opacity', `${reducedMotion ? 1 : clamp((local - 3400) / 700)}`);
-      root.style.setProperty('--journey-delta-draw', `${reducedMotion ? 0 : 1 - clamp((local - 4200) / 1300)}`);
-    };
-    const select = (next: number) => {
-      previous = index; index = Math.max(0, Math.min(LAST, next)); local = 0; exitMs = null; spoken = 0;
-      clockRef.current = { index, local, playing: true, exitMs }; completedRef.current = false;
-      setActive(index); setNarration(0); setLeaving(false); setRoutesOpen(false); setPlayback(true); flying.length = 0;
-      if (renderer) { renderer.pin(shapeName(index)); if (previous === index) renderer.replay(); }
-      setComposition(); directShot(); last = 0; sync();
-    };
-    const toggle = () => { if (!loaded || exitMs !== null) return; setPlayback(!play); last = 0; sync(); };
-    const finish = () => {
-      if (!loaded || exitMs !== null || completedRef.current) return;
-      exitMs = 0; clockRef.current.exitMs = 0; setLeaving(true); setRoutesOpen(false); setPlayback(true); renderer?.pause(); last = 0; wake();
-    };
-    controller.current = { select, toggle, replay: () => select(0), finish, sync };
-    const emit = (x: number, y: number, amount: number, force = 1) => {
-      for (let i = 0; i < amount; i += 1) flying.push({ x: x + (rng() - .5) * 20, y: y - rng() * 24, vx: (rng() - .5) * 105 * force, vy: -25 - rng() * 65, life: .5 + rng() * .8, size: .6 + rng() * 1.9, shade: rng() });
-      if (flying.length > 1100) flying.splice(0, flying.length - 1100);
-    };
-    const paintFrame = (stamp: number) => {
-      frame = 0;
-      if (!available()) { last = 0; return; }
-      // The story uses actual foreground time. A slow GPU must not turn one shot into a minute.
-      const elapsed = last ? Math.max(0, Math.min(1000, stamp - last)) : 0; last = stamp;
-      const dt = play ? Math.min(.045, elapsed / 1000) : 0;
-      if (exitMs !== null) {
-        exitMs += play ? elapsed : 0; clockRef.current.exitMs = exitMs;
-        if (exitMs >= (reducedMotion ? 120 : 1100)) { completedRef.current = true; cancelFrame(); onCompleteRef.current(); return; }
-        if (play) wake(); return;
+
+    const drawStatic = (lane: LaneRuntime, local: number) => {
+      const { context: ctx, width, height, ox, oy, fit } = lane;
+      ctx.clearRect(0, 0, width, height);
+      const blend = reducedMotion ? 1 : clamp(local / 1500);
+      if (blend < 1 && lane.previous !== lane.index) {
+        ctx.globalAlpha = 1 - blend; ctx.drawImage(artwork[lane.previous].painting, ox, oy, ART_WIDTH * fit, ART_HEIGHT * fit);
       }
-      if (play) local += elapsed;
-      if (local >= SHOTS[index].duration) {
-        if (index < LAST) { select(index + 1); return; }
-        finish(); return;
-      }
-      clockRef.current.local = local; directShot();
-      if (usingStatic && local <= 1800) showStatic();
-      if (mapKnotRef.current) mapKnotRef.current.style.opacity = `${reducedMotion ? 1 : clamp((local - 6500) / 700)}`;
-      context.clearRect(0, 0, width, height);
-      const fit = fitArtwork(); const ox = (width - ART_WIDTH * fit) / 2; const oy = (height - ART_HEIGHT * fit) / 2;
-      context.save(); context.translate(ox, oy); context.scale(fit, fit);
-      pathRefs.current.forEach((path, n) => {
-        if (!path) return;
-        const paired = index === LAST; const offset = paired ? (n === 0 ? 800 : 3800) : 600 + n * 780;
-        const p = reducedMotion ? 1 : clamp((local - offset) / (paired ? (n === 0 ? 3400 : 2600) : 1250)); const length = path.getTotalLength();
-        path.style.strokeDasharray = `${length}`; path.style.strokeDashoffset = `${length * (1 - p)}`; path.style.opacity = `${paired ? .95 : reducedMotion ? 0 : p < 1 ? .45 : .06}`;
-        if (!reducedMotion && p > 0 && p < 1 && play && dt > 0) {
-          const tip = path.getPointAtLength(length * p); emit(tip.x, tip.y, Math.max(1, Math.round(dt * 140)), paired ? 1.45 : .8);
-        }
+      ctx.globalAlpha = blend; ctx.drawImage(artwork[lane.index].painting, ox, oy, ART_WIDTH * fit, ART_HEIGHT * fit); ctx.globalAlpha = 1;
+    };
+    const compose = (lane: LaneRuntime) => {
+      const width = lane.node.clientWidth || 1; const height = lane.node.clientHeight || 1;
+      const mobile = window.matchMedia('(max-width: 700px)').matches;
+      const reserve = lane.index === LAST && mobile ? Math.min(140, height * .36) : 0;
+      const availableHeight = height - reserve;
+      const fit = lane.index === LAST
+        ? Math.min(width / (mobile ? 1020 : 1180), availableHeight / 780)
+        : Math.min(width / (PLACES[lane.index].id === 'shanghai' ? 1110 : 1000), height / 635, Math.min(width, height) * 2 / ART_WIDTH);
+      const extraX = lane.index === LAST ? width * .025 : 0;
+      lane.width = width; lane.height = height; lane.fit = fit;
+      lane.ox = (width - ART_WIDTH * fit) / 2 + extraX;
+      lane.oy = (availableHeight - ART_HEIGHT * fit) / 2;
+      const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
+      lane.canvas.width = Math.round(width * dpr); lane.canvas.height = Math.round(height * dpr);
+      lane.context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      lane.node.style.setProperty('--art-left', `${lane.ox}px`);
+      lane.node.style.setProperty('--art-top', `${lane.oy}px`);
+      lane.node.style.setProperty('--art-width', `${ART_WIDTH * fit}px`);
+      lane.node.style.setProperty('--art-height', `${ART_HEIGHT * fit}px`);
+      lane.renderer?.setOptions({ pictureScale: fit * ART_WIDTH / Math.max(1, Math.min(width, height)), offsetX: extraX / width, offsetY: reserve / (2 * height), color: sandColor(lane.index), colorDark: sandColor(lane.index) });
+      drawStatic(lane, localTime(lanes.indexOf(lane)));
+    };
+    const updateView = () => setView({ indices: [lanes[0].index, lanes[1].index], finale, closingLine });
+    const select = (lane: LaneRuntime, next: number) => {
+      if (lane.index === next) return;
+      lane.previous = lane.index; lane.index = next; lane.renderer?.pin(shapeName(next));
+      compose(lane);
+    };
+    const directScene = () => {
+      lanes.forEach((lane, n) => {
+        if (finale && n === 1) return;
+        const local = localTime(n); const duration = finale ? MEETING_MS : n === 0 ? 8000 : 10000;
+        const progress = clamp(local / duration);
+        lane.picture.style.transform = reducedMotion || finale ? 'none' : `translate3d(${(n === 0 ? 1 : -1) * (progress - .5) * 4}px,${(1 - progress) * 2}px,0) scale(${1.018 + progress * .023})`;
+        lane.node.parentElement!.style.setProperty('--caption-opacity', `${reducedMotion ? 1 : clamp((local - 550) / 700)}`);
+        lane.node.parentElement!.style.setProperty('--title-opacity', `${reducedMotion ? 1 : .35 + .65 * clamp(local / 1000)}`);
+        if (lane.staticOnly || !lane.loaded) drawStatic(lane, local);
+        pathRefs.current[n].forEach((path, p) => {
+          if (!path) return;
+          const fraction = reducedMotion ? 1 : clamp((local - (finale ? (p === 0 ? 700 : 2500) : 500 + p * 530)) / (finale ? 3300 : 1450));
+          path.style.strokeDasharray = '1'; path.style.strokeDashoffset = `${1 - fraction}`;
+          path.style.opacity = `${finale ? .94 : reducedMotion ? 0 : fraction < 1 ? .46 : .07}`;
+        });
       });
-      if (!reducedMotion && pointer.current.down && play) {
-        const p = pointer.current; emit((p.x - ox) / fit, (p.y - oy) / fit, Math.max(3, Math.round(dt * 240)), 1.8); brushUntil = stamp + 550;
-        const mask = `radial-gradient(circle 32px at ${p.x}px ${p.y}px, transparent 28%, #000 100%)`; sand.style.maskImage = mask; staticCanvas.style.maskImage = mask;
-      } else if (stamp > brushUntil) { sand.style.maskImage = ''; staticCanvas.style.maskImage = ''; }
-      for (let i = flying.length - 1; i >= 0; i -= 1) {
-        const grain = flying[i]; grain.life -= dt;
-        if (grain.life <= 0) { flying.splice(i, 1); continue; }
-        grain.vy += dt * 112; grain.x += grain.vx * dt; grain.y += grain.vy * dt;
-        context.globalAlpha = Math.min(1, grain.life * 2) * (.4 + grain.shade * .45); context.fillStyle = grain.shade > .6 ? '#fff2d9' : sandColor(index); context.fillRect(grain.x, grain.y, grain.size, grain.size);
-      }
-      context.restore();
-      if (play) wake();
+      const meetingLocal = elapsed - ROUTE_MS;
+      root.style.setProperty('--meeting-reveal', `${reducedMotion ? 1 : clamp((meetingLocal - 5200) / 900)}`);
+      root.style.setProperty('--delta-reveal', `${reducedMotion ? 1 : clamp((meetingLocal - 3200) / 650)}`);
+      root.style.setProperty('--delta-progress', `${reducedMotion ? 0 : 1 - clamp((meetingLocal - 3600) / 1800)}`);
+      root.style.setProperty('--exit-opacity', `${reducedMotion ? 0 : clamp((elapsed - TOTAL_MS) / 1100)}`);
     };
+    function tick(stamp: number) {
+      frame = 0;
+      if (!available() || !play) { last = 0; return; }
+      // Story duration is elapsed foreground time, never the renderer's capped simulation delta.
+      const dt = last ? Math.max(0, stamp - last) : 0; last = stamp; elapsed += dt;
+      clockRef.current.elapsed = elapsed;
+      const nextFinale = elapsed >= ROUTE_MS;
+      const nextClosingLine = elapsed >= ROUTE_MS + 6500;
+      const indices = nextFinale ? [LAST, 8] : [HER_STOPS[Math.floor(elapsed / 8000)], HIS_STOPS[Math.floor(elapsed / 10000)]];
+      if (nextFinale !== finale || nextClosingLine !== closingLine || lanes.some((lane, n) => lane.index !== indices[n])) {
+        finale = nextFinale; closingLine = nextClosingLine;
+        lanes.forEach((lane, n) => select(lane, indices[n]));
+        updateView();
+        if (finale) lanes[1].renderer?.pause();
+      }
+      if (elapsed >= TOTAL_MS && !root!.classList.contains('journey-leaving')) { root!.classList.add('journey-leaving'); setLeaving(true); }
+      directScene();
+      if (elapsed >= TOTAL_MS + (reducedMotion ? 125 : 1100)) {
+        completedRef.current = true; lanes.forEach((lane) => lane.renderer?.pause()); onCompleteRef.current(); return;
+      }
+      wake();
+    }
     function wake() {
-      if (!frame && available()) frame = reducedMotion ? window.setTimeout(() => paintFrame(performance.now()), 125) : requestAnimationFrame(paintFrame);
+      if (!frame && available() && play) frame = reducedMotion ? window.setTimeout(() => tick(performance.now()), 125) : requestAnimationFrame(tick);
     }
     function sync() {
       last = 0;
-      root!.dataset.sceneSuspended = available() ? 'false' : 'true';
-      if (!available()) { renderer?.pause(); cancelFrame(); pointer.current.down = false; }
-      else {
-        if (play && exitMs === null) { renderer?.resume(); if (renderer && entrancePending) { entrancePending = false; renderer.replay(); } }
-        else renderer?.pause();
-        wake();
-      }
+      const running = available() && play;
+      root!.dataset.sceneSuspended = running ? 'false' : 'true';
+      lanes.forEach((lane, n) => {
+        if (running && !(finale && n === 1)) {
+          lane.renderer?.resume();
+          if (lane.entrance) { lane.entrance = false; lane.renderer?.replay(); }
+        } else lane.renderer?.pause();
+      });
+      if (running) wake(); else cancelFrame();
     }
-    const resize = () => {
-      const rect = stage.getBoundingClientRect(); const scale = Number(stage.style.getPropertyValue('--journey-zoom')) || 1;
-      width = rect.width / scale; height = rect.height / scale; const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      [drawing, staticCanvas].forEach((canvas) => { canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr); });
-      context.setTransform(dpr, 0, 0, dpr, 0, 0); staticContext.setTransform(dpr, 0, 0, dpr, 0, 0);
-      setComposition(); directShot(); wake();
+    const seek = (time: number) => {
+      elapsed = time; clockRef.current.elapsed = time; last = 0;
+      finale = time >= ROUTE_MS; closingLine = false; completedRef.current = false;
+      play = true; clockRef.current.playing = true; setPlaying(true); setLeaving(false); root.classList.remove('journey-leaving');
+      lanes.forEach((lane, n) => {
+        select(lane, finale ? n === 0 ? LAST : 8 : n === 0 ? 0 : 5);
+        if (time === 0) lane.entrance = true;
+      });
+      updateView(); directScene(); sync();
     };
-    const useStatic = () => {
+    controller.current = {
+      toggle: () => { play = !play; clockRef.current.playing = play; setPlaying(play); sync(); },
+      replay: () => seek(0),
+      next: () => { if (finale) { elapsed = TOTAL_MS; clockRef.current.elapsed = elapsed; setLeaving(true); root.classList.add('journey-leaving'); play = true; clockRef.current.playing = true; setPlaying(true); sync(); } else seek(ROUTE_MS); },
+      sync,
+    };
+    const checkReady = () => {
       if (disposed) return;
-      renderer?.dispose(); renderer = null; usingStatic = true; loaded = true; setReady(true); setFallback(true); staticCanvas.style.opacity = '1'; showStatic(); sync();
+      setReady(loaded()); setFallback(lanes.some((lane) => lane.staticOnly));
+      if (loaded()) sync();
     };
-    const resizer = new ResizeObserver(resize); resizer.observe(stage);
-    const observer = new IntersectionObserver((entries) => { visible = entries.some((entry) => entry.isIntersecting); sync(); }, { threshold: .12 }); observer.observe(stage);
+    const useStatic = (lane: LaneRuntime) => {
+      if (disposed) return;
+      lane.renderer?.dispose(); lane.renderer = null; lane.staticOnly = true; lane.loaded = true;
+      lane.canvas.style.opacity = '1'; drawStatic(lane, localTime(lanes.indexOf(lane))); checkReady();
+    };
+    const resizer = new ResizeObserver(() => { lanes.forEach(compose); directScene(); });
+    lanes.forEach((lane) => { compose(lane); resizer.observe(lane.node); });
+    const observer = new IntersectionObserver((entries) => { visible = entries.some((entry) => entry.isIntersecting); sync(); }, { threshold: .12 }); observer.observe(root);
     document.addEventListener('visibilitychange', sync);
-    const pointerWake = () => wake(); stage.addEventListener('pointerdown', pointerWake); stage.addEventListener('pointermove', pointerWake); resize();
-    if (reducedMotion) useStatic();
-    else {
+    if (reducedMotion) checkReady();
+    else lanes.forEach((lane, n) => {
+      const sourceIndices = n === 0 ? [...HER_STOPS, LAST] : HIS_STOPS;
+      const shapes: ShapeSource[] = sourceIndices.map((i) => {
+        const line = artwork[i].line;
+        return { name: shapeName(i), pinOnly: true, raster: () => ({ line: { w: line.width, h: line.height, data: line.getContext('2d', { willReadFrequently: true })!.getImageData(0, 0, line.width, line.height).data } }) };
+      });
       try {
-        renderer = new SandKit(sand, { shapes, worker: true, options: {
-          count: window.innerWidth < 700 ? 52000 : 78000, pointSize: 1.22, sizeVariation: 1.08, opacity: 1, color: sandColor(index), colorDark: sandColor(index),
-          introMs: 2350, moveMs: 2500, holdMs: 15000, stagger: .43, scatterPhase: .27, scatterReach: .13, scatterDepth: .48, flightFade: .05,
-          jitter: .001, sway: 0, tilt: .035, tiltEase: .13, depthRange: .12, depthContrast: .17, dustShare: .005, fillDensity: .54, interiorTone: .035, blurRadius: 1, cloudRadius: 1.15, cloudFar: -.45,
-          pictureScale: fitArtwork() * ART_WIDTH / Math.max(1, Math.min(width, height)),
-        }, onError: (error) => { if (error.message.includes('context')) useStatic(); } });
-        renderer.pin(shapeName(index)); renderer.pause();
-        renderer.ready.then(() => {
-          if (disposed || usingStatic) return; loaded = true; setReady(true); setFallback(false); staticCanvas.style.opacity = '0'; sync();
-        }).catch(useStatic);
-      } catch { useStatic(); }
-    }
-    return () => { disposed = true; cancelFrame(); renderer?.dispose(); resizer.disconnect(); observer.disconnect(); document.removeEventListener('visibilitychange', sync); stage.removeEventListener('pointerdown', pointerWake); stage.removeEventListener('pointermove', pointerWake); controller.current = null; };
+        // Two actual renderers, 26k each on every screen: the combined mobile budget is never exceeded on resize.
+        lane.renderer = new SandKit(lane.sand, { shapes, worker: true, options: {
+          count: 26000, pointSize: 1.28, sizeVariation: 1.02, opacity: 1, color: sandColor(lane.index), colorDark: sandColor(lane.index),
+          introMs: 1800, moveMs: 1950, holdMs: 15000, stagger: .39, scatterPhase: .25, scatterReach: .1, scatterDepth: .3, flightFade: .035,
+          jitter: .00065, sway: 0, tilt: .018, tiltEase: .11, depthRange: .09, depthContrast: .15, dustShare: .004, fillDensity: .55, interiorTone: .035, blurRadius: 1, cloudRadius: 1.08, cloudFar: -.35,
+          pictureScale: lane.fit * ART_WIDTH / Math.max(1, Math.min(lane.width, lane.height)), offsetX: 0, offsetY: 0, layoutMs: 900,
+        }, onError: () => useStatic(lane) });
+        lane.renderer.pin(shapeName(lane.index)); lane.renderer.pause();
+        lane.renderer.ready.then(() => {
+          if (disposed || lane.staticOnly) return;
+          lane.loaded = true; lane.canvas.style.opacity = '0'; compose(lane); checkReady();
+        }).catch(() => useStatic(lane));
+      } catch { useStatic(lane); }
+    });
+    updateView(); directScene();
+    return () => { disposed = true; cancelFrame(); lanes.forEach((lane) => lane.renderer?.dispose()); resizer.disconnect(); observer.disconnect(); document.removeEventListener('visibilitychange', sync); controller.current = null; };
   }, [reducedMotion]);
 
-  const handlePointer = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect(); const scale = rect.width / event.currentTarget.clientWidth;
-    pointer.current.x = (event.clientX - rect.left) / scale; pointer.current.y = (event.clientY - rect.top) / scale;
-    if (event.type === 'pointerdown') { pointer.current.down = true; event.currentTarget.setPointerCapture(event.pointerId); }
-  };
-  const releasePointer = () => { pointer.current.down = false; };
-  const next = () => { if (active === LAST) controller.current?.finish(); else controller.current?.select(active + 1); };
   return (
-    <section ref={rootRef} className={`journey-stage journey-film journey-owner-${place.owner}${active === LAST ? ' journey-map-finale' : ''}${leaving ? ' journey-leaving' : ''}${reducedMotion ? ' journey-still' : ''}${!playing || !sceneActive || routesOpen ? ' journey-paused' : ''}`} data-scene={`${place.owner}-${place.id}`} aria-label="第二章，自动讲述的两条人生路线">
-      <header className="journey-heading"><span className="journey-eyebrow">第二章 · 两条来路</span><span className="journey-chapter-poem">走过山海，与你同页。</span></header>
-      <div className="journey-route-menu">
-        <button type="button" className="journey-route-toggle" aria-expanded={routesOpen} aria-controls="journey-routes" onClick={() => setRoutesOpen(!routesOpen)}>翻阅来路 <span aria-hidden="true">{routesOpen ? '−' : '+'}</span></button>
-        <div id="journey-routes" className={`journey-routes${routesOpen ? ' is-open' : ''}`} hidden={!routesOpen} aria-label="两条真实来路，可以点选回看">
-          {(['her', 'me'] as const).map((owner) => <div className={`journey-route journey-route-${owner}`} key={owner}>
-            <span className="journey-route-label">{owner === 'her' ? '你的来路' : '我的来路'}</span>
-            <div className="journey-stops">{PLACES.map((item, i) => (item.owner === owner && <button type="button" key={`${owner}-${i}`} onClick={() => controller.current?.select(i)} disabled={!ready || leaving} className={active === i ? 'is-current' : ''} aria-current={active === i ? 'step' : undefined}><strong>{item.city}{item.id === 'zhoukou' || item.id === 'wuhan' ? ` · ${item.region}` : ''}</strong>{item.school && <span>{item.school}</span>}</button>))}</div>
-          </div>)}
-        </div>
+    <section ref={rootRef} className={`journey-stage journey-duet${view.finale ? ' journey-map-finale' : ''}${leaving ? ' journey-leaving' : ''}${reducedMotion ? ' journey-still' : ''}${!playing || !sceneActive ? ' journey-paused' : ''}`} data-scene={view.finale ? 'both-shenzhen' : `${shapeName(view.indices[0])} ${shapeName(view.indices[1])}`} aria-label="第二章，两条各自走过的人生来路，最终在深圳相遇">
+      <header className="journey-heading" data-pet-obstacle><span className="journey-eyebrow">第二章 · 两条来路</span><span className="journey-chapter-poem">各自的时光，终于同页。</span></header>
+      <div className="journey-duet-field">
+        {view.indices.map((index, n) => {
+          const place = PLACES[index]; const paired = index === LAST;
+          return <article className={`journey-lane journey-lane-${n === 0 ? 'her' : 'me'}`} key={n} aria-hidden={view.finale && n === 1} aria-label={paired ? '我们的相遇' : n === 0 ? '她的来路' : '我的来路'}>
+            <header className="journey-place" data-pet-obstacle>
+              <span className="journey-person">{paired ? '终于同页' : n === 0 ? '你的来路' : '我的来路'}</span>
+              <h3>{place.id === 'zhoukou' || place.id === 'wuhan' ? `${place.region} · ${place.city}` : paired ? '深圳 · 相遇' : place.city}</h3>
+              {place.school && <p className="journey-school">{place.school}</p>}
+            </header>
+            <div className="journey-art" ref={(node) => { laneRefs.current[n] = node; }}>
+              <div className="journey-picture" ref={(node) => { pictureRefs.current[n] = node; }}>
+                <canvas ref={(node) => { staticRefs.current[n] = node; }} className="journey-fallback" aria-hidden="true" />
+                <canvas ref={(node) => { sandRefs.current[n] = node; }} className="journey-sand" aria-hidden="true" />
+                <svg className="journey-drawn-lines" viewBox={`0 0 ${ART_WIDTH} ${ART_HEIGHT}`} aria-hidden="true">
+                  {(paired ? MAP_ROUTES : DRAWING_PATHS[place.id]).map((d, i) => <path pathLength="1" className={paired ? `journey-map-route journey-map-route-${i}` : undefined} d={d} key={`${index}-${i}`} ref={(node) => { pathRefs.current[n][i] = node; }} />)}
+                  {paired && <><g className="journey-map-knot" transform={`translate(${MEETING[0]} ${MEETING[1]})`}><circle r="23" /><circle r="10" /><path d="M0 0C-25-20-34 13-9 9L0 0C24-21 34 12 9 9Z" /><path d="M-1 2Q-9 23-27 26M2 2Q11 24 30 27" /></g><g className="journey-delta-connector"><circle cx={(MEETING[0] + HONGKONG[0]) / 2} cy={(MEETING[1] + HONGKONG[1]) / 2} r="21" /><path className="journey-delta-leader-desktop" d={`M${HONGKONG[0] + 20} ${HONGKONG[1]}L862 664L1040 590`} /><path className="journey-delta-leader-mobile" d={`M${HONGKONG[0]} ${HONGKONG[1] + 21}L${HONGKONG[0]} 756L640 818`} /></g></>}
+                </svg>
+                {paired && <div className="journey-map-labels" aria-label="周口、天津、北京、香港、深圳；武汉、南京、上海、深圳">
+                  {MAP_POINTS.map((point) => { const [x, y] = mapPosition(point); return <span className={`journey-map-label journey-map-label-${point.id}`} key={point.id} style={{ left: `${(x + point.dx) / ART_WIDTH * 100}%`, top: `${(y + point.dy) / ART_HEIGHT * 100}%` }}>{point.label}</span>; })}
+                  {MAP_POINTS.map((point) => {
+                    const [x, y] = mapPosition(point); const callout = MOBILE_MAP_CALLOUTS[point.id];
+                    return <span className="journey-map-callout" key={`callout-${point.id}`} style={{ left: `${x / ART_WIDTH * 100}%`, top: `${y / ART_HEIGHT * 100}%` }}>
+                      <svg viewBox="-100 -100 200 200" aria-hidden="true"><path d={`M0 0L${callout.x * .5} ${callout.y}L${callout.x} ${callout.y}`} /></svg>
+                      <span className={`journey-map-callout-label journey-map-label-${point.id}${callout.x < 0 ? ' is-left' : ''}`} style={{ left: callout.x, top: callout.y }}>{point.label}</span>
+                    </span>;
+                  })}
+                </div>}
+              </div>
+              {paired && <figure className="journey-delta-inset" aria-label="港深局部放大：香港科技大学所在的香港，来到深圳。保留城市真实经纬度相对位置。" data-pet-obstacle>
+                <figcaption>最后一程 · 港深放大</figcaption>
+                <svg viewBox="0 0 320 156" aria-hidden="true"><path className="journey-delta-grid" d="M31 66H289M31 110H289M77 26V136M221 26V136" /><path className="journey-delta-route" pathLength="1" d={`M${DELTA_HONGKONG.join(' ')}L${DELTA_SHENZHEN.join(' ')}`} /><circle className="journey-delta-city" cx={DELTA_HONGKONG[0]} cy={DELTA_HONGKONG[1]} r="5" /><circle className="journey-delta-city journey-delta-meeting" cx={DELTA_SHENZHEN[0]} cy={DELTA_SHENZHEN[1]} r="7" /><path className="journey-delta-arrow" d={`M${DELTA_SHENZHEN[0] - 3} ${DELTA_SHENZHEN[1] + 16}l-4-10 10 5`} /></svg>
+                <span className="journey-delta-hongkong"><strong>香港</strong><small>香港科技大学</small></span><span className="journey-delta-shenzhen"><strong>深圳</strong><small>我们的相遇</small></span>
+              </figure>}
+            </div>
+            <p className="journey-lane-caption" data-pet-obstacle>{paired && view.closingLine ? place.caption : place.line}</p>
+          </article>;
+        })}
       </div>
-      <div className="journey-light-table">
-        <div className="journey-light-beam" aria-hidden="true" />
-        <div className="journey-place" key={`place-${active}`} aria-live="polite" aria-atomic="true">
-          <span className="journey-person">{place.owner === 'her' ? '你的来路' : place.owner === 'me' ? '我的来路' : '我们的这一页'}</span>
-          <div className="journey-city">{(place.id === 'zhoukou' || place.id === 'wuhan') && <span className="journey-region">{place.region}</span>}<h3>{place.city}</h3></div>
-          {place.school && <p className="journey-school">{place.school}</p>}
-          <span className="journey-motif">{place.motif}</span>
-        </div>
-        <div ref={stageRef} className="journey-sand-window" onPointerDown={handlePointer} onPointerMove={handlePointer} onPointerUp={releasePointer} onPointerCancel={releasePointer} onLostPointerCapture={releasePointer}>
-          <canvas ref={fallbackRef} className={`journey-fallback${fallback ? ' is-visible' : ''}`} aria-hidden="true" />
-          <canvas ref={sandRef} className="journey-sand" aria-hidden="true" />
-          <svg className="journey-drawn-lines" viewBox={`0 0 ${ART_WIDTH} ${ART_HEIGHT}`} aria-hidden="true">{(active === LAST ? MAP_ROUTES : DRAWING_PATHS[place.id]).map((d, i) => <path className={active === LAST ? `journey-map-route journey-map-route-${i}` : undefined} d={d} key={`${active}-${i}`} ref={(node) => { pathRefs.current[i] = node; }} />)}
-            {active === LAST && <g ref={mapKnotRef} className="journey-map-knot" transform={`translate(${MEETING[0]} ${MEETING[1]})`}><circle r="23" /><circle r="10" /><path d="M0 0C-25-20-34 13-9 9L0 0C24-21 34 12 9 9Z" /><path d="M-1 2Q-9 23-27 26M2 2Q11 24 30 27" /></g>}
-            {active === LAST && <g className="journey-delta-connector"><circle cx={(MEETING[0] + HONGKONG[0]) / 2} cy={(MEETING[1] + HONGKONG[1]) / 2} r="21" /><path className="journey-delta-leader-desktop" d={`M${HONGKONG[0] + 20} ${HONGKONG[1]}L862 664L965 584`} /><path className="journey-delta-leader-mobile" d={`M${HONGKONG[0]} ${HONGKONG[1] + 21}L${HONGKONG[0]} 731L640 765`} /></g>}
-          </svg>
-          {active === LAST && <div className="journey-map-labels" aria-label="中国地图上的两条城市路线，在深圳汇合">
-            {MAP_POINTS.map((point) => { const [x, y] = mapPosition(point); return <span className={`journey-map-label journey-map-label-${point.id}`} key={point.id} style={{ left: `${(x + point.dx) / ART_WIDTH * 100}%`, top: `${(y + point.dy) / ART_HEIGHT * 100}%` }}>{point.label}</span>; })}
-            <figure className="journey-delta-inset" aria-label="港深局部放大：她从香港科技大学所在的香港来到深圳，两条路线在深圳相遇。城市仍按真实经纬度相对位置展示。">
-              <figcaption>最后一程 · 港深放大</figcaption>
-              <svg viewBox="0 0 320 156" aria-hidden="true">
-                <path className="journey-delta-grid" d="M31 66H289M31 110H289M77 26V136M221 26V136" />
-                <path className="journey-delta-route" pathLength="1" d={`M${DELTA_HONGKONG.join(' ')}L${DELTA_SHENZHEN.join(' ')}`} />
-                <circle className="journey-delta-city" cx={DELTA_HONGKONG[0]} cy={DELTA_HONGKONG[1]} r="5" />
-                <circle className="journey-delta-city journey-delta-meeting" cx={DELTA_SHENZHEN[0]} cy={DELTA_SHENZHEN[1]} r="7" />
-                <path className="journey-delta-arrow" d={`M${DELTA_SHENZHEN[0] - 3} ${DELTA_SHENZHEN[1] + 16}l-4-10 10 5`} />
-              </svg>
-              <span className="journey-delta-hongkong"><strong>香港</strong><small>香港科技大学</small></span>
-              <span className="journey-delta-shenzhen"><strong>深圳</strong><small>我们的相遇</small></span>
-            </figure>
-          </div>}
-          <canvas ref={drawingRef} className="journey-falling-sand" aria-hidden="true" /><div className="journey-photo-outline" aria-hidden="true" />
-        </div>
-        <div className="journey-caption" aria-live="polite" aria-atomic="true"><p>{narration === 0 ? place.line : place.caption}</p><span>{place.owner === 'her' ? '你走过的每一程，都值得被认真记下。' : place.owner === 'me' ? '书的另一页，是我走向你的来路。' : '从此，未来有了可以并肩写下的一页。'}</span></div>
-      </div>
-      <footer className="journey-footer">
-        <button type="button" className="journey-back" onClick={() => active === LAST ? controller.current?.replay() : controller.current?.select(active - 1)} disabled={active === 0 || !ready || leaving}>{active === LAST ? '再读一次来路' : '回望上一程'}</button>
-        <div className="journey-playback"><button type="button" onClick={() => controller.current?.toggle()} disabled={!ready || leaving} aria-label={playing ? '暂停自动讲述' : '继续自动讲述'}>{playing ? '让这一刻停留' : '让故事继续'}</button>
-          {!ready && <span className="journey-brush-hint">沙粒正在汇聚…</span>}
-          {fallback && !reducedMotion && <span className="journey-brush-hint">此设备以沙画叠映，自动讲述来路</span>}
-        </div>
-        <button type="button" className="journey-next" onClick={next} disabled={!ready || leaving}>{active === LAST ? '把回忆放进书里' : '略过这一程'}<span aria-hidden="true">↗</span></button>
+      <footer className="journey-footer" data-pet-obstacle>
+        <button type="button" onClick={() => controller.current?.replay()} disabled={!ready || leaving}>重新读起</button>
+        <button type="button" className="journey-playback" onClick={() => controller.current?.toggle()} disabled={!ready || leaving} aria-label={playing ? '暂停两条路线的自动讲述' : '继续两条路线的自动讲述'}>{playing ? '让这一刻停留' : '让故事继续'}</button>
+        <button type="button" className="journey-next" onClick={() => controller.current?.next()} disabled={!ready || leaving}>{view.finale ? '收进回忆' : '看相遇'}<span aria-hidden="true">↗</span></button>
       </footer>
+      <p className="journey-status" role="status">{!ready ? '沙粒正在汇聚…' : fallback && !reducedMotion ? '以静帧沙画，继续讲述来路' : ''}</p>
     </section>
   );
 }

@@ -4,7 +4,10 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { assetUrl } from '../utils/assetUrl';
-import { BOOK_SPREADS, LAST_BOOK_SPREAD, clampBookPage } from './bookPages';
+import { BOOK_MECHANISMS, BOOK_SPREADS, LAST_BOOK_SPREAD, clampBookPage } from './bookPages';
+import type { BookMechanism, ReadingSide } from './bookPages';
+import { createBookMechanisms } from './bookMechanisms';
+import type { MechanismTriggers } from './bookMechanisms';
 
 type Props = {
   kind: 'book' | 'cake';
@@ -16,6 +19,7 @@ type Props = {
   pageIndex?: number;
   onPageChange?: (index: number) => void;
   onTurningChange?: (turning: boolean) => void;
+  onReadingChange?: (side: ReadingSide) => void;
 };
 
 function flameTexture() {
@@ -59,27 +63,29 @@ function dedicationTexture() {
   ctx.strokeStyle = '#947044'; ctx.lineWidth = 2; ctx.strokeRect(36, 40, 568, 820);
   ctx.lineWidth = 1; ctx.strokeRect(45, 49, 550, 802);
   ctx.textAlign = 'center'; ctx.fillStyle = '#382516';
-  ctx.font = '28px Georgia'; ctx.fillStyle = '#795623'; ctx.fillText('THE STORY OF YOU', 320, 150); ctx.fillStyle = '#382516';
-  ctx.font = '64px GiftSerif, SimSun, serif'; ctx.fillText('师宝宝', 320, 330);
-  ctx.font = '32px GiftSerif, SimSun, serif'; ctx.fillStyle = '#25180f';
-  ['每一段走过的路，', '都值得被温柔收藏。', '', '而这一页，', '只为你打开。'].forEach((text, i) => ctx.fillText(text, 320, 447 + i * 53));
+  ctx.font = '24px Georgia'; ctx.fillStyle = '#795623'; ctx.fillText('AD TE', 320, 150); ctx.fillStyle = '#382516';
+  ctx.font = 'bold 62px STKaiti, SimSun, serif'; ctx.fillText('致师宝宝', 320, 345);
+  ctx.font = 'bold 39px STKaiti, SimSun, serif'; ctx.fillStyle = '#25180f';
+  ['故事，', '从这里开始。'].forEach((text, i) => ctx.fillText(text, 320, 490 + i * 75));
   ctx.font = '65px Georgia'; ctx.fillStyle = '#ae8139'; ctx.fillText('✧', 320, 786);
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
 }
 
 /** Blender geometry, rendered and animated in the browser; no image-plane object. */
-export default function MagicObject({ kind, open = false, extinguished = false, reducedMotion = false, onOpen, pageIndex, onPageChange, onTurningChange }: Props) {
+export default function MagicObject({ kind, open = false, extinguished = false, reducedMotion = false, onOpen, pageIndex, onPageChange, onTurningChange, onReadingChange }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const [internalPage, setInternalPage] = useState(0);
-  const [readingSide, setReadingSide] = useState<'spread' | 'left' | 'right'>('spread');
+  const [readingSide, setReadingSide] = useState<ReadingSide>('spread');
+  const [mechanismTriggers, setMechanismTriggers] = useState<MechanismTriggers>({ name: 0, veil: 0, ink: 0, note: 0 });
+  const triggerMechanism = (id: BookMechanism) => setMechanismTriggers(values => ({ ...values, [id]: values[id] + 1 }));
   const activePage = clampBookPage(pageIndex ?? internalPage);
   const changePage = (index: number) => {
     const next = clampBookPage(index);
     setInternalPage(next);
     onPageChange?.(next);
   };
-  const state = useRef({ open, extinguished, reducedMotion, onOpen, pageIndex: activePage, changePage, onTurningChange, readingSide });
+  const state = useRef({ open, extinguished, reducedMotion, onOpen, pageIndex: activePage, changePage, onTurningChange, readingSide, setReadingSide, mechanismTriggers, triggerMechanism });
   const controlsRef = useRef<OrbitControls | null>(null);
   const resetViewRef = useRef<(() => void) | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -88,8 +94,9 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
   const [pageTurning, setPageTurning] = useState(false);
   const turningRef = useRef(true);
   const [retry, setRetry] = useState(0);
-  useEffect(() => { state.current = { open, extinguished, reducedMotion, onOpen, pageIndex: activePage, changePage, onTurningChange, readingSide }; });
-  useEffect(() => { if (!open) { setInternalPage(0); setReadingSide('spread'); } }, [open]);
+  useEffect(() => { state.current = { open, extinguished, reducedMotion, onOpen, pageIndex: activePage, changePage, onTurningChange, readingSide, setReadingSide, mechanismTriggers, triggerMechanism }; });
+  useEffect(() => { if (!open) { setInternalPage(0); setReadingSide('spread'); setMechanismTriggers({ name: 0, veil: 0, ink: 0, note: 0 }); } }, [open]);
+  useEffect(() => { if (kind === 'book') onReadingChange?.(readingSide); }, [kind, readingSide, onReadingChange]);
   useEffect(() => { turningRef.current = turning; }, [turning]);
 
   useEffect(() => {
@@ -98,13 +105,14 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
     let disposed = false, frame = 0, inView = true, previous = performance.now(), elapsed = 0;
     let renderer: THREE.WebGLRenderer;
     try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' }); }
-    catch { setStatus('error'); return; }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.7));
+    catch { setStatus('error'); state.current.onTurningChange?.(false); return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth <= 680 ? 1.5 : 1.7));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = kind === 'book' ? 1.04 : 1.02;
     renderer.setClearColor(0x000000, 0);
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.domElement.setAttribute('aria-label', kind === 'book' ? '可旋转、可翻开的立体魔法书' : '可旋转欣赏的立体星空蛋糕');
+    if (kind === 'book') { renderer.domElement.tabIndex = 0; renderer.domElement.setAttribute('aria-label', '立体魔法书：拖动观察，点选纸页近读，回车打开或触发本页机关'); }
     renderer.domElement.style.touchAction = 'pan-y';
     element.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
@@ -124,16 +132,16 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
     const env = new RoomEnvironment();
     const pmrem = new THREE.PMREMGenerator(renderer);
     const envTarget = pmrem.fromScene(env, .04); scene.environment = envTarget.texture;
-    scene.environmentIntensity = kind === 'book' ? .38 : .42; env.dispose(); pmrem.dispose();
+    scene.environmentIntensity = kind === 'book' ? .38 : .32; env.dispose(); pmrem.dispose();
     scene.add(new THREE.HemisphereLight(0xb8c6dc, 0x493226, kind === 'book' ? .62 : .75));
     const key = new THREE.DirectionalLight(0xffdec1, kind === 'book' ? 2.15 : 2.05); key.position.set(-3.5, 6, 4.5); key.castShadow = true;
-    key.shadow.mapSize.set(1024, 1024); key.shadow.normalBias = .015; key.shadow.radius = 3;
+    key.shadow.mapSize.set(1024, 1024); key.shadow.normalBias = .008; key.shadow.radius = kind === 'book' ? 4 : 6;
     key.shadow.camera.left = key.shadow.camera.bottom = -5; key.shadow.camera.right = key.shadow.camera.top = 5;
     key.shadow.camera.near = .1; key.shadow.camera.far = 18; scene.add(key);
-    const rim = new THREE.DirectionalLight(0xabbfde, kind === 'book' ? .85 : 1.1); rim.position.set(3, 4, -5); scene.add(rim);
+    const rim = new THREE.DirectionalLight(0xabbfde, kind === 'book' ? .85 : .8); rim.position.set(3, 4, -5); scene.add(rim);
     // Transparent contact shadows blend with the photographic desk behind this canvas.
-    const contact = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.ShadowMaterial({ color: 0x0e0805, opacity: .30 }));
-    contact.rotation.x = -Math.PI / 2; contact.position.y = kind === 'book' ? -.12 : -.205; contact.receiveShadow = kind === 'book'; scene.add(contact);
+    const contact = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.ShadowMaterial({ color: 0x0e0805, opacity: kind === 'book' ? .26 : .13 }));
+    contact.rotation.x = -Math.PI / 2; contact.position.y = kind === 'book' ? -.12 : -.205; contact.receiveShadow = true; scene.add(contact);
     const contactMap = contactTexture();
     const support = new THREE.Mesh(new THREE.PlaneGeometry(kind === 'book' ? 3.6 : 2.7, kind === 'book' ? 4.3 : 2.7), new THREE.MeshBasicMaterial({ map: contactMap, transparent: true, opacity: .48, depthWrite: false }));
     support.rotation.x = -Math.PI / 2; support.position.set(.08, kind === 'book' ? -.119 : -.204, .02); scene.add(support);
@@ -145,6 +153,8 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
     const dustMap = glowTexture();
     const dust = new THREE.Points(dustGeometry, new THREE.PointsMaterial({ color: 0xf3c97b, map: dustMap, size: .032, transparent: true, opacity: .28, depthWrite: false, blending: THREE.AdditiveBlending })); scene.add(dust);
     let model: THREE.Group | undefined;
+    let loadFailed = false;
+    let paperMechanisms: ReturnType<typeof createBookMechanisms> | undefined;
     let cover: THREE.Object3D | undefined;
     let coverAngle = .025, openPhase = 0, pageProgress = 0;
     let readingViewTouched = false;
@@ -183,8 +193,15 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
         if (object instanceof THREE.Mesh) { object.castShadow = true; object.receiveShadow = true;
           const materials = Array.isArray(object.material) ? object.material : [object.material];
           materials.forEach(mat => { if (mat instanceof THREE.MeshStandardMaterial) {
-            mat.envMapIntensity = kind === 'book' ? .85 : .55;
-            if (kind === 'book' && /paper|leaf/i.test(mat.name)) { object.castShadow = false; object.receiveShadow = false; }
+            mat.envMapIntensity = kind === 'book' ? .85 : .36;
+            if (kind === 'book' && /paper|leaf/i.test(mat.name)) {
+              mat.envMapIntensity = .18; mat.roughness = .98;
+              if (mat instanceof THREE.MeshPhysicalMaterial) mat.specularIntensity = .14;
+            }
+            if (kind === 'cake' && /buttercream|vanilla/i.test(mat.name)) {
+              mat.roughness = Math.max(.92, mat.roughness); mat.envMapIntensity = .23;
+              if (mat instanceof THREE.MeshPhysicalMaterial) mat.specularIntensity = .23;
+            }
             [mat.map, mat.normalMap, mat.roughnessMap, mat.metalnessMap].forEach(texture => { if (texture) texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); });
             // Every physical leaf has distinct recto and verso primitives.
             if (/story leaf/i.test(mat.name)) mat.side = THREE.FrontSide;
@@ -219,7 +236,7 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
         pages.push(page);
         const surfaces: Array<{ mesh: THREE.Mesh; positions: Float32Array }> = [];
         page.traverse(child => {
-          if (!(child instanceof THREE.Mesh)) return;
+          if (!(child instanceof THREE.Mesh) || !child.name.startsWith('Paper_')) return;
           const originalGeometry = child.geometry;
           child.geometry = originalGeometry.clone(); originalGeometry.dispose(); child.frustumCulled = false;
           const attr = child.geometry.getAttribute('position');
@@ -229,6 +246,7 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
         });
         paperSurfaces.push(surfaces);
       }
+      if (kind === 'book') paperMechanisms = createBookMechanisms(model, pages);
       for (let i = 0; i < 3; i++) {
         const socket = model.getObjectByName(`FlameSocket_${i}`);
         if (!socket) continue;
@@ -238,26 +256,43 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
         sockets.push(socket.position.clone());
       }
       setStatus('ready');
-    }, undefined, () => { if (!disposed) setStatus('error'); });
+    }, undefined, () => { if (!disposed) { loadFailed = true; setStatus('error'); setPageTurning(false); state.current.onTurningChange?.(false); } });
     const resize = () => {
       const w = element.clientWidth, h = element.clientHeight;
       if (!w || !h) return;
       camera.aspect = w / h;
       camera.fov = kind === 'book' ? (w < 540 ? 44 : 36) : (w < 540 ? 38 : 32);
       camera.updateProjectionMatrix(); renderer.setSize(w, h, false);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth <= 680 ? 1.5 : 1.7));
     };
     const observer = new ResizeObserver(resize); observer.observe(element); resize();
     const intersection = new IntersectionObserver(entries => { inView = entries[0].isIntersecting; }); intersection.observe(element);
     let pointerStart = { x: 0, y: 0 }, dragging = false, lastTouch = -100;
+    const raycaster = new THREE.Raycaster();
     const down = (event: PointerEvent) => { pointerStart = { x: event.clientX, y: event.clientY }; dragging = true; };
     const up = (event: PointerEvent) => { dragging = false; lastTouch = elapsed;
       if (kind !== 'book') return;
       if (Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) >= 6) { readingViewTouched = true; return; }
+      if (!state.current.open) { state.current.onOpen?.(); return; }
+      if (!model || openPhase < .9 || Math.abs(pageProgress - state.current.pageIndex) >= .025) return;
+      const bounds = renderer.domElement.getBoundingClientRect();
+      raycaster.setFromCamera(new THREE.Vector2((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1), camera);
+      const hit = raycaster.intersectObject(model, true).find(item => item.object.visible);
+      if (!hit) return;
+      const point = group.worldToLocal(hit.point.clone());
+      const side = point.x < -1.15 ? 'left' : 'right';
+      if (state.current.readingSide !== side) state.current.setReadingSide(side);
+      else { const action = BOOK_MECHANISMS[state.current.pageIndex]; if (side === 'right' && action) state.current.triggerMechanism(action.id); }
+    };
+    const keydown = (event: KeyboardEvent) => {
+      if (kind !== 'book' || !['Enter', ' '].includes(event.key)) return;
+      event.preventDefault();
       if (!state.current.open) state.current.onOpen?.();
-      else if (openPhase > .9 && Math.abs(pageProgress - state.current.pageIndex) < .025) state.current.changePage(state.current.pageIndex + 1);
+      else if (Math.abs(pageProgress - state.current.pageIndex) < .025) { const action = BOOK_MECHANISMS[state.current.pageIndex]; if (action) state.current.triggerMechanism(action.id); }
     };
     const cancel = () => { dragging = false; lastTouch = elapsed; };
     renderer.domElement.addEventListener('pointerdown', down); renderer.domElement.addEventListener('pointerup', up); renderer.domElement.addEventListener('pointercancel', cancel);
+    renderer.domElement.addEventListener('keydown', keydown);
     const animate = (now: number) => {
       frame = requestAnimationFrame(animate);
       const dt = Math.min((now - previous) / 1000, .045); previous = now;
@@ -326,7 +361,8 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
           camera.position.lerp(view, reduced ? 1 : 1 - Math.exp(-dt * 2));
           controls.target.lerp(target, reduced ? 1 : 1 - Math.exp(-dt * 2));
         }
-        const busy = !model || Math.abs(pageProgress - requestedPage) > .001 || Math.abs(coverAngle - desired) > .025;
+        const busy = !loadFailed && (!model || Math.abs(pageProgress - requestedPage) > .001 || Math.abs(coverAngle - desired) > .025);
+        paperMechanisms?.update(requestedPage, state.current.mechanismTriggers, dt, reduced, state.current.open && !busy);
         if (busy !== reportedTurning) {
           reportedTurning = busy;
           setPageTurning(busy);
@@ -363,6 +399,7 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
     return () => {
       disposed = true; cancelAnimationFrame(frame); observer.disconnect(); intersection.disconnect(); controls.dispose();
       renderer.domElement.removeEventListener('pointerdown', down); renderer.domElement.removeEventListener('pointerup', up); renderer.domElement.removeEventListener('pointercancel', cancel);
+      renderer.domElement.removeEventListener('keydown', keydown);
       disposeObject(scene); pageTexture?.dispose(); plumeTexture.dispose(); dustMap.dispose(); contactMap.dispose(); envTarget.dispose(); renderer.dispose(); renderer.domElement.remove();
       controlsRef.current = null; cameraRef.current = null;
       resetViewRef.current = null;
@@ -370,7 +407,8 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
     };
   }, [kind, retry]);
 
-  return <div className={`magic-object magic-object-${kind}${kind === 'book' && open && readingSide !== 'spread' ? ' is-reading' : ''}`}>
+  const mechanism = BOOK_MECHANISMS[activePage];
+  return <div className={`magic-object magic-object-${kind}${kind === 'book' && open && readingSide !== 'spread' ? ' is-reading' : ''}`} data-open={kind === 'book' && open} data-reading={kind === 'book' ? readingSide : undefined}>
     <div className="magic-object-canvas" ref={host} />
     {status === 'loading' && <span className="object-loading" role="status">{kind === 'book' ? '魔法书正在苏醒…' : '正在为你点亮星空…'}</span>}
     {status === 'error' && <div className="object-unavailable"><p>这一次没能打开立体画面。</p><button onClick={() => { setStatus('loading'); setRetry(n => n + 1); }}>再试一次</button></div>}
@@ -382,6 +420,7 @@ export default function MagicObject({ kind, open = false, extinguished = false, 
         <button type="button" aria-label="翻到下一页" disabled={pageTurning || activePage === LAST_BOOK_SPREAD} onClick={() => changePage(activePage + 1)}>›</button>
       </div>
       <div className="book-page-options"><button type="button" aria-pressed={readingSide === 'left'} onClick={() => setReadingSide(readingSide === 'left' ? 'spread' : 'left')}>{readingSide === 'left' ? '回到双页' : '近读左页'}</button><button type="button" aria-pressed={readingSide === 'right'} onClick={() => setReadingSide(readingSide === 'right' ? 'spread' : 'right')}>{readingSide === 'right' ? '回到双页' : '近读右页'}</button><button type="button" onClick={() => { changePage(0); onOpen?.(); }}>合上书</button></div>
+      {mechanism && <div className="book-mechanism-row"><button type="button" disabled={pageTurning} aria-label={mechanismTriggers[mechanism.id] ? `再看一次：${mechanism.label}` : mechanism.label} onClick={() => triggerMechanism(mechanism.id)}>{mechanismTriggers[mechanism.id] ? '再看一次' : mechanism.label}<span aria-hidden="true"> ✧</span></button><p className="book-accessible-message" role="status">{mechanismTriggers[mechanism.id] ? mechanism.result : ''}</p></div>}
     </nav>}
   </div>;
 }

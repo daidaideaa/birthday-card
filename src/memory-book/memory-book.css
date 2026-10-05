@@ -37,17 +37,10 @@
 .album-page{background:radial-gradient(ellipse at 70% 20%,#f1e4c9,#d5c09c)}.photo-mount{height:300px}.chapter-bottom{max-width:970px}.chapter-bottom>span{font-size:10px;letter-spacing:1px}
 @media(min-width:1700px){.invitation-copy{padding-top:25svh}.wish-chapter>.magic-object-cake{inset:190px 0 200px}}
 @media(max-width:1000px){.gift-header{padding:0 28px}.gift-brand{font-size:12px}.gift-tools{gap:20px}.gift-footer{justify-content:center}.footer-dedication,.footer-about{display:none}.gift-footer nav{gap:26px}.invitation-copy{width:46%;padding-left:6%;padding-top:23svh}.invitation-copy h1{font-size:42px}.invitation>.magic-object-book{inset:8% -18% 3% 28%}.album-note{padding:30px}.album-page.album-image{padding:26px 22px 12px}.photo-mount{height:290px}.chapter-bottom{gap:15px}.chapter-bottom>span{display:none}.photos-chapter{padding-left:5%;padding-right:5%}.wish-heading h1{font-size:30px}.wish-actions{left:10%;right:10%}}
-@media(max-width:680px){
- .gift-header{height:78px;padding:0 20px}.gift-brand{font-size:11px;letter-spacing:1px;gap:8px}.brand-star{font-size:27px}.gift-brand small{font-size:5.5px;letter-spacing:1.6px}.gift-tools{gap:15px}.sound-switch>span:last-child{display:none}.chapter-menu-toggle{font-size:10px!important}.chapter-menu-toggle span{margin-left:5px}.chapter-menu{right:15px;top:65px}
- .gift-footer{height:61px;padding:0 21px}.gift-footer nav{width:100%;justify-content:space-between;gap:0}.gift-footer nav button{flex-direction:column;gap:7px;font-size:8px;padding:11px 3px}.gift-footer nav button span{font-size:8px}.gift-footer nav button[aria-current]:before{bottom:0}
- .invitation{height:max(890px,100svh);min-height:890px}.invitation>.magic-object-book{inset:65px -10% auto;height:485px}.invitation-copy{position:absolute;top:505px;bottom:auto;width:100%;padding:0 23px;text-align:center}.invitation-copy>.eyebrow{font-size:7px;letter-spacing:2px;margin:0 0 13px}.tiny-rule{display:none}.invitation-copy h1{font-size:31px;line-height:1.6;letter-spacing:2px;margin:10px 0 12px}.invitation-copy h1 br{display:none}.intro-lines{font-size:11px;line-height:2;letter-spacing:1px;margin:12px 0 20px}.intro-lines br{display:none}.quiet-note{font-size:9px;margin:14px 0}.gold-button{font-size:12px;min-height:48px;min-width:220px}
- .floating-dust{inset:10% 0 38%}.eyebrow{font-size:8px;letter-spacing:2.5px}.section-heading{padding:5px 10px 23px}.section-heading h1{font-size:25px;line-height:1.6;letter-spacing:2px}.section-heading h1 em{display:block}.section-heading>p:last-child{font-size:11px;letter-spacing:1px}.photos-chapter{padding:93px 20px 195px}.album{display:flex;flex-direction:column;border-width:7px;min-height:0;transform:none}.album:after{display:none}.album-note{padding:24px 23px 16px;display:block}.album-label{font-size:9px;letter-spacing:2px}.album-number{position:absolute;right:24px;top:16px;font-size:52px;margin:0;opacity:.5}.album-note h2{font-size:21px;margin:17px 0 8px;position:relative}.album-note>p:not(.album-label){font-size:11px;margin-bottom:8px;max-width:80%}.photo-count{display:none}.letter-link{position:absolute;right:24px;bottom:16px;border:0;margin:0;padding:0;font-size:0;gap:0}.letter-link>span:last-child{font-size:11px}.envelope-icon{font-size:25px}.album-page.album-image{padding:8px 20px 7px}.photo-mount{height:auto;aspect-ratio:1.24;border-width:6px}.album-controls{margin-top:13px;font-size:8px;letter-spacing:0}.chapter-bottom{margin:25px 2px 0;justify-content:space-between;gap:10px}.chapter-bottom .text-button{font-size:11px}
- .wish-chapter{height:max(890px,100svh);min-height:890px}.wish-heading{inset:105px 22px auto}.wish-heading h1{font-size:26px;line-height:1.6;letter-spacing:2px}.wish-heading>p:last-child{font-size:11px;letter-spacing:1px;max-width:290px;margin:14px auto}.wish-chapter>.magic-object-cake{inset:258px -9% auto;width:118%;height:405px}.wish-actions{bottom:160px;left:18px;right:18px}.wish-actions>div{gap:8px;flex-wrap:wrap}.wish-actions .text-button{font-size:10px}.after-wish{font-size:12px;line-height:2;max-width:290px;margin:0 auto 10px}
- .gift-dialog{width:94vw;max-height:90svh}.dialog-content{max-height:90svh}.letter-paper,.credits-paper{padding:44px 24px 35px;font-size:15px;line-height:2}.letter-paper h2{font-size:22px}.letter-paper>.eyebrow{font-size:8px;letter-spacing:1.4px}.letter-signature{font-size:19px}.letter-continue{font-size:11px}.full-photo{padding-top:54px}.full-photo img{max-height:65svh}
-}
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-@media(max-width:680px){.chapter-stage>.memory-pets{bottom:36px}} .wish-chapter>.magic-object-cake .object-tools{bottom:6%}
-@media(max-width:680px){.invitation>.magic-object-book .object-tools{bottom:14%}}
+ .wish-chapter>.magic-object-cake .object-tools{bottom:6%}
+
 
 /* A quiet, photographed room anchors the object and keeps the title readable. */
 .wish-room{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:.5}
@@ -57,12 +50,7 @@
 .invitation-copy .intro-lines{color:#d0c5b1;text-shadow:0 2px 16px #000}
 .invitation-copy .quiet-note{color:#b6a68c;text-shadow:0 2px 10px #000}
 .invitation .floating-dust{opacity:.42}
-@media(max-width:680px){
- .library-backdrop img{height:650px;object-position:66% 0;filter:saturate(.72) brightness(.82);mask-image:linear-gradient(0deg,transparent,#000 24%)}
- .library-backdrop:after{background:linear-gradient(0deg,#080c14f5 0%,#080c14b8 29%,#080c140d 60%,#080c1420)}
- .library-window-light{left:25%;top:9%;width:70%;height:35%}
- .invitation-copy h1{text-shadow:0 3px 25px #000}
-}
+
 
 /* The room is the opening shot: reserve visible air above the book and keep it across the whole phone screen. */
 .invitation{min-height:740px;background:#181813}
@@ -102,19 +90,4 @@
  .invitation-copy .quiet-note{display:none}
 }
 @media(min-width:681px) and (max-width:1000px){.invitation-copy{padding-left:5%;width:43%}.invitation-copy h1{font-size:35px}.invitation>.magic-object-book{inset:26% -7% 12% 34%}}
-@media(max-width:680px){
- .invitation{height:max(870px,100svh);min-height:870px}
- .library-backdrop img{height:100%;object-position:50% 50%;filter:saturate(.8) brightness(1.06);mask-image:none}
- .library-backdrop:after{background:linear-gradient(0deg,#080c14ba 0%,#080c1466 24%,transparent 63%,#080c1425)}
- .library-window-light{left:14%;top:6%;height:52%;width:85%}
- .invitation>.magic-object-book{inset:168px -3% auto;height:400px;width:auto;min-height:0}
- .invitation>.magic-object-book .object-tools{bottom:13%;font-size:8px}
- .invitation-copy{position:absolute;top:520px;bottom:auto;width:100%;padding:0 22px;text-align:center}
- .invitation-copy .eyebrow{font-size:9px;letter-spacing:.3em;margin:0 0 9px}
- .invitation-copy h1{font-size:29px;line-height:1.5;letter-spacing:1px;margin:12px 0}
- .invitation-copy .intro-lines{font-size:11px;margin:13px 0 19px;color:#ded3bd}
- .invitation-copy .quiet-note{display:none}
- .invitation-copy .gold-button{min-height:46px;background:#201b16bf}
- .transition-whisper{bottom:20%;font-size:12px;line-height:1.9;letter-spacing:.08em}
- .gift-tools{gap:12px}.gift-brand{font-size:10px}
-}
+
